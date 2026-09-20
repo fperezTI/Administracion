@@ -1,0 +1,88 @@
+import Link from "next/link";
+import { notFound } from "next/navigation";
+import { requireAccessToken } from "@/lib/require-session";
+import { ApiError, getAssignmentById } from "@/lib/api";
+import { AppHeader } from "@/components/app-header";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ASSIGNMENT_STATUS_LABELS, assignmentStatusBadgeVariant } from "@/lib/inventory-labels";
+import { cancelAssignmentAction } from "./actions";
+import { ReturnAssignmentForm } from "./return-assignment-form";
+
+export default async function AssignmentDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const accessToken = await requireAccessToken();
+  const { id } = await params;
+
+  let assignment;
+  try {
+    assignment = await getAssignmentById(accessToken, id);
+  } catch (error) {
+    if (error instanceof ApiError && error.status === 404) {
+      notFound();
+    }
+    throw error;
+  }
+
+  return (
+    <div className="mx-auto flex max-w-2xl flex-col gap-4 p-8">
+      <AppHeader title="Asignación" />
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <Link href={`/assets/${assignment.assetId}`} className="hover:text-primary font-mono text-lg font-semibold hover:underline">
+            {assignment.assetFolio}
+          </Link>
+          <p className="text-muted-foreground text-sm">Asignado a {assignment.assignedToDisplayName}</p>
+        </div>
+        <Badge variant={assignmentStatusBadgeVariant(assignment.status)}>{ASSIGNMENT_STATUS_LABELS[assignment.status]}</Badge>
+      </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-sm">Firma de recepción</CardTitle>
+        </CardHeader>
+        <CardContent className="text-sm">
+          {assignment.acceptanceSignature ? (
+            <div className="grid gap-1">
+              <p>{assignment.acceptanceSignature.signerDisplayName}</p>
+              <p className="text-muted-foreground text-xs">
+                {new Date(assignment.acceptanceSignature.signedAtUtc).toLocaleString("es-MX")}
+              </p>
+              <p className="font-mono text-xs break-all">{assignment.acceptanceSignature.contentHash}</p>
+            </div>
+          ) : (
+            <p className="text-muted-foreground">
+              El destinatario todavía no confirma la recepción desde &ldquo;Mis asignaciones&rdquo;.
+            </p>
+          )}
+        </CardContent>
+      </Card>
+
+      {assignment.returnSignature && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-sm">Firma de devolución</CardTitle>
+          </CardHeader>
+          <CardContent className="text-sm">
+            <div className="grid gap-1">
+              <p>{assignment.returnSignature.signerDisplayName}</p>
+              <p className="text-muted-foreground text-xs">
+                {new Date(assignment.returnSignature.signedAtUtc).toLocaleString("es-MX")}
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {assignment.status === "PendingSignature" && (
+        <form action={cancelAssignmentAction.bind(null, assignment.id)}>
+          <Button variant="outline" type="submit">
+            Cancelar asignación
+          </Button>
+        </form>
+      )}
+
+      {assignment.status === "Accepted" && <ReturnAssignmentForm assignmentId={assignment.id} />}
+    </div>
+  );
+}

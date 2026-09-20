@@ -1,0 +1,14 @@
+@AssetManagement.Api_HostAddress = http://localhost:5080
+
+GET {{AssetManagement.Api_HostAddress}}/api/v1/system/info
+Accept: application/json
+
+###
+
+GET {{AssetManagement.Api_HostAddress}}/health/live
+
+###
+
+GET {{AssetManagement.Api_HostAddress}}/health/ready
+
+###

@@ -1,0 +1,35 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\AssetManagement.Domain\AssetManagement.Domain.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="FluentValidation" Version="11.11.0" />
+    <PackageReference Include="FluentValidation.DependencyInjectionExtensions" Version="11.11.0" />
+    <PackageReference Include="MediatR" Version="12.4.1" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.0" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="9.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="9.0.0" />
+    <!-- Pure in-memory computation libraries (parsing/serialization, no network/external resource) —
+         referenced directly here like FluentValidation/MediatR already are, see ADR 0011 decision 8. -->
+    <PackageReference Include="CsvHelper" Version="33.0.1" />
+    <PackageReference Include="ClosedXML" Version="0.104.2" />
+    <PackageReference Include="PdfSharp" Version="6.1.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Liberation Sans (SIL Open Font License 1.1, see ImportExport/Fonts/LICENSE-LiberationFonts.txt)
+         embedded so PdfSharp's font resolver works inside the Linux container — PdfSharp 6 has no
+         platform font resolver there, see ADR 0011. -->
+    <EmbeddedResource Include="ImportExport\Fonts\LiberationSans-Regular.ttf" />
+    <EmbeddedResource Include="ImportExport\Fonts\LiberationSans-Bold.ttf" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+</Project>

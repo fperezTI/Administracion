@@ -1,0 +1,71 @@
+name: CI
+
+# Mirrors exactly the commands developers already run locally (see CLAUDE.md) — no CI-only step that
+# isn't also something you could run yourself. Integration tests use Testcontainers (real SQL Server,
+# real Azurite), which works out of the box on ubuntu-latest GitHub-hosted runners (Docker preinstalled).
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  backend:
+    name: Backend (build + test)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+
+      - name: Restore
+        run: dotnet restore apps/api/AssetManagement.sln
+
+      - name: Build
+        run: dotnet build apps/api/AssetManagement.sln --no-restore --configuration Release
+
+      - name: Unit tests
+        run: dotnet test apps/api/tests/AssetManagement.UnitTests --no-build --configuration Release --logger "trx;LogFileName=unit-tests.trx"
+
+      - name: Integration tests
+        run: dotnet test apps/api/tests/AssetManagement.IntegrationTests --no-build --configuration Release --logger "trx;LogFileName=integration-tests.trx"
+
+      - name: Publish test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-test-results
+          path: apps/api/tests/**/TestResults/*.trx
+          retention-days: 14
+
+  frontend:
+    name: Frontend (lint + typecheck + build)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/web
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: apps/web/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Type-check
+        run: npx tsc --noEmit
+
+      - name: Build
+        run: npm run build

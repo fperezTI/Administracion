@@ -1,0 +1,153 @@
+name: CD
+
+# Builds both images once (in dev's registry), then *promotes* that exact same image — never rebuilds —
+# into each later environment's own registry via `az acr import` before deploying. One az deployment
+# group create per environment updates infrastructure *and* the running image version together (the tag
+# is a Bicep parameter, see infrastructure/bicep/main.bicep) — the same artifact that passed dev is what
+# reaches prod, never a re-build that could drift.
+#
+# dev -> test -> prod runs sequentially. Whether an environment pauses for manual approval is controlled
+# entirely by that GitHub Environment's own protection rules (Settings > Environments) — prod has a
+# required reviewer configured there, dev/test don't (docs/deployment.md). No workflow_dispatch branching
+# needed: GitHub itself blocks the job at whichever environment requires approval.
+#
+# Each environment is a fully self-contained resource group (its own Container Registry included, per
+# infrastructure/bicep/main.bicep) — deliberate isolation, at the cost of the explicit `az acr import`
+# promotion step below instead of every environment just reading from one shared registry.
+#
+# Uses OIDC federated credentials (azure/login@v2) — no long-lived Azure client secret is ever stored in
+# GitHub. See docs/deployment.md's runbook for how to create the federated credential per environment.
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+  id-token: write
+
+env:
+  API_IMAGE_NAME: asset-management-api
+  WEB_IMAGE_NAME: asset-management-web
+
+jobs:
+  build-and-push:
+    name: Build and push images (to dev)
+    runs-on: ubuntu-latest
+    environment: dev
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Log in to Azure (OIDC)
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Log in to the dev Container Registry
+        run: az acr login --name ${{ vars.AZURE_CONTAINER_REGISTRY_NAME }}
+
+      - name: Build and push API image
+        run: |
+          docker build -f infrastructure/docker/api.Dockerfile \
+            -t ${{ vars.AZURE_CONTAINER_REGISTRY_NAME }}.azurecr.io/${{ env.API_IMAGE_NAME }}:${{ github.sha }} .
+          docker push ${{ vars.AZURE_CONTAINER_REGISTRY_NAME }}.azurecr.io/${{ env.API_IMAGE_NAME }}:${{ github.sha }}
+
+      - name: Build and push Web image
+        run: |
+          docker build -f infrastructure/docker/web.Dockerfile \
+            -t ${{ vars.AZURE_CONTAINER_REGISTRY_NAME }}.azurecr.io/${{ env.WEB_IMAGE_NAME }}:${{ github.sha }} .
+          docker push ${{ vars.AZURE_CONTAINER_REGISTRY_NAME }}.azurecr.io/${{ env.WEB_IMAGE_NAME }}:${{ github.sha }}
+
+  deploy-dev:
+    name: Deploy to dev
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    environment: dev
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Deploy infrastructure.bicep
+        uses: azure/arm-deploy@v2
+        with:
+          scope: resourcegroup
+          resourceGroupName: ${{ vars.AZURE_RESOURCE_GROUP }}
+          template: infrastructure/bicep/main.bicep
+          parameters: >
+            infrastructure/bicep/parameters/dev.bicepparam
+            apiContainerImageTag=${{ github.sha }}
+            webContainerImageTag=${{ github.sha }}
+
+  deploy-test:
+    name: Promote image and deploy to test
+    needs: deploy-dev
+    runs-on: ubuntu-latest
+    environment: test
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Promote images from dev's registry (same digest, never rebuilt)
+        run: |
+          az acr import --name ${{ vars.AZURE_CONTAINER_REGISTRY_NAME }} \
+            --source ${{ vars.DEV_AZURE_CONTAINER_REGISTRY_NAME }}.azurecr.io/${{ env.API_IMAGE_NAME }}:${{ github.sha }} \
+            --image ${{ env.API_IMAGE_NAME }}:${{ github.sha }}
+          az acr import --name ${{ vars.AZURE_CONTAINER_REGISTRY_NAME }} \
+            --source ${{ vars.DEV_AZURE_CONTAINER_REGISTRY_NAME }}.azurecr.io/${{ env.WEB_IMAGE_NAME }}:${{ github.sha }} \
+            --image ${{ env.WEB_IMAGE_NAME }}:${{ github.sha }}
+
+      - name: Deploy infrastructure.bicep
+        uses: azure/arm-deploy@v2
+        with:
+          scope: resourcegroup
+          resourceGroupName: ${{ vars.AZURE_RESOURCE_GROUP }}
+          template: infrastructure/bicep/main.bicep
+          parameters: >
+            infrastructure/bicep/parameters/test.bicepparam
+            apiContainerImageTag=${{ github.sha }}
+            webContainerImageTag=${{ github.sha }}
+
+  deploy-prod:
+    name: Promote image and deploy to prod
+    needs: deploy-test
+    runs-on: ubuntu-latest
+    environment: prod # GitHub's own required-reviewer rule on this Environment is what makes this "manual"
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Promote images from test's registry (the exact build that passed test, never rebuilt)
+        run: |
+          az acr import --name ${{ vars.AZURE_CONTAINER_REGISTRY_NAME }} \
+            --source ${{ vars.TEST_AZURE_CONTAINER_REGISTRY_NAME }}.azurecr.io/${{ env.API_IMAGE_NAME }}:${{ github.sha }} \
+            --image ${{ env.API_IMAGE_NAME }}:${{ github.sha }}
+          az acr import --name ${{ vars.AZURE_CONTAINER_REGISTRY_NAME }} \
+            --source ${{ vars.TEST_AZURE_CONTAINER_REGISTRY_NAME }}.azurecr.io/${{ env.WEB_IMAGE_NAME }}:${{ github.sha }} \
+            --image ${{ env.WEB_IMAGE_NAME }}:${{ github.sha }}
+
+      - name: Deploy infrastructure.bicep
+        uses: azure/arm-deploy@v2
+        with:
+          scope: resourcegroup
+          resourceGroupName: ${{ vars.AZURE_RESOURCE_GROUP }}
+          template: infrastructure/bicep/main.bicep
+          parameters: >
+            infrastructure/bicep/parameters/prod.bicepparam
+            apiContainerImageTag=${{ github.sha }}
+            webContainerImageTag=${{ github.sha }}

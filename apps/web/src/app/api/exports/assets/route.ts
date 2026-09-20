@@ -1,0 +1,33 @@
+import { auth } from "@/auth";
+
+/**
+ * Proxies the Excel/PDF asset export from the .NET API — same reasoning as
+ * app/api/documents/[id]/content/route.ts (F8): the API is only reachable server-side, and a plain
+ * `<a href>` can't attach an Authorization header. Forwards every filter query param as-is.
+ */
+export async function GET(request: Request) {
+  const session = await auth();
+  if (!session?.accessToken || session.error === "RefreshAccessTokenError") {
+    return new Response(null, { status: 401 });
+  }
+
+  const { search } = new URL(request.url);
+  const apiBaseUrl = process.env.API_INTERNAL_URL ?? "http://localhost:5080";
+
+  const response = await fetch(`${apiBaseUrl}/api/v1/exports/assets${search}`, {
+    headers: { Authorization: `Bearer ${session.accessToken}` },
+    cache: "no-store",
+  });
+
+  if (!response.ok || !response.body) {
+    return new Response(null, { status: response.status });
+  }
+
+  return new Response(response.body, {
+    status: 200,
+    headers: {
+      "Content-Type": response.headers.get("Content-Type") ?? "application/octet-stream",
+      "Content-Disposition": response.headers.get("Content-Disposition") ?? "attachment",
+    },
+  });
+}

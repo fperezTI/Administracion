@@ -1,0 +1,150 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-plex-sans);
+  --font-mono: var(--font-plex-mono);
+  --font-heading: var(--font-plex-sans);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-warning: var(--warning);
+  --color-success-foreground: var(--success-foreground);
+  --color-success: var(--success);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
+}
+
+/*
+ * Identidad visual: consola operativa de activos, no un sitio de marketing. Paleta fría de
+ * "papel + cobalto" (nada de crema/terracota ni negro puro con acento ácido — ver skill de
+ * diseño), radio de esquina reducido y sin sombras: la jerarquía la da el hairline, no el
+ * degradado. Los colores de estado (success/warning) están atados a la semántica real de
+ * `AssetStatus` (ver src/lib/asset-labels.ts), no son decorativos.
+ */
+:root {
+  --background: #f7f7f4;
+  --foreground: #171b1f;
+  --card: #ffffff;
+  --card-foreground: #171b1f;
+  --popover: #ffffff;
+  --popover-foreground: #171b1f;
+  --primary: #1e4fa3;
+  --primary-foreground: #f7f9fc;
+  --secondary: #ececE7;
+  --secondary-foreground: #171b1f;
+  --muted: #efefea;
+  --muted-foreground: #63676c;
+  --accent: #e7eef9;
+  --accent-foreground: #17335c;
+  --destructive: #b23a2e;
+  --success: #1e7a4c;
+  --success-foreground: #f3fbf6;
+  --warning: #a3650c;
+  --warning-foreground: #fbf3e7;
+  --border: #dcdcd5;
+  --input: #dcdcd5;
+  --ring: #1e4fa3;
+  --chart-1: #1e4fa3;
+  --chart-2: #3e7bc4;
+  --chart-3: #7ca6db;
+  --chart-4: #63676c;
+  --chart-5: #171b1f;
+  --radius: 0.5rem;
+  --sidebar: #f7f7f4;
+  --sidebar-foreground: #171b1f;
+  --sidebar-primary: #1e4fa3;
+  --sidebar-primary-foreground: #f7f9fc;
+  --sidebar-accent: #e7eef9;
+  --sidebar-accent-foreground: #17335c;
+  --sidebar-border: #dcdcd5;
+  --sidebar-ring: #1e4fa3;
+}
+
+.dark {
+  --background: #12151a;
+  --foreground: #e7e9ec;
+  --card: #191d23;
+  --card-foreground: #e7e9ec;
+  --popover: #191d23;
+  --popover-foreground: #e7e9ec;
+  --primary: #6c9bea;
+  --primary-foreground: #0b1220;
+  --secondary: #232830;
+  --secondary-foreground: #e7e9ec;
+  --muted: #232830;
+  --muted-foreground: #9aa0a8;
+  --accent: #1e2a3d;
+  --accent-foreground: #bfd3f2;
+  --destructive: #e2685a;
+  --success: #3fae79;
+  --success-foreground: #0b1220;
+  --warning: #d99a3a;
+  --warning-foreground: #0b1220;
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 15%);
+  --ring: #6c9bea;
+  --chart-1: #6c9bea;
+  --chart-2: #3e7bc4;
+  --chart-3: #9aa0a8;
+  --chart-4: #63676c;
+  --chart-5: #e7e9ec;
+  --sidebar: #12151a;
+  --sidebar-foreground: #e7e9ec;
+  --sidebar-primary: #6c9bea;
+  --sidebar-primary-foreground: #0b1220;
+  --sidebar-accent: #1e2a3d;
+  --sidebar-accent-foreground: #bfd3f2;
+  --sidebar-border: oklch(1 0 0 / 10%);
+  --sidebar-ring: #6c9bea;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    /* font-sans va en body, no en html: la variable --font-plex-sans que resuelve --font-sans la
+     * define next/font en una clase sobre <body> (ver layout.tsx), y las variables CSS solo se
+     * heredan hacia los descendientes — puesta en <html> nunca la ve y cae a la fuente serif por
+     * defecto del navegador. */
+    @apply bg-background text-foreground font-sans;
+  }
+}

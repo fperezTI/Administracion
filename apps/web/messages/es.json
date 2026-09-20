@@ -1,0 +1,31 @@
+{
+  "App": {
+    "name": "Gestión de Activos de TI"
+  },
+  "Home": {
+    "title": "Gestión de Activos de TI e Infraestructura",
+    "subtitle": "Registro, etiquetado y control de activos de TI e infraestructura en todas tus empresas.",
+    "systemInfoHeading": "Estado del API",
+    "systemInfoLoading": "Consultando el API...",
+    "systemInfoError": "No fue posible contactar al API.",
+    "signIn": "Iniciar sesión con Microsoft",
+    "goToDashboard": "Ir a mi perfil"
+  },
+  "Dashboard": {
+    "title": "Mi perfil",
+    "signOut": "Cerrar sesión",
+    "profileHeading": "Perfil",
+    "permissionsHeading": "Permisos",
+    "noPermissions": "Todavía no tienes permisos asignados.",
+    "companiesHeading": "Empresas",
+    "noCompanies": "Todavía no tienes acceso a ninguna empresa.",
+    "accountDisabled": "Tu cuenta está desactivada. Contacta a un administrador.",
+    "apiError": "No fue posible consultar tu perfil en el API."
+  },
+  "Theme": {
+    "light": "Claro",
+    "dark": "Oscuro",
+    "system": "Sistema",
+    "toggle": "Cambiar tema"
+  }
+}

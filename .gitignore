@@ -1,0 +1,45 @@
+# --- .NET / backend ---
+bin/
+obj/
+*.user
+*.suo
+.vs/
+artifacts/
+*.trx
+*.received.*
+TestResults/
+
+# --- Node / frontend ---
+node_modules/
+.next/
+out/
+next-env.d.ts
+*.tsbuildinfo
+coverage/
+playwright-report/
+test-results/
+.turbo/
+# Local browser profile used for manual Playwright verification against the real dev stack — holds
+# real session cookies, never a build artifact to ship or a fixture to commit.
+.playwright-profile/
+
+# --- Environment / secrets (never commit) ---
+.env
+.env.*
+!.env.example
+*.pfx
+*.pem
+local.settings.json
+appsettings.*.local.json
+
+# --- Infra ---
+.terraform/
+*.tfstate
+*.tfstate.*
+.bicep/
+
+# --- OS / IDE ---
+.DS_Store
+Thumbs.db
+.idea/
+*.swp
