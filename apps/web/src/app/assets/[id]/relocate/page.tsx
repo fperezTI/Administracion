@@ -23,8 +23,9 @@ export default async function RelocateAssetPage({ params }: { params: Promise<{ 
   const orgUnits = await getOrgUnitTree(accessToken, asset.companyId);
 
   return (
-    <div className="mx-auto max-w-md p-8">
+    <>
       <AppHeader title="Reubicar activo" subtitle={`${asset.internalFolio} — ${asset.brand} ${asset.model}`} />
+    <div className="mx-auto max-w-xl px-8 pb-8">
       <div className="mb-4 flex justify-end">
         <Button variant="outline" render={<Link href={`/assets/${id}`} />}>
           ← Volver
@@ -32,5 +33,6 @@ export default async function RelocateAssetPage({ params }: { params: Promise<{ 
       </div>
       <RelocateAssetForm assetId={id} orgUnits={orgUnits} currentOrgUnitId={asset.currentOrgUnitId} />
     </div>
+    </>
   );
 }

@@ -14,7 +14,6 @@ export default async function TemplatesPage() {
     const templates = await getTemplates(accessToken);
 
     content = (
-      <div className="rounded-lg border">
         <Table>
           <TableHeader>
             <TableRow>
@@ -49,7 +48,6 @@ export default async function TemplatesPage() {
             )}
           </TableBody>
         </Table>
-      </div>
     );
   } catch (error) {
     const status = error instanceof ApiError ? error.status : undefined;
@@ -61,15 +59,17 @@ export default async function TemplatesPage() {
   }
 
   return (
-    <div className="mx-auto max-w-3xl p-8">
+    <>
       <AppHeader
         title="Plantillas"
         subtitle="Catálogo versionado de texto (resguardos, correos, notificaciones) — sin generación de documentos todavía."
       />
+    <div className="mx-auto max-w-6xl px-8 pb-8">
       <div className="mb-4 flex justify-end">
         <Button render={<Link href="/templates/new" />}>Nueva plantilla</Button>
       </div>
       {content}
     </div>
+    </>
   );
 }

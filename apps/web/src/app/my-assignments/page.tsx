@@ -49,12 +49,14 @@ export default async function MyAssignmentsPage() {
   }
 
   return (
-    <div className="mx-auto max-w-2xl p-8">
+    <>
       <AppHeader
         title="Mis asignaciones"
         subtitle="Activos que tienes bajo tu resguardo — confirma la recepción de los pendientes."
       />
+    <div className="mx-auto max-w-3xl px-8 pb-8">
       {content}
     </div>
+    </>
   );
 }

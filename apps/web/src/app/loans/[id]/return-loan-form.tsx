@@ -20,7 +20,7 @@ export function ReturnLoanForm({ loanId }: { loanId: string }) {
         <Input id="notes" name="notes" maxLength={500} />
       </div>
       <div className="flex items-center justify-between">
-        <p className="text-sm">{state.error && <span className="text-destructive">{state.error}</span>}</p>
+        <p className="text-sm" role="alert">{state.error && <span className="text-destructive">{state.error}</span>}</p>
         <Button type="submit" disabled={pending}>
           {pending ? "Guardando…" : "Registrar devolución"}
         </Button>

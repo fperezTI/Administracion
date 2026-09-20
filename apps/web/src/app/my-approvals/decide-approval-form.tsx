@@ -38,7 +38,7 @@ export function DecideApprovalForm({ approvalInstanceId }: { approvalInstanceId:
       <form action={approveFormAction} className="flex flex-col gap-3 rounded-lg border p-3">
         <SignatureMechanismFields />
         <div className="flex items-center justify-between">
-          <p className="text-sm">{approveState.error && <span className="text-destructive">{approveState.error}</span>}</p>
+          <p className="text-sm" role="alert">{approveState.error && <span className="text-destructive">{approveState.error}</span>}</p>
           <div className="flex gap-2">
             <Button type="button" variant="outline" size="sm" onClick={() => setMode("idle")}>
               Cancelar
@@ -60,7 +60,7 @@ export function DecideApprovalForm({ approvalInstanceId }: { approvalInstanceId:
       </div>
       <SignatureMechanismFields />
       <div className="flex items-center justify-between">
-        <p className="text-sm">{rejectState.error && <span className="text-destructive">{rejectState.error}</span>}</p>
+        <p className="text-sm" role="alert">{rejectState.error && <span className="text-destructive">{rejectState.error}</span>}</p>
         <div className="flex gap-2">
           <Button type="button" variant="outline" size="sm" onClick={() => setMode("idle")}>
             Cancelar

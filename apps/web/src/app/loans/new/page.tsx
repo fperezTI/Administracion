@@ -25,8 +25,9 @@ export default async function NewLoanPage({ searchParams }: { searchParams: Prom
   ]);
 
   return (
-    <div className="mx-auto max-w-md p-8">
+    <>
       <AppHeader title="Nuevo préstamo" subtitle="Préstamo de corto plazo, sin firma de recepción." />
+    <div className="mx-auto max-w-xl px-8 pb-8">
       <div className="mb-4 flex justify-end">
         <Button variant="outline" render={<Link href={`/loans?companyId=${companyId}`} />}>
           ← Volver
@@ -34,5 +35,6 @@ export default async function NewLoanPage({ searchParams }: { searchParams: Prom
       </div>
       <CreateLoanForm assets={assets.items} users={users.items} />
     </div>
+    </>
   );
 }

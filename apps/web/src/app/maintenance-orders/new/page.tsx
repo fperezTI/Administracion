@@ -50,12 +50,13 @@ export default async function NewMaintenanceOrderPage({
   }
 
   return (
-    <div className="mx-auto max-w-md p-8">
+    <>
       <AppHeader
         title="Nueva orden de mantenimiento"
         subtitle="Envía un activo en almacén o asignado a mantenimiento."
         activeCompany={<CompanySwitcher companies={me.companies} currentCompanyId={companyId} />}
       />
+    <div className="mx-auto max-w-xl px-8 pb-8">
       <div className="mb-4 flex justify-end">
         <Button variant="outline" render={<Link href={`/maintenance-orders?companyId=${companyId}`} />}>
           ← Volver
@@ -63,5 +64,6 @@ export default async function NewMaintenanceOrderPage({
       </div>
       {content}
     </div>
+    </>
   );
 }

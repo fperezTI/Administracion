@@ -1,0 +1,61 @@
+stateDiagram-v2
+    [*] --> InWarehouse: Alta de activo
+
+    InWarehouse --> Reserved
+    InWarehouse --> Assigned
+    InWarehouse --> OnLoan
+    InWarehouse --> InTransit
+    InWarehouse --> InMaintenance
+    InWarehouse --> PendingDecommission
+
+    Reserved --> InWarehouse
+    Reserved --> Assigned
+    Reserved --> OnLoan
+
+    Assigned --> InWarehouse
+    Assigned --> OnLoan
+    Assigned --> InTransit
+    Assigned --> InMaintenance
+    Assigned --> Damaged
+    Assigned --> Lost
+    Assigned --> Stolen
+    Assigned --> PendingDecommission
+
+    OnLoan --> InWarehouse
+    OnLoan --> Assigned
+    OnLoan --> Damaged
+    OnLoan --> Lost
+    OnLoan --> Stolen
+
+    InTransit --> InWarehouse
+    InTransit --> Assigned
+
+    InMaintenance --> InWarehouse
+    InMaintenance --> UnderWarranty
+    InMaintenance --> PendingDecommission
+    InMaintenance --> Damaged
+
+    UnderWarranty --> InWarehouse
+    UnderWarranty --> InMaintenance
+    UnderWarranty --> PendingDecommission
+
+    Damaged --> InMaintenance
+    Damaged --> PendingDecommission
+
+    Lost --> PendingDecommission
+    Stolen --> PendingDecommission
+
+    PendingDecommission --> Decommissioned: Baja aprobada
+    PendingDecommission --> InWarehouse: Baja rechazada
+
+    Decommissioned --> Sold: Disposición aprobada (Venta)
+    Decommissioned --> Donated: Disposición aprobada (Donación)
+    Decommissioned --> Destroyed: Disposición aprobada (Destrucción)
+
+    Sold --> [*]
+    Donated --> [*]
+    Destroyed --> [*]
+
+    state InWarehouse {
+        note: En almacén
+    }

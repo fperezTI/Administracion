@@ -20,7 +20,7 @@ export function CreateConsumableForm({ companyId }: { companyId: string }) {
         <Input id="name" name="name" required maxLength={200} placeholder="Tóner HP 58A" />
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="flex flex-col gap-1">
           <Label htmlFor="sku">SKU (opcional)</Label>
           <Input id="sku" name="sku" maxLength={100} placeholder="TN-58A" />
@@ -36,7 +36,7 @@ export function CreateConsumableForm({ companyId }: { companyId: string }) {
         <Input id="minimumStock" name="minimumStock" type="number" min={0} step="any" />
       </div>
 
-      {state.error && <p className="text-destructive text-sm">{state.error}</p>}
+      {state.error && <p className="text-destructive text-sm" role="alert">{state.error}</p>}
 
       <div className="flex justify-end">
         <Button type="submit" disabled={pending}>

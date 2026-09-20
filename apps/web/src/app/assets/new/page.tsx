@@ -29,12 +29,13 @@ export default async function NewAssetPage({
   ]);
 
   return (
-    <div className="mx-auto max-w-2xl p-8">
+    <>
       <AppHeader
         title="Nuevo activo"
         subtitle="Alta y etiquetado — se genera folio y etiqueta al guardar."
         activeCompany={<CompanySwitcher companies={me.companies} currentCompanyId={companyId} />}
       />
+    <div className="mx-auto max-w-xl px-8 pb-8">
 
       {categories.length === 0 ? (
         <p className="text-muted-foreground text-sm">
@@ -44,5 +45,6 @@ export default async function NewAssetPage({
         <CreateAssetForm companyId={companyId} categories={categories} orgUnits={orgUnits} />
       )}
     </div>
+    </>
   );
 }

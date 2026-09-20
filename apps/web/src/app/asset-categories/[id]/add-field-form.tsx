@@ -4,6 +4,9 @@ import { useActionState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Field } from "@/components/ui/field";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { CUSTOM_FIELD_DATA_TYPE_LABELS } from "@/lib/asset-labels";
 import { addFieldAction, type AddFieldActionState } from "./actions";
 
 const initialState: AddFieldActionState = { error: null };
@@ -15,43 +18,39 @@ export function AddFieldForm({ categoryId }: { categoryId: string }) {
   return (
     <form action={formAction} className="flex flex-col gap-3 rounded-lg border p-4">
       <p className="text-sm font-medium">Agregar campo técnico</p>
-      <div className="grid grid-cols-2 gap-3">
-        <div className="flex flex-col gap-1">
-          <Label htmlFor="name">Nombre</Label>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <Field label="Nombre" htmlFor="name">
           <Input id="name" name="name" required maxLength={100} placeholder="p. ej. RAM" />
-        </div>
-        <div className="flex flex-col gap-1">
-          <Label htmlFor="code">Código</Label>
+        </Field>
+        <Field label="Código" htmlFor="code">
           <Input id="code" name="code" required maxLength={50} placeholder="p. ej. RAM" />
-        </div>
+        </Field>
       </div>
-      <div className="grid grid-cols-2 gap-3">
-        <div className="flex flex-col gap-1">
-          <Label htmlFor="dataType">Tipo de dato</Label>
-          <select
-            id="dataType"
-            name="dataType"
-            defaultValue="Text"
-            className="h-8 rounded-lg border border-input bg-transparent px-2.5 text-sm outline-none dark:bg-input/30"
-          >
-            <option value="Text">Texto</option>
-            <option value="Number">Número</option>
-            <option value="Date">Fecha</option>
-            <option value="Boolean">Sí/No</option>
-            <option value="Select">Selección</option>
-          </select>
-        </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <Field label="Tipo de dato" htmlFor="dataType">
+          <Select name="dataType" defaultValue="Text">
+            <SelectTrigger id="dataType" className="w-full">
+              <SelectValue>{(value: keyof typeof CUSTOM_FIELD_DATA_TYPE_LABELS) => CUSTOM_FIELD_DATA_TYPE_LABELS[value]}</SelectValue>
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="Text">Texto</SelectItem>
+              <SelectItem value="Number">Número</SelectItem>
+              <SelectItem value="Date">Fecha</SelectItem>
+              <SelectItem value="Boolean">Sí/No</SelectItem>
+              <SelectItem value="Select">Selección</SelectItem>
+            </SelectContent>
+          </Select>
+        </Field>
         <div className="flex items-end gap-2 pb-1.5">
           <input id="isRequired" name="isRequired" type="checkbox" className="size-4" />
           <Label htmlFor="isRequired">Obligatorio</Label>
         </div>
       </div>
-      <div className="flex flex-col gap-1">
-        <Label htmlFor="options">Opciones (solo para Selección, separadas por coma)</Label>
+      <Field label="Opciones (solo para Selección, separadas por coma)" htmlFor="options">
         <Input id="options" name="options" placeholder="p. ej. 8GB, 16GB, 32GB" />
-      </div>
+      </Field>
 
-      {state.error && <p className="text-destructive text-sm">{state.error}</p>}
+      {state.error && <p className="text-destructive text-sm" role="alert">{state.error}</p>}
 
       <div className="flex justify-end">
         <Button type="submit" size="sm" disabled={pending}>

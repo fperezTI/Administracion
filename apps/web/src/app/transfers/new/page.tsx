@@ -45,12 +45,13 @@ export default async function NewTransferPage({
   }
 
   return (
-    <div className="mx-auto max-w-md p-8">
+    <>
       <AppHeader
         title="Nueva transferencia"
         subtitle="Envía un activo en almacén a otra empresa del tenant."
         activeCompany={<CompanySwitcher companies={me.companies} currentCompanyId={companyId} />}
       />
+    <div className="mx-auto max-w-xl px-8 pb-8">
       <div className="mb-4 flex justify-end">
         <Button variant="outline" render={<Link href={`/transfers?companyId=${companyId}`} />}>
           ← Volver
@@ -58,5 +59,6 @@ export default async function NewTransferPage({
       </div>
       {content}
     </div>
+    </>
   );
 }

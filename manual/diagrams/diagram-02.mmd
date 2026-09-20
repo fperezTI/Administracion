@@ -1,0 +1,7 @@
+stateDiagram-v2
+    [*] --> PendingSignature: Crear asignación (Assignments.Create)\nActivo → Reservado
+    PendingSignature --> Accepted: Firmar (self-service, solo el destinatario)\nActivo → Asignado
+    PendingSignature --> Cancelled: Cancelar (Assignments.Update)\nActivo → En almacén
+    Accepted --> Returned: Devolver (Returns.Create)\nActivo → En almacén
+    Returned --> [*]
+    Cancelled --> [*]

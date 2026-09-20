@@ -26,12 +26,13 @@ export default async function NewInternalRequestPage({ searchParams }: { searchP
   ]);
 
   return (
-    <div className="mx-auto max-w-md p-8">
+    <>
       <AppHeader
         title="Nueva solicitud"
         subtitle="Pide que te asignen un activo, un préstamo, o reporta que necesita mantenimiento."
         activeCompany={<CompanySwitcher companies={me.companies} currentCompanyId={companyId} />}
       />
+    <div className="mx-auto max-w-xl px-8 pb-8">
       <div className="mb-4 flex justify-end">
         <Button variant="outline" render={<Link href={`/requests?companyId=${companyId}`} />}>
           ← Volver
@@ -39,5 +40,6 @@ export default async function NewInternalRequestPage({ searchParams }: { searchP
       </div>
       <CreateRequestForm inWarehouseAssets={inWarehouse.items} assignedAssets={assigned.items} companyId={companyId} />
     </div>
+    </>
   );
 }

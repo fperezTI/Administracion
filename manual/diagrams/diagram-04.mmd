@@ -1,0 +1,9 @@
+stateDiagram-v2
+    [*] --> PendingApproval: Solicitar transferencia (Transfers.Create)
+    PendingApproval --> Rejected: Aprobación rechazada (automático)
+    PendingApproval --> Cancelled: Cancelar (solo el solicitante, sin permiso RBAC)
+    PendingApproval --> InTransit: Aprobación completada (automático = "salida")\nActivo → En tránsito
+    InTransit --> Completed: Recibir (Transfers.Update + acceso real a la empresa destino)\nActivo → En almacén en destino
+    Rejected --> [*]
+    Cancelled --> [*]
+    Completed --> [*]

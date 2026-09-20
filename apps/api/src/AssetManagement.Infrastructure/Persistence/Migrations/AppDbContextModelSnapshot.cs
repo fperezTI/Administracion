@@ -1132,6 +1132,13 @@ namespace AssetManagement.Infrastructure.Persistence.Migrations
                             Action = "Update",
                             Description = "Editar configuración del sistema",
                             Module = "Configuration"
+                        },
+                        new
+                        {
+                            Id = new Guid("dcf1a95f-3f4f-9596-44a2-0ee949c3c69a"),
+                            Action = "ViewExecutive",
+                            Description = "Ver el dashboard ejecutivo",
+                            Module = "Dashboards"
                         });
                 });
 

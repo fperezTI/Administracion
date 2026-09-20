@@ -27,15 +27,14 @@ export default async function InternalRequestsPage({ searchParams }: { searchPar
     const requests = await getInternalRequests(accessToken, { companyId, pageSize: 100 });
 
     content = (
-      <div className="rounded-lg border">
         <Table>
           <TableHeader>
             <TableRow>
               <TableHead>Activo</TableHead>
               <TableHead>Tipo</TableHead>
-              <TableHead>Solicitante</TableHead>
+              <TableHead className="hidden sm:table-cell">Solicitante</TableHead>
               <TableHead>Estado</TableHead>
-              <TableHead>Fecha</TableHead>
+              <TableHead className="hidden sm:table-cell">Fecha</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -54,17 +53,16 @@ export default async function InternalRequestsPage({ searchParams }: { searchPar
                     </Link>
                   </TableCell>
                   <TableCell>{INTERNAL_REQUEST_TYPE_LABELS[r.type]}</TableCell>
-                  <TableCell>{r.requestedByDisplayName}</TableCell>
+                  <TableCell className="hidden sm:table-cell">{r.requestedByDisplayName}</TableCell>
                   <TableCell>
                     <Badge variant={internalRequestStatusBadgeVariant(r.status)}>{INTERNAL_REQUEST_STATUS_LABELS[r.status]}</Badge>
                   </TableCell>
-                  <TableCell>{new Date(r.requestedAtUtc).toLocaleDateString("es-MX")}</TableCell>
+                  <TableCell className="hidden sm:table-cell">{new Date(r.requestedAtUtc).toLocaleDateString("es-MX")}</TableCell>
                 </TableRow>
               ))
             )}
           </TableBody>
         </Table>
-      </div>
     );
   } catch (error) {
     const status = error instanceof ApiError ? error.status : undefined;
@@ -76,16 +74,18 @@ export default async function InternalRequestsPage({ searchParams }: { searchPar
   }
 
   return (
-    <div className="mx-auto max-w-4xl p-8">
+    <>
       <AppHeader
         title="Solicitudes internas"
         subtitle="Solicitudes de asignación, préstamo o mantenimiento hechas por cualquier persona de la empresa."
         activeCompany={<CompanySwitcher companies={me.companies} currentCompanyId={companyId} />}
       />
+    <div className="mx-auto max-w-6xl px-8 pb-8">
       <div className="mb-4 flex justify-end">
         <Button render={<Link href={`/requests/new?companyId=${companyId}`} />}>Nueva solicitud</Button>
       </div>
       {content}
     </div>
+    </>
   );
 }

@@ -16,7 +16,6 @@ export default async function ApprovalFlowsPage() {
     const flows = await getApprovalFlows(accessToken);
 
     content = (
-      <div className="rounded-lg border">
         <Table>
           <TableHeader>
             <TableRow>
@@ -59,7 +58,6 @@ export default async function ApprovalFlowsPage() {
             )}
           </TableBody>
         </Table>
-      </div>
     );
   } catch (error) {
     const status = error instanceof ApiError ? error.status : undefined;
@@ -71,15 +69,17 @@ export default async function ApprovalFlowsPage() {
   }
 
   return (
-    <div className="mx-auto max-w-4xl p-8">
+    <>
       <AppHeader
         title="Flujos de aprobación"
         subtitle="Qué roles deben aprobar cada tipo de operación (p. ej. baja de activos)."
       />
+    <div className="mx-auto max-w-6xl px-8 pb-8">
       <div className="mb-4 flex justify-end">
         <Button render={<Link href="/approval-flows/new" />}>Nuevo flujo</Button>
       </div>
       {content}
     </div>
+    </>
   );
 }

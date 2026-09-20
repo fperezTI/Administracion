@@ -25,8 +25,9 @@ export default async function RoleDetailPage({ params }: { params: Promise<{ id:
   const groups = await getPermissions(accessToken);
 
   return (
-    <div className="mx-auto flex max-w-3xl flex-col gap-4 p-8">
+    <>
       <AppHeader title="Roles" />
+    <div className="mx-auto flex max-w-3xl flex-col gap-4 px-8 pb-8">
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-semibold tracking-tight">{role.name}</h2>
         <div className="flex items-center gap-2">
@@ -47,5 +48,6 @@ export default async function RoleDetailPage({ params }: { params: Promise<{ id:
         ← Volver
       </Button>
     </div>
+    </>
   );
 }

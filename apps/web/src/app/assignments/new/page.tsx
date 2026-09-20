@@ -30,8 +30,9 @@ export default async function NewAssignmentPage({
   ]);
 
   return (
-    <div className="mx-auto max-w-md p-8">
+    <>
       <AppHeader title="Nueva asignación" subtitle="Entrega un activo en resguardo a una persona." />
+    <div className="mx-auto max-w-xl px-8 pb-8">
       <div className="mb-4 flex justify-end">
         <Button variant="outline" render={<Link href={`/assignments?companyId=${companyId}`} />}>
           ← Volver
@@ -39,5 +40,6 @@ export default async function NewAssignmentPage({
       </div>
       <CreateAssignmentForm assets={assets.items} users={users.items} orgUnits={orgUnits} />
     </div>
+    </>
   );
 }

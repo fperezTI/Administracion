@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { requireAccessToken } from "@/lib/require-session";
 import { ApiError, getTransferById } from "@/lib/api";
 import { AppHeader } from "@/components/app-header";
+import { Breadcrumbs } from "@/components/layout/breadcrumbs";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { TRANSFER_STATUS_LABELS, transferStatusBadgeVariant } from "@/lib/transfer-labels";
@@ -24,8 +25,10 @@ export default async function TransferDetailPage({ params }: { params: Promise<{
   }
 
   return (
-    <div className="mx-auto flex max-w-2xl flex-col gap-4 p-8">
+    <>
       <AppHeader title="Transferencia" />
+    <div className="mx-auto flex max-w-3xl flex-col gap-4 px-8 pb-8">
+      <Breadcrumbs items={[{ label: "Transferencias", href: "/transfers" }, { label: transfer.assetFolio }]} />
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <Link href={`/assets/${transfer.assetId}`} className="hover:text-primary font-mono text-lg font-semibold hover:underline">
@@ -38,7 +41,7 @@ export default async function TransferDetailPage({ params }: { params: Promise<{
         <Badge variant={transferStatusBadgeVariant(transfer.status)}>{TRANSFER_STATUS_LABELS[transfer.status]}</Badge>
       </div>
 
-      <div className="grid grid-cols-2 gap-4 rounded-lg border p-4 text-sm">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 rounded-lg border p-4 text-sm">
         <div>
           <p className="text-muted-foreground text-xs">Solicitado por</p>
           <p>{transfer.requestedByDisplayName}</p>
@@ -77,5 +80,6 @@ export default async function TransferDetailPage({ params }: { params: Promise<{
 
       {transfer.status === "InTransit" && <ReceiveTransferForm transferId={transfer.id} />}
     </div>
+    </>
   );
 }

@@ -1,0 +1,8 @@
+stateDiagram-v2
+    [*] --> Pending: Se crea (una operación disparó la necesidad de aprobación)
+    Pending --> Approved: Se alcanzan las aprobaciones requeridas
+    Pending --> Rejected: Un solo rechazo, sin importar cuántas aprobaciones ya se acumularon
+    Pending --> Cancelled: El solicitante original la cancela
+    Approved --> [*]
+    Rejected --> [*]
+    Cancelled --> [*]

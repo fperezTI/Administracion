@@ -27,15 +27,14 @@ export default async function TransfersPage({ searchParams }: { searchParams: Pr
     const transfers = await getTransfers(accessToken, { companyId, pageSize: 100 });
 
     content = (
-      <div className="rounded-lg border">
         <Table>
           <TableHeader>
             <TableRow>
               <TableHead>Folio</TableHead>
-              <TableHead>Origen</TableHead>
+              <TableHead className="hidden sm:table-cell">Origen</TableHead>
               <TableHead>Destino</TableHead>
               <TableHead>Estado</TableHead>
-              <TableHead>Fecha</TableHead>
+              <TableHead className="hidden sm:table-cell">Fecha</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -53,18 +52,17 @@ export default async function TransfersPage({ searchParams }: { searchParams: Pr
                       {t.assetFolio}
                     </Link>
                   </TableCell>
-                  <TableCell>{t.fromCompanyName}</TableCell>
+                  <TableCell className="hidden sm:table-cell">{t.fromCompanyName}</TableCell>
                   <TableCell>{t.toCompanyName}</TableCell>
                   <TableCell>
                     <Badge variant={transferStatusBadgeVariant(t.status)}>{TRANSFER_STATUS_LABELS[t.status]}</Badge>
                   </TableCell>
-                  <TableCell>{new Date(t.requestedAtUtc).toLocaleDateString("es-MX")}</TableCell>
+                  <TableCell className="hidden sm:table-cell">{new Date(t.requestedAtUtc).toLocaleDateString("es-MX")}</TableCell>
                 </TableRow>
               ))
             )}
           </TableBody>
         </Table>
-      </div>
     );
   } catch (error) {
     const status = error instanceof ApiError ? error.status : undefined;
@@ -76,16 +74,18 @@ export default async function TransfersPage({ searchParams }: { searchParams: Pr
   }
 
   return (
-    <div className="mx-auto max-w-4xl p-8">
+    <>
       <AppHeader
         title="Transferencias entre empresas"
         subtitle="Activos en tránsito o transferidos entre las empresas del tenant — aparece si tu empresa es origen o destino."
         activeCompany={<CompanySwitcher companies={me.companies} currentCompanyId={companyId} />}
       />
+    <div className="mx-auto max-w-6xl px-8 pb-8">
       <div className="mb-4 flex justify-end">
         <Button render={<Link href={`/transfers/new?companyId=${companyId}`} />}>Nueva transferencia</Button>
       </div>
       {content}
     </div>
+    </>
   );
 }

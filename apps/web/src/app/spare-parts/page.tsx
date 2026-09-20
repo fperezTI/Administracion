@@ -27,7 +27,6 @@ export default async function SparePartsPage({ searchParams }: { searchParams: P
     const spareParts = await getSpareParts(accessToken, { companyId });
 
     content = (
-      <div className="rounded-lg border">
         <Table>
           <TableHeader>
             <TableRow>
@@ -61,7 +60,6 @@ export default async function SparePartsPage({ searchParams }: { searchParams: P
             )}
           </TableBody>
         </Table>
-      </div>
     );
   } catch (error) {
     const status = error instanceof ApiError ? error.status : undefined;
@@ -73,16 +71,18 @@ export default async function SparePartsPage({ searchParams }: { searchParams: P
   }
 
   return (
-    <div className="mx-auto max-w-3xl p-8">
+    <>
       <AppHeader
         title="Refacciones"
         subtitle="Refacciones serializadas — historial de instalación y retiro por activo."
         activeCompany={<CompanySwitcher companies={me.companies} currentCompanyId={companyId} />}
       />
+    <div className="mx-auto max-w-6xl px-8 pb-8">
       <div className="mb-4 flex justify-end">
         <Button render={<Link href={`/spare-parts/new?companyId=${companyId}`} />}>Nueva refacción</Button>
       </div>
       {content}
     </div>
+    </>
   );
 }

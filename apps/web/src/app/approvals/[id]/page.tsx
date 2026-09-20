@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { requireAccessToken } from "@/lib/require-session";
 import { ApiError, getApprovalInstanceById } from "@/lib/api";
 import { AppHeader } from "@/components/app-header";
+import { Breadcrumbs } from "@/components/layout/breadcrumbs";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { APPROVAL_MODE_LABELS, APPROVAL_STATUS_LABELS, approvalStatusBadgeVariant, describeApprovalContext } from "@/lib/approval-labels";
@@ -21,8 +22,12 @@ export default async function ApprovalDetailPage({ params }: { params: Promise<{
   }
 
   return (
-    <div className="mx-auto flex max-w-2xl flex-col gap-4 p-8">
+    <>
       <AppHeader title="Aprobación" />
+    <div className="mx-auto flex max-w-3xl flex-col gap-4 px-8 pb-8">
+      <Breadcrumbs
+        items={[{ label: "Mis aprobaciones", href: "/my-approvals" }, { label: describeApprovalContext(approval.contextType) }]}
+      />
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h2 className="text-lg font-semibold tracking-tight">{describeApprovalContext(approval.contextType)}</h2>
@@ -65,5 +70,6 @@ export default async function ApprovalDetailPage({ params }: { params: Promise<{
         </CardContent>
       </Card>
     </div>
+    </>
   );
 }

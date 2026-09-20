@@ -1,0 +1,4 @@
+stateDiagram-v2
+    [*] --> Active: Crear préstamo (Loans.Create)\nActivo → En préstamo
+    Active --> Returned: Devolver (Returns.Create)\nActivo → En almacén
+    Returned --> [*]

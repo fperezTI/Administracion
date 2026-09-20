@@ -1,0 +1,20 @@
+flowchart TD
+    A[Empleado abre 'Nueva solicitud'] --> B{Tipo de solicitud}
+    B -->|Asignación de activo| C[Elige un activo\nen almacén]
+    B -->|Préstamo| D[Elige un activo\nen almacén + fecha\nde devolución]
+    B -->|Mantenimiento| E[Elige un activo\nen almacén o asignado]
+    C --> F[Se crea la solicitud\ny automáticamente\nuna aprobación pendiente]
+    D --> F
+    E --> F
+    F --> G[La aprobación aparece\nen 'Mis aprobaciones'\nde cada rol elegible]
+    G --> H{Decisión}
+    H -->|Rechaza| I[Solicitud rechazada.\nEl activo no cambia de estado]
+    H -->|Aprueba\n- puede requerir varias\naprobaciones según el flujo| J{¿Se completaron\ntodas las aprobaciones\nrequeridas?}
+    J -->|No todavía| G
+    J -->|Sí| K{Tipo de solicitud}
+    K -->|Asignación| L[Se crea la asignación\ny el movimiento asociado.\nEl activo queda reservado\nhasta que el destinatario firme]
+    K -->|Préstamo| M[Se crea el préstamo\ny el activo queda prestado]
+    K -->|Mantenimiento| N[Se abre la orden\nde mantenimiento correctivo]
+    L --> O[Solicitud cumplida]
+    M --> O
+    N --> O

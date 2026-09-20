@@ -8,8 +8,9 @@ export default async function NewRolePage() {
   await requireAccessToken();
 
   return (
-    <div className="mx-auto max-w-md p-8">
+    <>
       <AppHeader title="Nuevo rol" />
+    <div className="mx-auto max-w-xl px-8 pb-8">
       <div className="mb-4 flex justify-end">
         <Button variant="outline" render={<Link href="/roles" />}>
           ← Volver
@@ -17,5 +18,6 @@ export default async function NewRolePage() {
       </div>
       <CreateRoleForm />
     </div>
+    </>
   );
 }

@@ -9,18 +9,19 @@
     "systemInfoLoading": "Consultando el API...",
     "systemInfoError": "No fue posible contactar al API.",
     "signIn": "Iniciar sesión con Microsoft",
-    "goToDashboard": "Ir a mi perfil"
+    "goToDashboard": "Ir a mi dashboard"
   },
   "Dashboard": {
-    "title": "Mi perfil",
-    "signOut": "Cerrar sesión",
-    "profileHeading": "Perfil",
-    "permissionsHeading": "Permisos",
-    "noPermissions": "Todavía no tienes permisos asignados.",
-    "companiesHeading": "Empresas",
-    "noCompanies": "Todavía no tienes acceso a ninguna empresa.",
+    "title": "Dashboard",
+    "totalAssets": "Total de activos",
+    "assignedAssets": "Activos asignados",
+    "availableAssets": "Activos disponibles",
+    "pendingApprovals": "Aprobaciones pendientes",
+    "openMaintenanceOrders": "Mantenimientos abiertos",
+    "expiringWarranties": "Garantías por vencer",
+    "lowStockConsumables": "Existencias bajas",
     "accountDisabled": "Tu cuenta está desactivada. Contacta a un administrador.",
-    "apiError": "No fue posible consultar tu perfil en el API."
+    "apiError": "No fue posible consultar el dashboard en el API."
   },
   "Theme": {
     "light": "Claro",

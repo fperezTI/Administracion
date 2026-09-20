@@ -58,12 +58,14 @@ export default async function MyRequestsPage() {
   }
 
   return (
-    <div className="mx-auto max-w-2xl p-8">
+    <>
       <AppHeader title="Mis solicitudes" subtitle="Solicitudes internas que has hecho — asignación, préstamo o mantenimiento." />
+    <div className="mx-auto max-w-3xl px-8 pb-8">
       <div className="mb-4 flex justify-end">
         <Button render={<Link href="/requests/new" />}>Nueva solicitud</Button>
       </div>
       {content}
     </div>
+    </>
   );
 }

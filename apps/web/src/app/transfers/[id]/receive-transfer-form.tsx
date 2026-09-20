@@ -20,7 +20,7 @@ export function ReceiveTransferForm({ transferId }: { transferId: string }) {
       <p className="text-sm font-medium">Recibir en esta empresa</p>
       <SignatureMechanismFields />
       <div className="flex items-center justify-between">
-        <p className="text-sm">{state.error && <span className="text-destructive">{state.error}</span>}</p>
+        <p className="text-sm" role="alert">{state.error && <span className="text-destructive">{state.error}</span>}</p>
         <Button type="submit" disabled={pending}>
           {pending ? "Confirmando…" : "Confirmar recepción"}
         </Button>

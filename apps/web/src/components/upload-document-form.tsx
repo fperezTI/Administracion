@@ -24,12 +24,13 @@ export function UploadDocumentForm({
         type="file"
         name="file"
         required
+        aria-label="Archivo a subir"
         className="border-input bg-transparent file:bg-secondary file:text-secondary-foreground flex-1 rounded-lg border text-sm outline-none file:mr-3 file:h-8 file:cursor-pointer file:rounded-l-lg file:border-0 file:px-3"
       />
       <Button type="submit" size="sm" disabled={pending}>
         {pending ? "Cargando…" : "Cargar"}
       </Button>
-      {state.error && <p className="text-destructive text-xs">{state.error}</p>}
+      {state.error && <p className="text-destructive text-xs" role="alert">{state.error}</p>}
     </form>
   );
 }

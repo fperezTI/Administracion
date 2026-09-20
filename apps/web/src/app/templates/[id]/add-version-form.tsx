@@ -21,7 +21,7 @@ export function AddVersionForm({ templateId }: { templateId: string }) {
         className="rounded-lg border border-input bg-transparent px-2.5 py-2 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 dark:bg-input/30"
       />
       <div className="flex items-center justify-between">
-        <p className="text-sm">
+        <p className="text-sm" role="status">
           {state.error && <span className="text-destructive">{state.error}</span>}
           {!state.error && state.success && <span className="text-success">Versión agregada.</span>}
         </p>

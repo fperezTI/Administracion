@@ -51,9 +51,11 @@ export default async function NotificationsPage() {
   }
 
   return (
-    <div className="mx-auto max-w-2xl p-8">
+    <>
       <AppHeader title="Mis notificaciones" subtitle="Aprobaciones pendientes y resultados de tus propias solicitudes." />
+    <div className="mx-auto max-w-3xl px-8 pb-8">
       {content}
     </div>
+    </>
   );
 }

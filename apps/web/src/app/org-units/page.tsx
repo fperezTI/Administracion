@@ -8,10 +8,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { CreateOrgUnitForm } from "./create-org-unit-form";
+import { MoveOrgUnitSelect } from "./move-org-unit-select";
 import { moveOrgUnitAction, toggleOrgUnitActiveAction } from "./actions";
-
-const selectClassName =
-  "h-7 rounded-lg border border-input bg-transparent px-2 text-xs outline-none dark:bg-input/30";
 
 export default async function OrgUnitsPage({ searchParams }: { searchParams: Promise<{ companyId?: string }> }) {
   const accessToken = await requireAccessToken();
@@ -30,11 +28,9 @@ export default async function OrgUnitsPage({ searchParams }: { searchParams: Pro
   try {
     const [tree, types] = await Promise.all([getOrgUnitTree(accessToken, companyId), getOrgUnitTypes(accessToken)]);
     const options = flattenOrgUnitTree(tree);
-    const optionsById = new Map(options.map((o) => [o.id, o]));
 
     content = (
       <>
-        <div className="rounded-lg border">
           <Table>
             <TableHeader>
               <TableRow>
@@ -68,20 +64,11 @@ export default async function OrgUnitsPage({ searchParams }: { searchParams: Pro
                       </TableCell>
                       <TableCell>
                         <form action={moveOrgUnitAction.bind(null, node.id)} className="flex items-center gap-1">
-                          <select
+                          <MoveOrgUnitSelect
                             name={`newParent:${node.id}`}
                             defaultValue={node.parentOrgUnitId ?? ""}
-                            className={selectClassName}
-                          >
-                            <option value="">Ninguna (raíz)</option>
-                            {options
-                              .filter((o) => o.id !== node.id)
-                              .map((o) => (
-                                <option key={o.id} value={o.id}>
-                                  {optionsById.get(o.id)?.label}
-                                </option>
-                              ))}
-                          </select>
+                            options={options.filter((o) => o.id !== node.id)}
+                          />
                           <Button type="submit" variant="outline" size="xs">
                             Mover
                           </Button>
@@ -100,7 +87,6 @@ export default async function OrgUnitsPage({ searchParams }: { searchParams: Pro
               )}
             </TableBody>
           </Table>
-        </div>
 
         <CreateOrgUnitForm companyId={companyId} types={types} orgUnitOptions={options} />
       </>
@@ -117,13 +103,15 @@ export default async function OrgUnitsPage({ searchParams }: { searchParams: Pro
   }
 
   return (
-    <div className="mx-auto flex max-w-4xl flex-col gap-4 p-8">
+    <>
       <AppHeader
         title="Estructura organizacional"
         subtitle="Jerarquía de unidades organizacionales por empresa."
         activeCompany={<CompanySwitcher companies={me.companies} currentCompanyId={companyId} />}
       />
+    <div className="mx-auto flex max-w-6xl flex-col gap-4 px-8 pb-8">
       {content}
     </div>
+    </>
   );
 }

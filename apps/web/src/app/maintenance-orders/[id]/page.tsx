@@ -26,8 +26,9 @@ export default async function MaintenanceOrderDetailPage({ params }: { params: P
   }
 
   return (
-    <div className="mx-auto flex max-w-2xl flex-col gap-4 p-8">
+    <>
       <AppHeader title="Mantenimiento" />
+    <div className="mx-auto flex max-w-3xl flex-col gap-4 px-8 pb-8">
       <div className="mb-2 flex justify-end">
         <Button variant="outline" render={<Link href={`/maintenance-orders?companyId=${order.companyId}`} />}>
           ← Volver
@@ -101,5 +102,6 @@ export default async function MaintenanceOrderDetailPage({ params }: { params: P
         revalidatePathTarget={`/maintenance-orders/${id}`}
       />
     </div>
+    </>
   );
 }

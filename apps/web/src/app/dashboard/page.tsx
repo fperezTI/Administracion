@@ -1,58 +1,59 @@
 import { getTranslations } from "next-intl/server";
 import { requireAccessToken } from "@/lib/require-session";
 import { AppHeader } from "@/components/app-header";
-import { ApiError, getMe } from "@/lib/api";
+import { StatTile } from "@/components/ui/stat-tile";
+import { ApiError, getExecutiveDashboard, getMe } from "@/lib/api";
+
+/** Único permiso que controla la visibilidad de este tablero — quien no lo tenga ve la página
+ * en blanco (sin datos operativos ni de perfil), a propósito: es la vista de entrada del sistema
+ * y no todos los usuarios deben ver métricas de toda la operación. */
+const EXECUTIVE_DASHBOARD_PERMISSION = "Dashboards.ViewExecutive";
 
 export default async function DashboardPage() {
   const accessToken = await requireAccessToken();
   const t = await getTranslations("Dashboard");
 
-  let body: React.ReactNode;
+  let body: React.ReactNode = null;
   try {
     const me = await getMe(accessToken);
-    body = (
-      <div className="flex flex-col gap-4">
-        <div className="rounded-lg border px-4 py-3 text-sm">
-          <p className="text-muted-foreground mb-1 font-medium">{t("profileHeading")}</p>
-          <p>
-            {me.displayName} — {me.email}
-          </p>
+
+    if (me.permissionCodes.includes(EXECUTIVE_DASHBOARD_PERMISSION)) {
+      const kpis = await getExecutiveDashboard(accessToken, me.activeCompanyId ?? undefined);
+      body = (
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+          <StatTile label={t("totalAssets")} value={kpis.totalAssets.toLocaleString("es-MX")} />
+          <StatTile label={t("assignedAssets")} value={kpis.assignedAssets.toLocaleString("es-MX")} />
+          <StatTile label={t("availableAssets")} value={kpis.availableAssets.toLocaleString("es-MX")} />
+          <StatTile
+            label={t("pendingApprovals")}
+            value={kpis.pendingApprovals.toLocaleString("es-MX")}
+            tone={kpis.pendingApprovals > 0 ? "warning" : "neutral"}
+          />
+          <StatTile label={t("openMaintenanceOrders")} value={kpis.openMaintenanceOrders.toLocaleString("es-MX")} />
+          <StatTile
+            label={t("expiringWarranties")}
+            value={kpis.expiringWarranties.toLocaleString("es-MX")}
+            tone={kpis.expiringWarranties > 0 ? "warning" : "neutral"}
+          />
+          <StatTile
+            label={t("lowStockConsumables")}
+            value={kpis.lowStockConsumables.toLocaleString("es-MX")}
+            tone={kpis.lowStockConsumables > 0 ? "destructive" : "neutral"}
+          />
         </div>
-        <div className="rounded-lg border px-4 py-3 text-sm">
-          <p className="text-muted-foreground mb-1 font-medium">{t("permissionsHeading")}</p>
-          {me.permissionCodes.length > 0 ? (
-            <ul className="list-inside list-disc">
-              {me.permissionCodes.map((code) => (
-                <li key={code}>{code}</li>
-              ))}
-            </ul>
-          ) : (
-            <p>{t("noPermissions")}</p>
-          )}
-        </div>
-        <div className="rounded-lg border px-4 py-3 text-sm">
-          <p className="text-muted-foreground mb-1 font-medium">{t("companiesHeading")}</p>
-          {me.companies.length > 0 ? (
-            <ul className="list-inside list-disc">
-              {me.companies.map((company) => (
-                <li key={company.companyId}>{company.tradeName}</li>
-              ))}
-            </ul>
-          ) : (
-            <p>{t("noCompanies")}</p>
-          )}
-        </div>
-      </div>
-    );
+      );
+    }
   } catch (error) {
     const status = error instanceof ApiError ? error.status : undefined;
-    body = <p className="text-destructive text-sm">{status === 403 ? t("accountDisabled") : t("apiError")}</p>;
+    body = status === 403 ? <p className="text-destructive text-sm">{t("accountDisabled")}</p> : <p className="text-destructive text-sm">{t("apiError")}</p>;
   }
 
   return (
-    <div className="mx-auto flex max-w-lg flex-col gap-6 p-8">
+    <>
       <AppHeader title={t("title")} />
+    <div className="mx-auto flex max-w-6xl flex-col gap-6 px-8 pb-8">
       {body}
     </div>
+    </>
   );
 }

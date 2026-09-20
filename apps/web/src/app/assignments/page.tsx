@@ -27,14 +27,13 @@ export default async function AssignmentsPage({ searchParams }: { searchParams: 
     const assignments = await getAssignments(accessToken, { companyId, pageSize: 100 });
 
     content = (
-      <div className="rounded-lg border">
         <Table>
           <TableHeader>
             <TableRow>
               <TableHead>Folio</TableHead>
               <TableHead>Asignado a</TableHead>
               <TableHead>Estado</TableHead>
-              <TableHead>Fecha</TableHead>
+              <TableHead className="hidden sm:table-cell">Fecha</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -56,13 +55,12 @@ export default async function AssignmentsPage({ searchParams }: { searchParams: 
                   <TableCell>
                     <Badge variant={assignmentStatusBadgeVariant(a.status)}>{ASSIGNMENT_STATUS_LABELS[a.status]}</Badge>
                   </TableCell>
-                  <TableCell>{new Date(a.assignedAtUtc).toLocaleDateString("es-MX")}</TableCell>
+                  <TableCell className="hidden sm:table-cell">{new Date(a.assignedAtUtc).toLocaleDateString("es-MX")}</TableCell>
                 </TableRow>
               ))
             )}
           </TableBody>
         </Table>
-      </div>
     );
   } catch (error) {
     const status = error instanceof ApiError ? error.status : undefined;
@@ -74,16 +72,18 @@ export default async function AssignmentsPage({ searchParams }: { searchParams: 
   }
 
   return (
-    <div className="mx-auto max-w-4xl p-8">
+    <>
       <AppHeader
         title="Asignaciones"
         subtitle="Activos entregados en resguardo a una persona."
         activeCompany={<CompanySwitcher companies={me.companies} currentCompanyId={companyId} />}
       />
+    <div className="mx-auto max-w-6xl px-8 pb-8">
       <div className="mb-4 flex justify-end">
         <Button render={<Link href={`/assignments/new?companyId=${companyId}`} />}>Nueva asignación</Button>
       </div>
       {content}
     </div>
+    </>
   );
 }

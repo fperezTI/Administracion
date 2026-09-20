@@ -12,7 +12,6 @@ export default async function UsersPage() {
   try {
     const users = await getUsers(accessToken, { pageSize: 100 });
     content = (
-      <div className="rounded-lg border">
         <Table>
           <TableHeader>
             <TableRow>
@@ -49,7 +48,6 @@ export default async function UsersPage() {
             )}
           </TableBody>
         </Table>
-      </div>
     );
   } catch (error) {
     const status = error instanceof ApiError ? error.status : undefined;
@@ -61,9 +59,11 @@ export default async function UsersPage() {
   }
 
   return (
-    <div className="mx-auto max-w-3xl p-8">
+    <>
       <AppHeader title="Usuarios" subtitle="Los perfiles se crean automáticamente en el primer inicio de sesión con Entra ID." />
+    <div className="mx-auto max-w-6xl px-8 pb-8">
       {content}
     </div>
+    </>
   );
 }

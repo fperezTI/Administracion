@@ -27,13 +27,12 @@ export default async function LoansPage({ searchParams }: { searchParams: Promis
     const loans = await getLoans(accessToken, { companyId, pageSize: 100 });
 
     content = (
-      <div className="rounded-lg border">
         <Table>
           <TableHeader>
             <TableRow>
               <TableHead>Folio</TableHead>
               <TableHead>Prestado a</TableHead>
-              <TableHead>Devolución esperada</TableHead>
+              <TableHead className="hidden sm:table-cell">Devolución esperada</TableHead>
               <TableHead>Estado</TableHead>
             </TableRow>
           </TableHeader>
@@ -53,7 +52,7 @@ export default async function LoansPage({ searchParams }: { searchParams: Promis
                     </Link>
                   </TableCell>
                   <TableCell>{loan.borrowerDisplayName}</TableCell>
-                  <TableCell>{loan.expectedReturnDate}</TableCell>
+                  <TableCell className="hidden sm:table-cell">{loan.expectedReturnDate}</TableCell>
                   <TableCell>
                     <Badge variant={loanStatusBadgeVariant(loan.status)}>{LOAN_STATUS_LABELS[loan.status]}</Badge>
                   </TableCell>
@@ -62,7 +61,6 @@ export default async function LoansPage({ searchParams }: { searchParams: Promis
             )}
           </TableBody>
         </Table>
-      </div>
     );
   } catch (error) {
     const status = error instanceof ApiError ? error.status : undefined;
@@ -74,16 +72,18 @@ export default async function LoansPage({ searchParams }: { searchParams: Promis
   }
 
   return (
-    <div className="mx-auto max-w-4xl p-8">
+    <>
       <AppHeader
         title="Préstamos"
         subtitle="Préstamos de corto plazo, sin firma de recepción."
         activeCompany={<CompanySwitcher companies={me.companies} currentCompanyId={companyId} />}
       />
+    <div className="mx-auto max-w-6xl px-8 pb-8">
       <div className="mb-4 flex justify-end">
         <Button render={<Link href={`/loans/new?companyId=${companyId}`} />}>Nuevo préstamo</Button>
       </div>
       {content}
     </div>
+    </>
   );
 }

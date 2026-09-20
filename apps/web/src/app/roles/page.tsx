@@ -13,7 +13,6 @@ export default async function RolesPage() {
   try {
     const roles = await getRoles(accessToken, { pageSize: 100 });
     content = (
-      <div className="rounded-lg border">
         <Table>
           <TableHeader>
             <TableRow>
@@ -48,7 +47,6 @@ export default async function RolesPage() {
             )}
           </TableBody>
         </Table>
-      </div>
     );
   } catch (error) {
     const status = error instanceof ApiError ? error.status : undefined;
@@ -60,12 +58,14 @@ export default async function RolesPage() {
   }
 
   return (
-    <div className="mx-auto max-w-3xl p-8">
+    <>
       <AppHeader title="Roles" subtitle="Los permisos son globales — la empresa no acota qué puede hacer un rol." />
+    <div className="mx-auto max-w-6xl px-8 pb-8">
       <div className="mb-4 flex justify-end">
         <Button render={<Link href="/roles/new" />}>Nuevo rol</Button>
       </div>
       {content}
     </div>
+    </>
   );
 }

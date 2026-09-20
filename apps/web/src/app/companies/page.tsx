@@ -14,7 +14,6 @@ export default async function CompaniesPage() {
   try {
     const companies = await getCompanies(accessToken, { pageSize: 100 });
     content = (
-      <div className="rounded-lg border">
         <Table>
           <TableHeader>
             <TableRow>
@@ -59,7 +58,6 @@ export default async function CompaniesPage() {
             )}
           </TableBody>
         </Table>
-      </div>
     );
   } catch (error) {
     const status = error instanceof ApiError ? error.status : undefined;
@@ -71,12 +69,14 @@ export default async function CompaniesPage() {
   }
 
   return (
-    <div className="mx-auto max-w-4xl p-8">
+    <>
       <AppHeader title="Empresas" subtitle="Hasta 50 empresas dentro de un único tenant de Entra ID." />
+    <div className="mx-auto max-w-6xl px-8 pb-8">
       <div className="mb-4 flex justify-end">
         <Button render={<Link href="/companies/new" />}>Nueva empresa</Button>
       </div>
       {content}
     </div>
+    </>
   );
 }

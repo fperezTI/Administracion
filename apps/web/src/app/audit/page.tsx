@@ -26,7 +26,6 @@ export default async function AuditPage({
     });
 
     content = (
-      <div className="rounded-lg border">
         <Table>
           <TableHeader>
             <TableRow>
@@ -60,7 +59,6 @@ export default async function AuditPage({
             )}
           </TableBody>
         </Table>
-      </div>
     );
   } catch (error) {
     const status = error instanceof ApiError ? error.status : undefined;
@@ -72,8 +70,9 @@ export default async function AuditPage({
   }
 
   return (
-    <div className="mx-auto max-w-5xl p-8">
+    <>
       <AppHeader title="Auditoría" subtitle="Registro de acciones sensibles ejecutadas en el sistema, éxito o fracaso." />
+    <div className="mx-auto max-w-6xl px-8 pb-8">
       <form method="GET" className="mb-4 flex flex-wrap items-end gap-3">
         <div className="flex flex-col gap-1">
           <Label htmlFor="commandName">Comando</Label>
@@ -93,5 +92,6 @@ export default async function AuditPage({
       </form>
       {content}
     </div>
+    </>
   );
 }

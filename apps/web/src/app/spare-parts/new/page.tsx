@@ -24,12 +24,13 @@ export default async function NewSparePartPage({ searchParams }: { searchParams:
   const warehouses = orgUnits.filter((o) => o.orgUnitTypeName === "Almacén");
 
   return (
-    <div className="mx-auto max-w-md p-8">
+    <>
       <AppHeader
         title="Nueva refacción"
         subtitle="Refacción serializada, se registra en existencia."
         activeCompany={<CompanySwitcher companies={me.companies} currentCompanyId={companyId} />}
       />
+    <div className="mx-auto max-w-xl px-8 pb-8">
       <div className="mb-4 flex justify-end">
         <Button variant="outline" render={<Link href={`/spare-parts?companyId=${companyId}`} />}>
           ← Volver
@@ -47,5 +48,6 @@ export default async function NewSparePartPage({ searchParams }: { searchParams:
         <CreateSparePartForm warehouses={warehouses} companyId={companyId} />
       )}
     </div>
+    </>
   );
 }

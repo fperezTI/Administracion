@@ -27,7 +27,6 @@ export default async function WarrantiesPage({ searchParams }: { searchParams: P
     const today = new Date().toISOString().slice(0, 10);
 
     content = (
-      <div className="rounded-lg border">
         <Table>
           <TableHeader>
             <TableRow>
@@ -64,7 +63,6 @@ export default async function WarrantiesPage({ searchParams }: { searchParams: P
             )}
           </TableBody>
         </Table>
-      </div>
     );
   } catch (error) {
     const status = error instanceof ApiError ? error.status : undefined;
@@ -76,16 +74,18 @@ export default async function WarrantiesPage({ searchParams }: { searchParams: P
   }
 
   return (
-    <div className="mx-auto max-w-3xl p-8">
+    <>
       <AppHeader
         title="Garantías"
         subtitle="Coberturas de garantía o soporte registradas por activo."
         activeCompany={<CompanySwitcher companies={me.companies} currentCompanyId={companyId} />}
       />
+    <div className="mx-auto max-w-6xl px-8 pb-8">
       <div className="mb-4 flex justify-end">
         <Button render={<Link href={`/warranties/new?companyId=${companyId}`} />}>Nueva garantía</Button>
       </div>
       {content}
     </div>
+    </>
   );
 }

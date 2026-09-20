@@ -5,12 +5,10 @@ import type { ApprovalMode, MeCompany, RoleSummary } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { createApprovalFlowAction, type CreateApprovalFlowActionState } from "./actions";
 
 const initialState: CreateApprovalFlowActionState = { error: null };
-
-const selectClassName =
-  "h-8 rounded-lg border border-input bg-transparent px-2.5 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 dark:bg-input/30";
 
 export function CreateApprovalFlowForm({ roles, companies }: { roles: RoleSummary[]; companies: MeCompany[] }) {
   const [state, formAction, pending] = useActionState(createApprovalFlowAction, initialState);
@@ -34,37 +32,47 @@ export function CreateApprovalFlowForm({ roles, companies }: { roles: RoleSummar
 
   return (
     <form action={formAction} className="flex flex-col gap-4">
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="flex flex-col gap-1">
           <Label htmlFor="key">Clave</Label>
           <Input id="key" name="key" required maxLength={100} placeholder="p. ej. asset.decommission" />
         </div>
         <div className="flex flex-col gap-1">
           <Label htmlFor="companyId">Alcance</Label>
-          <select id="companyId" name="companyId" defaultValue="" className={selectClassName}>
-            <option value="">Todas las empresas</option>
-            {companies.map((c) => (
-              <option key={c.companyId} value={c.companyId}>
-                {c.tradeName}
-              </option>
-            ))}
-          </select>
+          <Select name="companyId" defaultValue="">
+            <SelectTrigger id="companyId" className="w-full">
+              <SelectValue>
+                {(value: string) => (value === "" ? "Todas las empresas" : companies.find((c) => c.companyId === value)?.tradeName)}
+              </SelectValue>
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="">Todas las empresas</SelectItem>
+              {companies.map((c) => (
+                <SelectItem key={c.companyId} value={c.companyId}>
+                  {c.tradeName}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="flex flex-col gap-1">
           <Label htmlFor="mode">Modo</Label>
-          <select
-            id="mode"
-            name="mode"
-            value={mode}
-            onChange={(e) => setMode(e.target.value as ApprovalMode)}
-            className={selectClassName}
-          >
-            <option value="Parallel">Paralelo (cualquier orden)</option>
-            <option value="Sequential">Secuencial (en el orden de la lista)</option>
-          </select>
+          <Select name="mode" value={mode} onValueChange={(value) => setMode(value as ApprovalMode)}>
+            <SelectTrigger id="mode" className="w-full">
+              <SelectValue>
+                {(value: ApprovalMode) =>
+                  value === "Parallel" ? "Paralelo (cualquier orden)" : "Secuencial (en el orden de la lista)"
+                }
+              </SelectValue>
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="Parallel">Paralelo (cualquier orden)</SelectItem>
+              <SelectItem value="Sequential">Secuencial (en el orden de la lista)</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
         <div className="flex flex-col gap-1">
           <Label htmlFor="requiredApprovals">Aprobaciones requeridas</Label>
@@ -89,19 +97,18 @@ export function CreateApprovalFlowForm({ roles, companies }: { roles: RoleSummar
         {roleSlots.map((roleId, index) => (
           <div key={index} className="flex items-center gap-2">
             {mode === "Sequential" && <span className="text-muted-foreground w-5 text-sm">{index + 1}.</span>}
-            <select
-              name="approverRoleIds"
-              value={roleId}
-              onChange={(e) => updateSlot(index, e.target.value)}
-              className={`${selectClassName} flex-1`}
-              required
-            >
-              {roles.map((role) => (
-                <option key={role.id} value={role.id}>
-                  {role.name}
-                </option>
-              ))}
-            </select>
+            <Select name="approverRoleIds" value={roleId} onValueChange={(value) => updateSlot(index, value ?? "")} required>
+              <SelectTrigger className="w-full flex-1">
+                <SelectValue>{(value: string) => roles.find((r) => r.id === value)?.name}</SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                {roles.map((role) => (
+                  <SelectItem key={role.id} value={role.id}>
+                    {role.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
             {roleSlots.length > 1 && (
               <Button type="button" variant="outline" size="sm" onClick={() => removeSlot(index)}>
                 Quitar
@@ -119,7 +126,7 @@ export function CreateApprovalFlowForm({ roles, companies }: { roles: RoleSummar
         Exigir justificación al solicitar
       </label>
 
-      {state.error && <p className="text-destructive text-sm">{state.error}</p>}
+      {state.error && <p className="text-destructive text-sm" role="alert">{state.error}</p>}
 
       <div className="flex justify-end">
         <Button type="submit" disabled={pending}>

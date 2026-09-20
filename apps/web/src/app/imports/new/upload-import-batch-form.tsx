@@ -4,6 +4,7 @@ import { useState, useActionState } from "react";
 import { getImportTemplateDownloadUrl, type AssetCategorySummary } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { uploadImportBatchAction, type UploadImportBatchActionState } from "./actions";
 
 const initialState: UploadImportBatchActionState = { error: null };
@@ -21,18 +22,18 @@ export function UploadImportBatchForm({ companyId, categories }: { companyId: st
           Descarga la plantilla con las columnas exactas (incluye los campos personalizados de la categoría elegida).
         </p>
         <div className="flex items-end gap-2">
-          <select
-            id="templateCategoryId"
-            value={templateCategoryId}
-            onChange={(e) => setTemplateCategoryId(e.target.value)}
-            className="border-input h-8 flex-1 rounded-lg border bg-transparent px-2.5 text-sm outline-none dark:bg-input/30"
-          >
-            {categories.map((category) => (
-              <option key={category.id} value={category.id}>
-                {category.name}
-              </option>
-            ))}
-          </select>
+          <Select value={templateCategoryId} onValueChange={(value) => setTemplateCategoryId(value ?? "")}>
+            <SelectTrigger id="templateCategoryId" className="w-full flex-1">
+              <SelectValue>{(value: string) => categories.find((c) => c.id === value)?.name}</SelectValue>
+            </SelectTrigger>
+            <SelectContent>
+              {categories.map((category) => (
+                <SelectItem key={category.id} value={category.id}>
+                  {category.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
           <Button
             type="button"
             variant="outline"
@@ -55,7 +56,7 @@ export function UploadImportBatchForm({ companyId, categories }: { companyId: st
           required
           className="border-input bg-transparent file:bg-secondary file:text-secondary-foreground rounded-lg border text-sm outline-none file:mr-3 file:h-8 file:cursor-pointer file:rounded-l-lg file:border-0 file:px-3"
         />
-        {state.error && <p className="text-destructive text-sm">{state.error}</p>}
+        {state.error && <p className="text-destructive text-sm" role="alert">{state.error}</p>}
         <Button type="submit" disabled={pending}>
           {pending ? "Subiendo…" : "Subir e iniciar validación"}
         </Button>

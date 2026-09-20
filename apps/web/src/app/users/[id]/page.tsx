@@ -6,9 +6,7 @@ import { AppHeader } from "@/components/app-header";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { anonymizeUserAction, assignRoleAction, grantCompanyAction, removeRoleAction, revokeCompanyAction } from "./actions";
-
-const selectClassName =
-  "h-8 rounded-lg border border-input bg-transparent px-2.5 text-sm outline-none dark:bg-input/30";
+import { AssignSelect } from "./assign-select";
 
 export default async function UserDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const accessToken = await requireAccessToken();
@@ -35,8 +33,9 @@ export default async function UserDetailPage({ params }: { params: Promise<{ id:
   const grantableCompanies = allCompanies.items.filter((c) => !user.companyIds.includes(c.id));
 
   return (
-    <div className="mx-auto flex max-w-2xl flex-col gap-4 p-8">
+    <>
       <AppHeader title="Usuarios" />
+    <div className="mx-auto flex max-w-3xl flex-col gap-4 px-8 pb-8">
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-lg font-semibold tracking-tight">{user.displayName}</h2>
@@ -65,16 +64,11 @@ export default async function UserDetailPage({ params }: { params: Promise<{ id:
         )}
         {assignableRoles.length > 0 && (
           <form action={assignRoleAction.bind(null, id)} className="mt-2 flex items-center gap-2">
-            <select name="roleId" className={selectClassName} defaultValue="" required>
-              <option value="" disabled>
-                Selecciona un rol
-              </option>
-              {assignableRoles.map((role) => (
-                <option key={role.id} value={role.id}>
-                  {role.name}
-                </option>
-              ))}
-            </select>
+            <AssignSelect
+              name="roleId"
+              placeholder="Selecciona un rol"
+              options={assignableRoles.map((role) => ({ id: role.id, label: role.name }))}
+            />
             <Button type="submit" variant="outline" size="sm">
               Asignar
             </Button>
@@ -102,16 +96,11 @@ export default async function UserDetailPage({ params }: { params: Promise<{ id:
         )}
         {grantableCompanies.length > 0 && (
           <form action={grantCompanyAction.bind(null, id)} className="mt-2 flex items-center gap-2">
-            <select name="companyId" className={selectClassName} defaultValue="" required>
-              <option value="" disabled>
-                Selecciona una empresa
-              </option>
-              {grantableCompanies.map((company) => (
-                <option key={company.id} value={company.id}>
-                  {company.tradeName}
-                </option>
-              ))}
-            </select>
+            <AssignSelect
+              name="companyId"
+              placeholder="Selecciona una empresa"
+              options={grantableCompanies.map((company) => ({ id: company.id, label: company.tradeName }))}
+            />
             <Button type="submit" variant="outline" size="sm">
               Otorgar
             </Button>
@@ -145,5 +134,6 @@ export default async function UserDetailPage({ params }: { params: Promise<{ id:
         ← Volver
       </Button>
     </div>
+    </>
   );
 }

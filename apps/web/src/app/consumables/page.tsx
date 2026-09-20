@@ -26,7 +26,6 @@ export default async function ConsumablesPage({ searchParams }: { searchParams: 
     const consumables = await getConsumables(accessToken, companyId);
 
     content = (
-      <div className="rounded-lg border">
         <Table>
           <TableHeader>
             <TableRow>
@@ -69,7 +68,6 @@ export default async function ConsumablesPage({ searchParams }: { searchParams: 
             )}
           </TableBody>
         </Table>
-      </div>
     );
   } catch (error) {
     const status = error instanceof ApiError ? error.status : undefined;
@@ -81,16 +79,18 @@ export default async function ConsumablesPage({ searchParams }: { searchParams: 
   }
 
   return (
-    <div className="mx-auto max-w-3xl p-8">
+    <>
       <AppHeader
         title="Consumibles"
         subtitle="Existencia por consumible — cambia solo mediante movimientos registrados."
         activeCompany={<CompanySwitcher companies={me.companies} currentCompanyId={companyId} />}
       />
+    <div className="mx-auto max-w-6xl px-8 pb-8">
       <div className="mb-4 flex justify-end">
         <Button render={<Link href={`/consumables/new?companyId=${companyId}`} />}>Nuevo consumible</Button>
       </div>
       {content}
     </div>
+    </>
   );
 }

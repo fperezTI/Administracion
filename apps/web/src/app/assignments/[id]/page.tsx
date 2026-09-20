@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { requireAccessToken } from "@/lib/require-session";
 import { ApiError, getAssignmentById } from "@/lib/api";
 import { AppHeader } from "@/components/app-header";
+import { Breadcrumbs } from "@/components/layout/breadcrumbs";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -25,8 +26,10 @@ export default async function AssignmentDetailPage({ params }: { params: Promise
   }
 
   return (
-    <div className="mx-auto flex max-w-2xl flex-col gap-4 p-8">
+    <>
       <AppHeader title="Asignación" />
+    <div className="mx-auto flex max-w-3xl flex-col gap-4 px-8 pb-8">
+      <Breadcrumbs items={[{ label: "Asignaciones", href: "/assignments" }, { label: assignment.assetFolio }]} />
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <Link href={`/assets/${assignment.assetId}`} className="hover:text-primary font-mono text-lg font-semibold hover:underline">
@@ -84,5 +87,6 @@ export default async function AssignmentDetailPage({ params }: { params: Promise
 
       {assignment.status === "Accepted" && <ReturnAssignmentForm assignmentId={assignment.id} />}
     </div>
+    </>
   );
 }

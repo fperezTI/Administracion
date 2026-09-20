@@ -5,12 +5,10 @@ import type { AssetSummary, UserSummary } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { createLoanAction, type CreateLoanActionState } from "./actions";
 
 const initialState: CreateLoanActionState = { error: null };
-
-const selectClassName =
-  "h-8 rounded-lg border border-input bg-transparent px-2.5 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 dark:bg-input/30";
 
 export function CreateLoanForm({ assets, users }: { assets: AssetSummary[]; users: UserSummary[] }) {
   const [state, formAction, pending] = useActionState(createLoanAction, initialState);
@@ -20,16 +18,23 @@ export function CreateLoanForm({ assets, users }: { assets: AssetSummary[]; user
     <form action={formAction} className="flex flex-col gap-4">
       <div className="flex flex-col gap-1">
         <Label htmlFor="assetId">Activo (debe estar en almacén)</Label>
-        <select id="assetId" name="assetId" className={selectClassName} required>
-          <option value="" disabled defaultValue="">
-            Selecciona
-          </option>
-          {assets.map((asset) => (
-            <option key={asset.id} value={asset.id}>
-              {asset.internalFolio} — {asset.brand} {asset.model}
-            </option>
-          ))}
-        </select>
+        <Select name="assetId" required>
+          <SelectTrigger id="assetId" className="w-full">
+            <SelectValue placeholder="Selecciona">
+              {(value: string) => {
+                const asset = assets.find((a) => a.id === value);
+                return asset ? `${asset.internalFolio} — ${asset.brand} ${asset.model}` : null;
+              }}
+            </SelectValue>
+          </SelectTrigger>
+          <SelectContent>
+            {assets.map((asset) => (
+              <SelectItem key={asset.id} value={asset.id}>
+                {asset.internalFolio} — {asset.brand} {asset.model}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
         {assets.length === 0 && (
           <p className="text-muted-foreground text-xs">No hay activos en almacén disponibles para prestar.</p>
         )}
@@ -37,16 +42,23 @@ export function CreateLoanForm({ assets, users }: { assets: AssetSummary[]; user
 
       <div className="flex flex-col gap-1">
         <Label htmlFor="borrowerUserId">Destinatario</Label>
-        <select id="borrowerUserId" name="borrowerUserId" className={selectClassName} required>
-          <option value="" disabled defaultValue="">
-            Selecciona
-          </option>
-          {users.map((user) => (
-            <option key={user.id} value={user.id}>
-              {user.displayName} — {user.email}
-            </option>
-          ))}
-        </select>
+        <Select name="borrowerUserId" required>
+          <SelectTrigger id="borrowerUserId" className="w-full">
+            <SelectValue placeholder="Selecciona">
+              {(value: string) => {
+                const user = users.find((u) => u.id === value);
+                return user ? `${user.displayName} — ${user.email}` : null;
+              }}
+            </SelectValue>
+          </SelectTrigger>
+          <SelectContent>
+            {users.map((user) => (
+              <SelectItem key={user.id} value={user.id}>
+                {user.displayName} — {user.email}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
 
       <div className="flex flex-col gap-1">
@@ -59,7 +71,7 @@ export function CreateLoanForm({ assets, users }: { assets: AssetSummary[]; user
         <Input id="notes" name="notes" maxLength={500} />
       </div>
 
-      {state.error && <p className="text-destructive text-sm">{state.error}</p>}
+      {state.error && <p className="text-destructive text-sm" role="alert">{state.error}</p>}
 
       <div className="flex justify-end">
         <Button type="submit" disabled={pending}>

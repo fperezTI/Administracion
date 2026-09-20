@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { requireAccessToken } from "@/lib/require-session";
 import { ApiError, getLoanById } from "@/lib/api";
 import { AppHeader } from "@/components/app-header";
+import { Breadcrumbs } from "@/components/layout/breadcrumbs";
 import { Badge } from "@/components/ui/badge";
 import { LOAN_STATUS_LABELS, loanStatusBadgeVariant } from "@/lib/inventory-labels";
 import { ReturnLoanForm } from "./return-loan-form";
@@ -22,8 +23,10 @@ export default async function LoanDetailPage({ params }: { params: Promise<{ id:
   }
 
   return (
-    <div className="mx-auto flex max-w-2xl flex-col gap-4 p-8">
+    <>
       <AppHeader title="Préstamo" />
+    <div className="mx-auto flex max-w-3xl flex-col gap-4 px-8 pb-8">
+      <Breadcrumbs items={[{ label: "Préstamos", href: "/loans" }, { label: loan.assetFolio }]} />
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <Link href={`/assets/${loan.assetId}`} className="hover:text-primary font-mono text-lg font-semibold hover:underline">
@@ -34,7 +37,7 @@ export default async function LoanDetailPage({ params }: { params: Promise<{ id:
         <Badge variant={loanStatusBadgeVariant(loan.status)}>{LOAN_STATUS_LABELS[loan.status]}</Badge>
       </div>
 
-      <div className="grid grid-cols-2 gap-4 rounded-lg border p-4 text-sm">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 rounded-lg border p-4 text-sm">
         <div>
           <p className="text-muted-foreground text-xs">Fecha de préstamo</p>
           <p>{new Date(loan.loanedAtUtc).toLocaleDateString("es-MX")}</p>
@@ -53,5 +56,6 @@ export default async function LoanDetailPage({ params }: { params: Promise<{ id:
 
       {loan.status === "Active" && <ReturnLoanForm loanId={loan.id} />}
     </div>
+    </>
   );
 }

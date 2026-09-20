@@ -1,0 +1,14 @@
+flowchart TD
+    A[Inicio: abrir la aplicación] --> B[Iniciar sesión con Microsoft]
+    B --> C{¿Es el primer login\nen la vida del sistema?}
+    C -->|Sí| D[Se crea automáticamente\nun superadministrador\ncon todos los permisos]
+    D --> E[Crear la primera empresa\nen Empresas]
+    E --> F[Otorgarse acceso a esa empresa\ndesde Usuarios]
+    F --> G[Configurar estructura organizacional,\nroles y categorías de activos]
+    C -->|No| H{¿Tiene empresa\ny permisos asignados?}
+    H -->|No| I[Pantalla muestra: 'Todavía no tienes acceso a ninguna empresa']
+    I --> J[Pedir a un administrador\nque otorgue acceso]
+    H -->|Sí| K[Dashboard con datos\nde las empresas accesibles]
+    G --> K
+    J --> H
+    K --> L[Operar los módulos:\nActivos, Movimientos,\nMantenimiento, Solicitudes, Datos]

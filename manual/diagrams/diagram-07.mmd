@@ -1,0 +1,8 @@
+stateDiagram-v2
+    [*] --> PendingApproval: Create() — sin fase de borrador
+    PendingApproval --> Rejected: La aprobación asociada se rechaza
+    PendingApproval --> Cancelled: El propio solicitante la cancela
+    PendingApproval --> Fulfilled: La aprobación asociada se completa
+    Rejected --> [*]
+    Cancelled --> [*]
+    Fulfilled --> [*]

@@ -44,8 +44,9 @@ export default async function ConsumableDetailPage({
   const belowMinimum = consumable.minimumStock !== null && consumable.currentStock < consumable.minimumStock;
 
   return (
-    <div className="mx-auto flex max-w-2xl flex-col gap-4 p-8">
+    <>
       <AppHeader title="Consumibles" />
+    <div className="mx-auto flex max-w-3xl flex-col gap-4 px-8 pb-8">
       <div className="mb-2 flex justify-end">
         <Button variant="outline" render={<Link href={`/consumables?companyId=${companyId}`} />}>
           ← Volver
@@ -118,5 +119,6 @@ export default async function ConsumableDetailPage({
         </CardContent>
       </Card>
     </div>
+    </>
   );
 }

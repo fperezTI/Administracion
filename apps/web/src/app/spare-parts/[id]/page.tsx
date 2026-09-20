@@ -41,8 +41,9 @@ export default async function SparePartDetailPage({
   const warehouses = orgUnits?.filter((o) => o.orgUnitTypeName === "Almacén") ?? [];
 
   return (
-    <div className="mx-auto flex max-w-2xl flex-col gap-4 p-8">
+    <>
       <AppHeader title="Refacciones" />
+    <div className="mx-auto flex max-w-3xl flex-col gap-4 px-8 pb-8">
       <div className="mb-2 flex justify-end">
         <Button variant="outline" render={<Link href={`/spare-parts?companyId=${companyId}`} />}>
           ← Volver
@@ -104,5 +105,6 @@ export default async function SparePartDetailPage({
         </CardContent>
       </Card>
     </div>
+    </>
   );
 }

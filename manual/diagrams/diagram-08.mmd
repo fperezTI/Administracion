@@ -1,0 +1,16 @@
+stateDiagram-v2
+    [*] --> Queued: Subir archivo CSV
+    Queued --> Validating: El worker toma el lote
+    Validating --> Validated: Validación completada
+    Validating --> Failed: Error inesperado durante la validación
+    Validated --> Processing: Confirmar importación
+    Queued --> Cancelled: Cancelar lote
+    Validating --> Cancelled: Cancelar lote
+    Validated --> Cancelled: Cancelar lote
+    Processing --> Completed: Todas las filas válidas se crearon sin errores
+    Processing --> CompletedWithErrors: Se crearon las filas válidas; otras quedaron con error (modo 'solo filas válidas')
+    Processing --> Failed: Modo 'todo o nada' con filas inválidas detectadas al confirmar
+    Completed --> [*]
+    CompletedWithErrors --> [*]
+    Failed --> [*]
+    Cancelled --> [*]

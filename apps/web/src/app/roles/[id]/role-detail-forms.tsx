@@ -21,7 +21,7 @@ export function RenameRoleForm({ role }: { role: RoleDetail }) {
 
   return (
     <form action={formAction} className="flex flex-col gap-3 rounded-lg border p-4">
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div className="flex flex-col gap-1">
           <Label htmlFor="name">Nombre</Label>
           <Input id="name" name="name" defaultValue={role.name} required maxLength={100} />
@@ -32,7 +32,7 @@ export function RenameRoleForm({ role }: { role: RoleDetail }) {
         </div>
       </div>
       <div className="flex items-center justify-between">
-        <p className="text-sm">
+        <p className="text-sm" role="status">
           {state.error && <span className="text-destructive">{state.error}</span>}
           {!state.error && state.success && <span className="text-green-600 dark:text-green-500">Guardado.</span>}
         </p>
@@ -58,7 +58,7 @@ export function DuplicateRoleForm({ roleId }: { roleId: string }) {
       <Button type="submit" variant="outline" size="sm" disabled={pending}>
         {pending ? "Duplicando…" : "Duplicar"}
       </Button>
-      {state.error && <p className="text-destructive text-sm">{state.error}</p>}
+      {state.error && <p className="text-destructive text-sm" role="alert">{state.error}</p>}
     </form>
   );
 }
@@ -101,7 +101,7 @@ export function PermissionMatrixForm({
       </div>
 
       <div className="flex items-center justify-between">
-        <p className="text-sm">
+        <p className="text-sm" role="status">
           {state.error && <span className="text-destructive">{state.error}</span>}
           {!state.error && state.success && <span className="text-green-600 dark:text-green-500">Permisos guardados.</span>}
         </p>

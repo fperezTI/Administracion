@@ -23,8 +23,9 @@ export default async function EditAssetPage({ params }: { params: Promise<{ id: 
   const category = await getAssetCategoryById(accessToken, asset.assetCategoryId).catch(() => null);
 
   return (
-    <div className="mx-auto flex max-w-3xl flex-col gap-4 p-8">
+    <>
       <AppHeader title="Activos" />
+    <div className="mx-auto flex max-w-3xl flex-col gap-4 px-8 pb-8">
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-semibold tracking-tight">Editar {asset.internalFolio}</h2>
         <Button variant="outline" render={<Link href={`/assets/${id}`} />}>
@@ -36,5 +37,6 @@ export default async function EditAssetPage({ params }: { params: Promise<{ id: 
       <FinancialInfoForm asset={asset} />
       <ContractualInfoForm asset={asset} />
     </div>
+    </>
   );
 }

@@ -31,15 +31,14 @@ export default async function MaintenanceOrdersPage({ searchParams }: { searchPa
     const orders = await getMaintenanceOrders(accessToken, { companyId, pageSize: 100 });
 
     content = (
-      <div className="rounded-lg border">
         <Table>
           <TableHeader>
             <TableRow>
               <TableHead>Folio</TableHead>
               <TableHead>Activo</TableHead>
-              <TableHead>Tipo</TableHead>
+              <TableHead className="hidden sm:table-cell">Tipo</TableHead>
               <TableHead>Estado</TableHead>
-              <TableHead>Abierta</TableHead>
+              <TableHead className="hidden sm:table-cell">Abierta</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -58,17 +57,16 @@ export default async function MaintenanceOrdersPage({ searchParams }: { searchPa
                     </Link>
                   </TableCell>
                   <TableCell>{o.assetFolio}</TableCell>
-                  <TableCell>{MAINTENANCE_ORDER_TYPE_LABELS[o.type]}</TableCell>
+                  <TableCell className="hidden sm:table-cell">{MAINTENANCE_ORDER_TYPE_LABELS[o.type]}</TableCell>
                   <TableCell>
                     <Badge variant={maintenanceOrderStatusBadgeVariant(o.status)}>{MAINTENANCE_ORDER_STATUS_LABELS[o.status]}</Badge>
                   </TableCell>
-                  <TableCell>{new Date(o.openedAtUtc).toLocaleDateString("es-MX")}</TableCell>
+                  <TableCell className="hidden sm:table-cell">{new Date(o.openedAtUtc).toLocaleDateString("es-MX")}</TableCell>
                 </TableRow>
               ))
             )}
           </TableBody>
         </Table>
-      </div>
     );
   } catch (error) {
     const status = error instanceof ApiError ? error.status : undefined;
@@ -80,16 +78,18 @@ export default async function MaintenanceOrdersPage({ searchParams }: { searchPa
   }
 
   return (
-    <div className="mx-auto max-w-4xl p-8">
+    <>
       <AppHeader
         title="Mantenimiento"
         subtitle="Órdenes de mantenimiento preventivo y correctivo."
         activeCompany={<CompanySwitcher companies={me.companies} currentCompanyId={companyId} />}
       />
+    <div className="mx-auto max-w-6xl px-8 pb-8">
       <div className="mb-4 flex justify-end">
         <Button render={<Link href={`/maintenance-orders/new?companyId=${companyId}`} />}>Nueva orden</Button>
       </div>
       {content}
     </div>
+    </>
   );
 }

@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { requireAccessToken } from "@/lib/require-session";
 import { ApiError, getAssetById, getAssetCategoryById, getMovements } from "@/lib/api";
 import { AppHeader } from "@/components/app-header";
+import { Breadcrumbs } from "@/components/layout/breadcrumbs";
 import { DocumentsPanel } from "@/components/documents-panel";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -38,8 +39,10 @@ export default async function AssetDetailPage({ params }: { params: Promise<{ id
   );
 
   return (
-    <div className="mx-auto flex max-w-3xl flex-col gap-4 p-8">
+    <>
       <AppHeader title="Activos" />
+    <div className="mx-auto flex max-w-3xl flex-col gap-4 px-8 pb-8">
+      <Breadcrumbs items={[{ label: "Activos", href: "/assets" }, { label: asset.internalFolio }]} />
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h2 className="font-mono text-lg font-semibold tracking-tight">{asset.internalFolio}</h2>
@@ -88,7 +91,7 @@ export default async function AssetDetailPage({ params }: { params: Promise<{ id
         <CardHeader>
           <CardTitle className="text-sm">General</CardTitle>
         </CardHeader>
-        <CardContent className="grid grid-cols-2 gap-x-6 gap-y-2 text-sm">
+        <CardContent className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2 text-sm">
           <Field label="Folio patrimonial" value={asset.patrimonialFolio} />
           <Field label="Número de serie" value={asset.serialNumber} />
           <Field label="Condición física" value={PHYSICAL_CONDITION_LABELS[asset.physicalCondition]} />
@@ -119,7 +122,7 @@ export default async function AssetDetailPage({ params }: { params: Promise<{ id
           <CardHeader>
             <CardTitle className="text-sm">Información financiera (informativa)</CardTitle>
           </CardHeader>
-          <CardContent className="grid grid-cols-2 gap-x-6 gap-y-2 text-sm">
+          <CardContent className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2 text-sm">
             <Field label="Fecha de adquisición" value={asset.acquisitionDate} />
             <Field
               label="Costo"
@@ -137,7 +140,7 @@ export default async function AssetDetailPage({ params }: { params: Promise<{ id
           <CardHeader>
             <CardTitle className="text-sm">Garantía y soporte</CardTitle>
           </CardHeader>
-          <CardContent className="grid grid-cols-2 gap-x-6 gap-y-2 text-sm">
+          <CardContent className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2 text-sm">
             <Field label="Inicio de garantía" value={asset.warrantyStartDate} />
             <Field label="Fin de garantía" value={asset.warrantyEndDate} />
             <Field label="Contrato de soporte" value={asset.supportContract} />
@@ -151,7 +154,7 @@ export default async function AssetDetailPage({ params }: { params: Promise<{ id
           <CardHeader>
             <CardTitle className="text-sm">Campos técnicos ({category?.name})</CardTitle>
           </CardHeader>
-          <CardContent className="grid grid-cols-2 gap-x-6 gap-y-2 text-sm">
+          <CardContent className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2 text-sm">
             {asset.customFieldValues.map((v) => (
               <Field
                 key={v.customFieldDefinitionId}
@@ -193,6 +196,7 @@ export default async function AssetDetailPage({ params }: { params: Promise<{ id
 
       <DocumentsPanel accessToken={accessToken} entityType="Asset" entityId={id} revalidatePathTarget={`/assets/${id}`} />
     </div>
+    </>
   );
 }
 

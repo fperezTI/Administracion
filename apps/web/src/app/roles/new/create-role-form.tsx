@@ -22,7 +22,7 @@ export function CreateRoleForm() {
         <Input id="description" name="description" maxLength={500} />
       </div>
 
-      {state.error && <p className="text-destructive text-sm">{state.error}</p>}
+      {state.error && <p className="text-destructive text-sm" role="alert">{state.error}</p>}
 
       <div className="flex justify-end">
         <Button type="submit" disabled={pending}>

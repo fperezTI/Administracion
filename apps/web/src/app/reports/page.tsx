@@ -17,12 +17,36 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { StatTile } from "@/components/ui/stat-tile";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ASSET_STATUS_LABELS } from "@/lib/asset-labels";
 import { WARRANTY_TYPE_LABELS } from "@/lib/maintenance-labels";
 
 function formatNumber(value: number | null, suffix: string): string {
   return value === null ? "—" : `${value.toLocaleString("es-MX", { maximumFractionDigits: 1 })} ${suffix}`;
+}
+
+/** Barra de magnitud de un solo tono — no son series distintas a diferenciar, son la misma
+ * medida (conteo) repartida por categoría/estado, así que un solo hue basta (ver skill de
+ * dataviz: "compare magnitude" → color secuencial, no categórico). */
+function MagnitudeBars({ items }: { items: { label: string; count: number }[] }) {
+  const max = Math.max(1, ...items.map((i) => i.count));
+  return (
+    <ul className="flex flex-col gap-2">
+      {items.map((item) => (
+        <li key={item.label} className="flex items-center gap-2 text-sm">
+          <span className="w-32 shrink-0 truncate">{item.label}</span>
+          <span className="bg-primary/15 h-2 flex-1 rounded-full">
+            <span
+              className="bg-primary block h-2 rounded-full"
+              style={{ width: `${Math.round((item.count / max) * 100)}%` }}
+            />
+          </span>
+          <span className="w-8 shrink-0 text-right font-medium tabular-nums">{item.count}</span>
+        </li>
+      ))}
+    </ul>
+  );
 }
 
 export default async function ReportsPage({
@@ -55,58 +79,43 @@ export default async function ReportsPage({
       getLowStockConsumables(accessToken, companyId),
     ]);
 
+    const overdueWarranties = warranties.filter((w) => w.daysRemaining < 0).length;
+    const warrantiesTone = warranties.length === 0 ? "neutral" : overdueWarranties > 0 ? "destructive" : "warning";
+    const lowStockTone = lowStock.length === 0 ? "neutral" : "destructive";
+
     content = (
       <div className="flex flex-col gap-4">
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+          <StatTile label="Activos" value={inventory.totalAssets.toLocaleString("es-MX")} />
+          <StatTile label="MTTR" value={formatNumber(kpis.mttrHours, "h")} />
+          <StatTile label="MTBF" value={formatNumber(kpis.mtbfDays, "d")} />
+          <StatTile label="Órdenes cerradas" value={kpis.closedOrdersCount.toLocaleString("es-MX")} />
+          <StatTile label="Garantías por vencer" value={warranties.length} tone={warrantiesTone} />
+          <StatTile label="Existencias bajas" value={lowStock.length} tone={lowStockTone} />
+        </div>
+
         <Card>
           <CardHeader>
-            <CardTitle className="text-sm">Inventario — {inventory.totalAssets} activos</CardTitle>
+            <CardTitle className="text-sm">Inventario</CardTitle>
           </CardHeader>
           <CardContent className="grid gap-6 sm:grid-cols-2">
             <div>
               <p className="text-muted-foreground mb-2 text-xs font-medium tracking-wide uppercase">Por estado</p>
-              <ul className="flex flex-col gap-1 text-sm">
-                {inventory.byStatus.map((s) => (
-                  <li key={s.status} className="flex items-center justify-between">
-                    <span>{ASSET_STATUS_LABELS[s.status]}</span>
-                    <span className="font-medium">{s.count}</span>
-                  </li>
-                ))}
-              </ul>
+              <MagnitudeBars items={inventory.byStatus.map((s) => ({ label: ASSET_STATUS_LABELS[s.status], count: s.count }))} />
             </div>
             <div>
               <p className="text-muted-foreground mb-2 text-xs font-medium tracking-wide uppercase">Por categoría</p>
-              <ul className="flex flex-col gap-1 text-sm">
-                {inventory.byCategory.map((c) => (
-                  <li key={c.assetCategoryId} className="flex items-center justify-between">
-                    <span>{c.assetCategoryName}</span>
-                    <span className="font-medium">{c.count}</span>
-                  </li>
-                ))}
-              </ul>
+              <MagnitudeBars
+                items={inventory.byCategory.map((c) => ({ label: c.assetCategoryName, count: c.count }))}
+              />
             </div>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-sm">Mantenimiento — MTTR / MTBF</CardTitle>
-          </CardHeader>
-          <CardContent className="flex flex-col gap-4">
-            <div className="flex items-center justify-between">
-              <div className="flex gap-6">
-                <div>
-                  <p className="text-muted-foreground text-xs">MTTR (tiempo medio de reparación)</p>
-                  <p className="text-lg font-semibold">{formatNumber(kpis.mttrHours, "h")}</p>
-                </div>
-                <div>
-                  <p className="text-muted-foreground text-xs">MTBF (tiempo medio entre fallas)</p>
-                  <p className="text-lg font-semibold">{formatNumber(kpis.mtbfDays, "días")}</p>
-                </div>
-                <div>
-                  <p className="text-muted-foreground text-xs">Órdenes cerradas</p>
-                  <p className="text-lg font-semibold">{kpis.closedOrdersCount}</p>
-                </div>
-              </div>
+        {kpis.byCategory.length > 0 && (
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <CardTitle className="text-sm">Mantenimiento por categoría</CardTitle>
               <div className="flex gap-2">
                 <Button variant="outline" size="sm" render={<a href={getReportExportUrl("maintenance-kpis", "Xlsx", companyId)} />}>
                   Exportar Excel
@@ -115,8 +124,8 @@ export default async function ReportsPage({
                   Exportar PDF
                 </Button>
               </div>
-            </div>
-            {kpis.byCategory.length > 0 && (
+            </CardHeader>
+            <CardContent className="p-0">
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -137,9 +146,9 @@ export default async function ReportsPage({
                   ))}
                 </TableBody>
               </Table>
-            )}
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        )}
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
@@ -271,12 +280,13 @@ export default async function ReportsPage({
   }
 
   return (
-    <div className="mx-auto max-w-4xl p-8">
+    <>
       <AppHeader
         title="Reportes"
         subtitle="Paneles operativos: inventario, mantenimiento, garantías y existencias."
         activeCompany={companyId ? <CompanySwitcher companies={me.companies} currentCompanyId={companyId} /> : undefined}
       />
+    <div className="mx-auto max-w-6xl px-8 pb-8">
       <div className="mb-4 flex justify-end">
         <Button
           variant="outline"
@@ -288,5 +298,6 @@ export default async function ReportsPage({
       </div>
       {content}
     </div>
+    </>
   );
 }

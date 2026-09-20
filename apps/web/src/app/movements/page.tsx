@@ -4,17 +4,14 @@ import { ApiError, getMe, getMovements, type MovementType } from "@/lib/api";
 import { AppHeader } from "@/components/app-header";
 import { CompanySwitcher } from "@/components/company-switcher";
 import { EmptyCompanyState } from "@/components/empty-company-state";
-import { Label } from "@/components/ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { MOVEMENT_TYPE_LABELS } from "@/lib/inventory-labels";
+import { MovementTypeFilterField } from "./movement-type-filter-field";
+import { TablePagination, type SearchParams } from "@/components/layout/table-pagination";
 
 const PAGE_SIZE = 30;
 
-export default async function MovementsPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ companyId?: string; type?: string; pageNumber?: string }>;
-}) {
+export default async function MovementsPage({ searchParams }: { searchParams: Promise<SearchParams> }) {
   const accessToken = await requireAccessToken();
   const params = await searchParams;
   const me = await getMe(accessToken);
@@ -40,15 +37,14 @@ export default async function MovementsPage({
 
     content = (
       <>
-        <div className="rounded-lg border">
           <Table>
             <TableHeader>
               <TableRow>
                 <TableHead>Folio</TableHead>
                 <TableHead>Activo</TableHead>
                 <TableHead>Tipo</TableHead>
-                <TableHead>Fecha</TableHead>
-                <TableHead>Notas</TableHead>
+                <TableHead className="hidden sm:table-cell">Fecha</TableHead>
+                <TableHead className="hidden sm:table-cell">Notas</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -68,17 +64,23 @@ export default async function MovementsPage({
                       </Link>
                     </TableCell>
                     <TableCell>{MOVEMENT_TYPE_LABELS[m.type]}</TableCell>
-                    <TableCell>{new Date(m.effectiveAtUtc).toLocaleString("es-MX")}</TableCell>
-                    <TableCell className="text-muted-foreground">{m.notes ?? "—"}</TableCell>
+                    <TableCell className="hidden sm:table-cell">{new Date(m.effectiveAtUtc).toLocaleString("es-MX")}</TableCell>
+                    <TableCell className="hidden text-muted-foreground sm:table-cell">{m.notes ?? "—"}</TableCell>
                   </TableRow>
                 ))
               )}
             </TableBody>
           </Table>
-        </div>
-        <p className="text-muted-foreground mt-4 text-sm">
-          {movements.totalCount} movimiento{movements.totalCount === 1 ? "" : "s"} — página {pageNumber} de {totalPages}
-        </p>
+        <TablePagination
+          basePath="/movements"
+          params={params}
+          companyId={companyId}
+          pageNumber={pageNumber}
+          totalPages={totalPages}
+          totalCount={movements.totalCount}
+          itemLabel="movimiento"
+          itemLabelPlural="movimientos"
+        />
       </>
     );
   } catch (error) {
@@ -91,32 +93,19 @@ export default async function MovementsPage({
   }
 
   return (
-    <div className="mx-auto max-w-4xl p-8">
+    <>
       <AppHeader
         title="Movimientos"
         subtitle="Historial auditado de asignaciones, préstamos, devoluciones y reubicaciones."
         activeCompany={<CompanySwitcher companies={me.companies} currentCompanyId={companyId} />}
       />
+    <div className="mx-auto max-w-6xl px-8 pb-8">
       <form method="GET" className="mb-4 flex flex-wrap items-end gap-3">
         <input type="hidden" name="companyId" value={companyId} />
-        <div className="flex flex-col gap-1">
-          <Label htmlFor="type">Tipo</Label>
-          <select
-            id="type"
-            name="type"
-            defaultValue={params.type ?? ""}
-            className="h-8 rounded-lg border border-input bg-transparent px-2.5 text-sm outline-none dark:bg-input/30"
-          >
-            <option value="">Todos</option>
-            {Object.entries(MOVEMENT_TYPE_LABELS).map(([value, label]) => (
-              <option key={value} value={value}>
-                {label}
-              </option>
-            ))}
-          </select>
-        </div>
+        <MovementTypeFilterField defaultType={params.type ?? ""} />
       </form>
       {content}
     </div>
+    </>
   );
 }

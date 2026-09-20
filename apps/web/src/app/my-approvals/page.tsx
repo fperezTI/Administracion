@@ -49,9 +49,11 @@ export default async function MyApprovalsPage() {
   }
 
   return (
-    <div className="mx-auto max-w-2xl p-8">
+    <>
       <AppHeader title="Mis aprobaciones" subtitle="Solicitudes pendientes donde tienes un rol elegible para decidir." />
+    <div className="mx-auto max-w-3xl px-8 pb-8">
       {content}
     </div>
+    </>
   );
 }

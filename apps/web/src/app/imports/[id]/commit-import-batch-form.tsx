@@ -27,7 +27,7 @@ export function CommitImportBatchForm({ importBatchId, hasInvalidRows }: { impor
           </span>
         </label>
       </fieldset>
-      {state.error && <p className="text-destructive text-sm">{state.error}</p>}
+      {state.error && <p className="text-destructive text-sm" role="alert">{state.error}</p>}
       <Button type="submit" disabled={pending}>
         {pending ? "Confirmando…" : "Confirmar importación"}
       </Button>

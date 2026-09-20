@@ -14,7 +14,6 @@ export default async function AssetCategoriesPage() {
   try {
     const categories = await getAssetCategories(accessToken, { pageSize: 200 });
     content = (
-      <div className="rounded-lg border">
         <Table>
           <TableHeader>
             <TableRow>
@@ -45,7 +44,6 @@ export default async function AssetCategoriesPage() {
             ))}
           </TableBody>
         </Table>
-      </div>
     );
   } catch (error) {
     const status = error instanceof ApiError ? error.status : undefined;
@@ -59,12 +57,14 @@ export default async function AssetCategoriesPage() {
   }
 
   return (
-    <div className="mx-auto max-w-3xl p-8">
+    <>
       <AppHeader title="Categorías de activos" subtitle="Catálogo configurable — define los campos técnicos por categoría." />
+    <div className="mx-auto max-w-6xl px-8 pb-8">
       <div className="mb-4 flex justify-end">
         <Button render={<Link href="/asset-categories/new" />}>Nueva categoría</Button>
       </div>
       {content}
     </div>
+    </>
   );
 }

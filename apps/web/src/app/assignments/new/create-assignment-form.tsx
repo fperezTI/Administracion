@@ -6,12 +6,10 @@ import { flattenOrgUnitTree } from "@/lib/org-unit-tree";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { createAssignmentAction, type CreateAssignmentActionState } from "./actions";
 
 const initialState: CreateAssignmentActionState = { error: null };
-
-const selectClassName =
-  "h-8 rounded-lg border border-input bg-transparent px-2.5 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 dark:bg-input/30";
 
 export function CreateAssignmentForm({
   assets,
@@ -29,16 +27,23 @@ export function CreateAssignmentForm({
     <form action={formAction} className="flex flex-col gap-4">
       <div className="flex flex-col gap-1">
         <Label htmlFor="assetId">Activo (debe estar en almacén)</Label>
-        <select id="assetId" name="assetId" className={selectClassName} required>
-          <option value="" disabled defaultValue="">
-            Selecciona
-          </option>
-          {assets.map((asset) => (
-            <option key={asset.id} value={asset.id}>
-              {asset.internalFolio} — {asset.brand} {asset.model}
-            </option>
-          ))}
-        </select>
+        <Select name="assetId" required>
+          <SelectTrigger id="assetId" className="w-full">
+            <SelectValue placeholder="Selecciona">
+              {(value: string) => {
+                const asset = assets.find((a) => a.id === value);
+                return asset ? `${asset.internalFolio} — ${asset.brand} ${asset.model}` : null;
+              }}
+            </SelectValue>
+          </SelectTrigger>
+          <SelectContent>
+            {assets.map((asset) => (
+              <SelectItem key={asset.id} value={asset.id}>
+                {asset.internalFolio} — {asset.brand} {asset.model}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
         {assets.length === 0 && (
           <p className="text-muted-foreground text-xs">No hay activos en almacén disponibles para asignar.</p>
         )}
@@ -46,28 +51,42 @@ export function CreateAssignmentForm({
 
       <div className="flex flex-col gap-1">
         <Label htmlFor="assignedToUserId">Destinatario</Label>
-        <select id="assignedToUserId" name="assignedToUserId" className={selectClassName} required>
-          <option value="" disabled defaultValue="">
-            Selecciona
-          </option>
-          {users.map((user) => (
-            <option key={user.id} value={user.id}>
-              {user.displayName} — {user.email}
-            </option>
-          ))}
-        </select>
+        <Select name="assignedToUserId" required>
+          <SelectTrigger id="assignedToUserId" className="w-full">
+            <SelectValue placeholder="Selecciona">
+              {(value: string) => {
+                const user = users.find((u) => u.id === value);
+                return user ? `${user.displayName} — ${user.email}` : null;
+              }}
+            </SelectValue>
+          </SelectTrigger>
+          <SelectContent>
+            {users.map((user) => (
+              <SelectItem key={user.id} value={user.id}>
+                {user.displayName} — {user.email}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
 
       <div className="flex flex-col gap-1">
         <Label htmlFor="orgUnitId">Unidad organizacional (opcional)</Label>
-        <select id="orgUnitId" name="orgUnitId" defaultValue="" className={selectClassName}>
-          <option value="">Sin asignar</option>
-          {orgUnitOptions.map((option) => (
-            <option key={option.id} value={option.id}>
-              {option.label}
-            </option>
-          ))}
-        </select>
+        <Select name="orgUnitId" defaultValue="">
+          <SelectTrigger id="orgUnitId" className="w-full">
+            <SelectValue>
+              {(value: string) => (value === "" ? "Sin asignar" : orgUnitOptions.find((o) => o.id === value)?.label)}
+            </SelectValue>
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="">Sin asignar</SelectItem>
+            {orgUnitOptions.map((option) => (
+              <SelectItem key={option.id} value={option.id}>
+                {option.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
 
       <div className="flex flex-col gap-1">
@@ -75,7 +94,7 @@ export function CreateAssignmentForm({
         <Input id="notes" name="notes" maxLength={500} />
       </div>
 
-      {state.error && <p className="text-destructive text-sm">{state.error}</p>}
+      {state.error && <p className="text-destructive text-sm" role="alert">{state.error}</p>}
 
       <div className="flex justify-end">
         <Button type="submit" disabled={pending}>

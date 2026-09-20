@@ -75,11 +75,12 @@ export default async function SearchPage({
   }
 
   return (
-    <div className="mx-auto max-w-3xl p-8">
+    <>
       <AppHeader
         title="Búsqueda"
         subtitle="Resultados en activos, movimientos, mantenimiento, garantías, refacciones, consumibles, solicitudes y usuarios."
       />
+    <div className="mx-auto max-w-3xl px-8 pb-8">
 
       <form method="GET" className="mb-4 flex flex-wrap items-end gap-3">
         <div className="flex flex-1 flex-col gap-1">
@@ -103,5 +104,6 @@ export default async function SearchPage({
 
       {content}
     </div>
+    </>
   );
 }

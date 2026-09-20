@@ -177,6 +177,11 @@ public static class PermissionCatalog
         public const string Update = "Configuration.Update";
     }
 
+    public static class Dashboards
+    {
+        public const string ViewExecutive = "Dashboards.ViewExecutive";
+    }
+
     /// <summary>Every (module, action, description) triple to seed. See Infrastructure's seed consumer.</summary>
     public static IReadOnlyList<(string Module, string Action, string Description)> SeedEntries { get; } =
     [
@@ -272,5 +277,7 @@ public static class PermissionCatalog
 
         ("Configuration", "Read", "Consultar configuración del sistema"),
         ("Configuration", "Update", "Editar configuración del sistema"),
+
+        ("Dashboards", "ViewExecutive", "Ver el dashboard ejecutivo"),
     ];
 }

@@ -25,8 +25,9 @@ export default async function AssetCategoryDetailPage({ params }: { params: Prom
   }
 
   return (
-    <div className="mx-auto flex max-w-2xl flex-col gap-4 p-8">
+    <>
       <AppHeader title="Categorías de activos" />
+    <div className="mx-auto flex max-w-3xl flex-col gap-4 px-8 pb-8">
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-lg font-semibold tracking-tight">{category.name}</h2>
@@ -49,7 +50,6 @@ export default async function AssetCategoryDetailPage({ params }: { params: Prom
         <strong>{IDENTIFICATION_TECHNOLOGY_LABELS[category.defaultIdentificationTechnology]}</strong>
       </p>
 
-      <div className="rounded-lg border">
         <Table>
           <TableHeader>
             <TableRow>
@@ -80,7 +80,6 @@ export default async function AssetCategoryDetailPage({ params }: { params: Prom
             )}
           </TableBody>
         </Table>
-      </div>
 
       <AddFieldForm categoryId={id} />
 
@@ -88,5 +87,6 @@ export default async function AssetCategoryDetailPage({ params }: { params: Prom
         ← Volver
       </Button>
     </div>
+    </>
   );
 }

@@ -10,10 +10,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ASSET_STATUS_LABELS, PHYSICAL_CONDITION_LABELS, assetStatusBadgeVariant } from "@/lib/asset-labels";
+import { AssetFilterFields } from "./asset-filter-fields";
+import { TablePagination, type SearchParams } from "@/components/layout/table-pagination";
 
 const PAGE_SIZE = 20;
-
-type SearchParams = Record<string, string | undefined>;
 
 export default async function AssetsPage({ searchParams }: { searchParams: Promise<SearchParams> }) {
   const accessToken = await requireAccessToken();
@@ -50,38 +50,11 @@ export default async function AssetsPage({ searchParams }: { searchParams: Promi
       <>
         <form method="GET" className="mb-4 flex flex-wrap items-end gap-3">
           <input type="hidden" name="companyId" value={companyId} />
-          <div className="flex flex-col gap-1">
-            <Label htmlFor="assetCategoryId">Categoría</Label>
-            <select
-              id="assetCategoryId"
-              name="assetCategoryId"
-              defaultValue={params.assetCategoryId ?? ""}
-              className="h-8 rounded-lg border border-input bg-transparent px-2.5 text-sm outline-none dark:bg-input/30"
-            >
-              <option value="">Todas</option>
-              {categories.items.map((category) => (
-                <option key={category.id} value={category.id}>
-                  {category.name}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div className="flex flex-col gap-1">
-            <Label htmlFor="status">Estado</Label>
-            <select
-              id="status"
-              name="status"
-              defaultValue={params.status ?? ""}
-              className="h-8 rounded-lg border border-input bg-transparent px-2.5 text-sm outline-none dark:bg-input/30"
-            >
-              <option value="">Todos</option>
-              {Object.entries(ASSET_STATUS_LABELS).map(([value, label]) => (
-                <option key={value} value={value}>
-                  {label}
-                </option>
-              ))}
-            </select>
-          </div>
+          <AssetFilterFields
+            categories={categories.items}
+            defaultCategoryId={params.assetCategoryId ?? ""}
+            defaultStatus={params.status ?? ""}
+          />
           <div className="flex flex-col gap-1">
             <Label htmlFor="search">Buscar</Label>
             <Input id="search" name="search" defaultValue={params.search ?? ""} placeholder="Folio, marca, modelo, serie" />
@@ -91,16 +64,15 @@ export default async function AssetsPage({ searchParams }: { searchParams: Promi
           </Button>
         </form>
 
-        <div className="rounded-lg border">
           <Table>
             <TableHeader>
               <TableRow>
                 <TableHead>Folio</TableHead>
-                <TableHead>Categoría</TableHead>
+                <TableHead className="hidden sm:table-cell">Categoría</TableHead>
                 <TableHead>Marca / Modelo</TableHead>
-                <TableHead>Serie</TableHead>
+                <TableHead className="hidden sm:table-cell">Serie</TableHead>
                 <TableHead>Estado</TableHead>
-                <TableHead>Condición</TableHead>
+                <TableHead className="hidden sm:table-cell">Condición</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -118,41 +90,31 @@ export default async function AssetsPage({ searchParams }: { searchParams: Promi
                         {asset.internalFolio}
                       </Link>
                     </TableCell>
-                    <TableCell>{categoryNameById.get(asset.assetCategoryId) ?? "—"}</TableCell>
+                    <TableCell className="hidden sm:table-cell">{categoryNameById.get(asset.assetCategoryId) ?? "—"}</TableCell>
                     <TableCell>
                       {asset.brand} {asset.model}
                     </TableCell>
-                    <TableCell>{asset.serialNumber ?? "—"}</TableCell>
+                    <TableCell className="hidden sm:table-cell">{asset.serialNumber ?? "—"}</TableCell>
                     <TableCell>
                       <Badge variant={assetStatusBadgeVariant(asset.status)}>{ASSET_STATUS_LABELS[asset.status]}</Badge>
                     </TableCell>
-                    <TableCell>{PHYSICAL_CONDITION_LABELS[asset.physicalCondition]}</TableCell>
+                    <TableCell className="hidden sm:table-cell">{PHYSICAL_CONDITION_LABELS[asset.physicalCondition]}</TableCell>
                   </TableRow>
                 ))
               )}
             </TableBody>
           </Table>
-        </div>
 
-        <div className="mt-4 flex items-center justify-between text-sm">
-          <p className="text-muted-foreground">
-            {assetsResult.totalCount} activo{assetsResult.totalCount === 1 ? "" : "s"} — página {pageNumber} de{" "}
-            {totalPages}
-          </p>
-          <div className="flex gap-2">
-            <PageLink params={params} companyId={companyId} pageNumber={pageNumber - 1} disabled={pageNumber <= 1}>
-              Anterior
-            </PageLink>
-            <PageLink
-              params={params}
-              companyId={companyId}
-              pageNumber={pageNumber + 1}
-              disabled={pageNumber >= totalPages}
-            >
-              Siguiente
-            </PageLink>
-          </div>
-        </div>
+        <TablePagination
+          basePath="/assets"
+          params={params}
+          companyId={companyId}
+          pageNumber={pageNumber}
+          totalPages={totalPages}
+          totalCount={assetsResult.totalCount}
+          itemLabel="activo"
+          itemLabelPlural="activos"
+        />
       </>
     );
   } catch (error) {
@@ -165,12 +127,13 @@ export default async function AssetsPage({ searchParams }: { searchParams: Promi
   }
 
   return (
-    <div className="mx-auto max-w-5xl p-8">
+    <>
       <AppHeader
         title="Activos"
         subtitle="Inventario de activos de TI por empresa."
         activeCompany={<CompanySwitcher companies={me.companies} currentCompanyId={companyId} />}
       />
+    <div className="mx-auto max-w-6xl px-8 pb-8">
       <div className="mb-4 flex items-center justify-end gap-3">
         <Button
           variant="outline"
@@ -208,37 +171,6 @@ export default async function AssetsPage({ searchParams }: { searchParams: Promi
       </div>
       {content}
     </div>
-  );
-}
-
-function PageLink({
-  params,
-  companyId,
-  pageNumber,
-  disabled,
-  children,
-}: {
-  params: SearchParams;
-  companyId: string;
-  pageNumber: number;
-  disabled: boolean;
-  children: React.ReactNode;
-}) {
-  if (disabled) {
-    return (
-      <span className="text-muted-foreground/50 rounded-lg border px-3 py-1">{children}</span>
-    );
-  }
-
-  const query = new URLSearchParams({
-    ...Object.fromEntries(Object.entries(params).filter(([, v]) => v !== undefined) as [string, string][]),
-    companyId,
-    pageNumber: String(pageNumber),
-  });
-
-  return (
-    <Link href={`/assets?${query.toString()}`} className="rounded-lg border px-3 py-1 hover:bg-muted">
-      {children}
-    </Link>
+    </>
   );
 }

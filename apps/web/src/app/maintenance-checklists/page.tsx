@@ -14,7 +14,6 @@ export default async function MaintenanceChecklistsPage() {
     const checklists = await getMaintenanceChecklists(accessToken);
 
     content = (
-      <div className="rounded-lg border">
         <Table>
           <TableHeader>
             <TableRow>
@@ -49,7 +48,6 @@ export default async function MaintenanceChecklistsPage() {
             )}
           </TableBody>
         </Table>
-      </div>
     );
   } catch (error) {
     const status = error instanceof ApiError ? error.status : undefined;
@@ -61,15 +59,17 @@ export default async function MaintenanceChecklistsPage() {
   }
 
   return (
-    <div className="mx-auto max-w-3xl p-8">
+    <>
       <AppHeader
         title="Checklists de mantenimiento"
         subtitle="Listas versionadas de verificación, reutilizables al abrir órdenes de mantenimiento."
       />
+    <div className="mx-auto max-w-6xl px-8 pb-8">
       <div className="mb-4 flex justify-end">
         <Button render={<Link href="/maintenance-checklists/new" />}>Nuevo checklist</Button>
       </div>
       {content}
     </div>
+    </>
   );
 }

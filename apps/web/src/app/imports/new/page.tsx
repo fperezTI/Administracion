@@ -34,12 +34,13 @@ export default async function NewImportBatchPage({ searchParams }: { searchParam
   }
 
   return (
-    <div className="mx-auto max-w-md p-8">
+    <>
       <AppHeader
         title="Nueva importación"
         subtitle="Sube un archivo CSV para dar de alta activos en lote."
         activeCompany={<CompanySwitcher companies={me.companies} currentCompanyId={companyId} />}
       />
+    <div className="mx-auto max-w-xl px-8 pb-8">
       <div className="mb-4 flex justify-end">
         <Button variant="outline" render={<Link href={`/imports?companyId=${companyId}`} />}>
           ← Volver
@@ -47,5 +48,6 @@ export default async function NewImportBatchPage({ searchParams }: { searchParam
       </div>
       {content}
     </div>
+    </>
   );
 }

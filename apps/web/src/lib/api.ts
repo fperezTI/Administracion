@@ -1686,6 +1686,20 @@ export function getLowStockConsumables(accessToken: string, companyId?: string):
   return apiFetch<LowStockConsumableRow[]>(accessToken, `/api/v1/reports/low-stock-consumables?${reportQuery(companyId).toString()}`);
 }
 
+export type ExecutiveDashboardResult = {
+  totalAssets: number;
+  assignedAssets: number;
+  availableAssets: number;
+  pendingApprovals: number;
+  openMaintenanceOrders: number;
+  expiringWarranties: number;
+  lowStockConsumables: number;
+};
+
+export function getExecutiveDashboard(accessToken: string, companyId?: string): Promise<ExecutiveDashboardResult> {
+  return apiFetch<ExecutiveDashboardResult>(accessToken, `/api/v1/dashboards/executive?${reportQuery(companyId).toString()}`);
+}
+
 export type ReportExportKey = "expiring-warranties" | "low-stock-consumables" | "maintenance-kpis";
 
 export function getReportExportUrl(

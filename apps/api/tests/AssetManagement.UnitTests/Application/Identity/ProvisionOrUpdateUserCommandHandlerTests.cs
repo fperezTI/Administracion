@@ -22,8 +22,37 @@ public class ProvisionOrUpdateUserCommandHandlerTests
 
         snapshot.EntraObjectId.Should().Be(entraObjectId);
         snapshot.IsActive.Should().BeTrue();
-        snapshot.PermissionCodes.Should().BeEmpty();
         (await db.Users.CountAsync()).Should().Be(1);
+    }
+
+    [Fact]
+    public async Task First_user_ever_is_bootstrapped_as_super_admin_with_every_permission()
+    {
+        using var db = InMemoryAppDbContextFactory.Create();
+        var handler = new ProvisionOrUpdateUserCommandHandler(db, new FakeClock(Now));
+        var allPermissionCodes = await db.Permissions.Select(p => p.Module + "." + p.Action).ToListAsync();
+
+        var snapshot = await handler.Handle(
+            new ProvisionOrUpdateUserCommand(Guid.NewGuid(), "Ada Lovelace", "ada@example.com"), CancellationToken.None);
+
+        snapshot.PermissionCodes.Should().BeEquivalentTo(allPermissionCodes);
+        (await db.Roles.CountAsync()).Should().Be(1);
+        (await db.Roles.SingleAsync()).Name.Should().Be("Super Administrador");
+        (await db.AuditEntries.CountAsync()).Should().Be(1);
+    }
+
+    [Fact]
+    public async Task Second_distinct_user_does_not_receive_super_admin_permissions()
+    {
+        using var db = InMemoryAppDbContextFactory.Create();
+        await new ProvisionOrUpdateUserCommandHandler(db, new FakeClock(Now)).Handle(
+            new ProvisionOrUpdateUserCommand(Guid.NewGuid(), "Ada Lovelace", "ada@example.com"), CancellationToken.None);
+
+        var secondSnapshot = await new ProvisionOrUpdateUserCommandHandler(db, new FakeClock(Now)).Handle(
+            new ProvisionOrUpdateUserCommand(Guid.NewGuid(), "Grace Hopper", "grace@example.com"), CancellationToken.None);
+
+        secondSnapshot.PermissionCodes.Should().BeEmpty();
+        (await db.Roles.CountAsync()).Should().Be(1);
     }
 
     [Fact]
@@ -44,5 +73,7 @@ public class ProvisionOrUpdateUserCommandHandlerTests
         secondSnapshot.Email.Should().Be("ada@new.example.com");
         (await db.Users.CountAsync()).Should().Be(1);
         (await db.Users.SingleAsync()).LastLoginAtUtc.Should().Be(later);
+        (await db.Roles.CountAsync()).Should().Be(1);
+        (await db.AuditEntries.CountAsync()).Should().Be(1);
     }
 }

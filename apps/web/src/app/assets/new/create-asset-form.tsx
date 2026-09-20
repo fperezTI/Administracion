@@ -3,15 +3,14 @@
 import { useActionState, useState } from "react";
 import type { AssetCategoryDetail, CustomFieldDefinitionSummary, OrgUnitNode } from "@/lib/api";
 import { flattenOrgUnitTree } from "@/lib/org-unit-tree";
+import { PHYSICAL_CONDITION_LABELS } from "@/lib/asset-labels";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Field } from "@/components/ui/field";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { createAssetAction, type CreateAssetActionState } from "./actions";
 
 const initialState: CreateAssetActionState = { error: null };
-
-const selectClassName =
-  "h-8 rounded-lg border border-input bg-transparent px-2.5 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 dark:bg-input/30";
 
 export function CreateAssetForm({
   companyId,
@@ -32,23 +31,21 @@ export function CreateAssetForm({
       <input type="hidden" name="companyId" value={companyId} />
 
       <Field label="Categoría" htmlFor="assetCategoryId">
-        <select
-          id="assetCategoryId"
-          name="assetCategoryId"
-          value={categoryId}
-          onChange={(e) => setCategoryId(e.target.value)}
-          className={selectClassName}
-          required
-        >
-          {categories.map((category) => (
-            <option key={category.id} value={category.id}>
-              {category.name}
-            </option>
-          ))}
-        </select>
+        <Select name="assetCategoryId" value={categoryId} onValueChange={(value) => setCategoryId(value ?? "")} required>
+          <SelectTrigger id="assetCategoryId" className="w-full">
+            <SelectValue>{(value: string) => categories.find((c) => c.id === value)?.name}</SelectValue>
+          </SelectTrigger>
+          <SelectContent>
+            {categories.map((category) => (
+              <SelectItem key={category.id} value={category.id}>
+                {category.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </Field>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <Field label="Marca" htmlFor="brand">
           <Input id="brand" name="brand" required maxLength={100} />
         </Field>
@@ -57,18 +54,23 @@ export function CreateAssetForm({
         </Field>
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <Field label="Número de serie" htmlFor="serialNumber" optional>
           <Input id="serialNumber" name="serialNumber" maxLength={100} />
         </Field>
         <Field label="Condición física" htmlFor="physicalCondition">
-          <select id="physicalCondition" name="physicalCondition" defaultValue="Good" className={selectClassName} required>
-            <option value="Excellent">Excelente</option>
-            <option value="Good">Buena</option>
-            <option value="Fair">Regular</option>
-            <option value="Poor">Mala</option>
-            <option value="Damaged">Dañado</option>
-          </select>
+          <Select name="physicalCondition" defaultValue="Good" required>
+            <SelectTrigger id="physicalCondition" className="w-full">
+              <SelectValue>{(value: keyof typeof PHYSICAL_CONDITION_LABELS) => PHYSICAL_CONDITION_LABELS[value]}</SelectValue>
+            </SelectTrigger>
+            <SelectContent>
+              {Object.entries(PHYSICAL_CONDITION_LABELS).map(([value, label]) => (
+                <SelectItem key={value} value={value}>
+                  {label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </Field>
       </div>
 
@@ -77,14 +79,21 @@ export function CreateAssetForm({
       </Field>
 
       <Field label="Ubicación" htmlFor="currentOrgUnitId" optional>
-        <select id="currentOrgUnitId" name="currentOrgUnitId" defaultValue="" className={selectClassName}>
-          <option value="">Sin asignar</option>
-          {orgUnitOptions.map((option) => (
-            <option key={option.id} value={option.id}>
-              {option.label}
-            </option>
-          ))}
-        </select>
+        <Select name="currentOrgUnitId" defaultValue="">
+          <SelectTrigger id="currentOrgUnitId" className="w-full">
+            <SelectValue>
+              {(value: string) => (value === "" ? "Sin asignar" : orgUnitOptions.find((o) => o.id === value)?.label)}
+            </SelectValue>
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="">Sin asignar</SelectItem>
+            {orgUnitOptions.map((option) => (
+              <SelectItem key={option.id} value={option.id}>
+                {option.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
         {orgUnitOptions.length === 0 && (
           <p className="text-muted-foreground text-xs">
             Esta empresa todavía no tiene estructura organizacional configurada.
@@ -103,7 +112,7 @@ export function CreateAssetForm({
         </fieldset>
       )}
 
-      {state.error && <p className="text-destructive text-sm">{state.error}</p>}
+      {state.error && <p className="text-destructive text-sm" role="alert">{state.error}</p>}
 
       <div className="flex justify-end">
         <Button type="submit" disabled={pending}>
@@ -121,28 +130,32 @@ function CustomFieldInput({ field }: { field: CustomFieldDefinitionSummary }) {
   return (
     <Field label={field.name} htmlFor={htmlId} optional={!field.isRequired}>
       {field.dataType === "Boolean" ? (
-        <select id={htmlId} name={name} className={selectClassName} required={field.isRequired} defaultValue="">
-          <option value="" disabled>
-            Selecciona
-          </option>
-          <option value="true">Sí</option>
-          <option value="false">No</option>
-        </select>
+        <Select name={name} required={field.isRequired}>
+          <SelectTrigger id={htmlId} className="w-full">
+            <SelectValue placeholder="Selecciona">{(value: string) => (value === "true" ? "Sí" : "No")}</SelectValue>
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="true">Sí</SelectItem>
+            <SelectItem value="false">No</SelectItem>
+          </SelectContent>
+        </Select>
       ) : field.dataType === "Select" ? (
-        <select id={htmlId} name={name} className={selectClassName} required={field.isRequired} defaultValue="">
-          <option value="" disabled>
-            Selecciona
-          </option>
-          {(field.options ?? "")
-            .split(",")
-            .map((option) => option.trim())
-            .filter(Boolean)
-            .map((option) => (
-              <option key={option} value={option}>
-                {option}
-              </option>
-            ))}
-        </select>
+        <Select name={name} required={field.isRequired}>
+          <SelectTrigger id={htmlId} className="w-full">
+            <SelectValue placeholder="Selecciona" />
+          </SelectTrigger>
+          <SelectContent>
+            {(field.options ?? "")
+              .split(",")
+              .map((option) => option.trim())
+              .filter(Boolean)
+              .map((option) => (
+                <SelectItem key={option} value={option}>
+                  {option}
+                </SelectItem>
+              ))}
+          </SelectContent>
+        </Select>
       ) : (
         <Input
           id={htmlId}
@@ -153,26 +166,5 @@ function CustomFieldInput({ field }: { field: CustomFieldDefinitionSummary }) {
         />
       )}
     </Field>
-  );
-}
-
-function Field({
-  label,
-  htmlFor,
-  optional,
-  children,
-}: {
-  label: string;
-  htmlFor: string;
-  optional?: boolean;
-  children: React.ReactNode;
-}) {
-  return (
-    <div className="flex flex-col gap-1">
-      <Label htmlFor={htmlFor}>
-        {label} {optional && <span className="text-muted-foreground font-normal">(opcional)</span>}
-      </Label>
-      {children}
-    </div>
   );
 }

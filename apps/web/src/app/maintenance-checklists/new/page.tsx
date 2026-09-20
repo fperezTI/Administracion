@@ -10,8 +10,9 @@ export default async function NewMaintenanceChecklistPage() {
   const categories = await getAssetCategories(accessToken, { isActive: true, pageSize: 200 });
 
   return (
-    <div className="mx-auto max-w-lg p-8">
+    <>
       <AppHeader title="Nuevo checklist" subtitle="Un ítem por línea." />
+    <div className="mx-auto max-w-xl px-8 pb-8">
       <div className="mb-4 flex justify-end">
         <Button variant="outline" render={<Link href="/maintenance-checklists" />}>
           ← Volver
@@ -19,5 +20,6 @@ export default async function NewMaintenanceChecklistPage() {
       </div>
       <CreateChecklistForm categories={categories.items} />
     </div>
+    </>
   );
 }

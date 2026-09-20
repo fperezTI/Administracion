@@ -25,7 +25,7 @@ export function SignAssignmentForm({ assignmentId }: { assignmentId: string }) {
       <Button type="submit" disabled={pending}>
         {pending ? "Confirmando…" : "Confirmar recepción"}
       </Button>
-      {state.error && <p className="text-destructive text-sm">{state.error}</p>}
+      {state.error && <p className="text-destructive text-sm" role="alert">{state.error}</p>}
     </form>
   );
 }

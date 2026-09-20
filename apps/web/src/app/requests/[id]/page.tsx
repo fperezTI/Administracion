@@ -23,8 +23,9 @@ export default async function InternalRequestDetailPage({ params }: { params: Pr
   }
 
   return (
-    <div className="mx-auto flex max-w-2xl flex-col gap-4 p-8">
+    <>
       <AppHeader title="Solicitudes internas" />
+    <div className="mx-auto flex max-w-3xl flex-col gap-4 px-8 pb-8">
       <div className="mb-2 flex justify-end">
         <Button variant="outline" render={<Link href="/requests" />}>
           ← Volver
@@ -57,5 +58,6 @@ export default async function InternalRequestDetailPage({ params }: { params: Pr
         </CardContent>
       </Card>
     </div>
+    </>
   );
 }

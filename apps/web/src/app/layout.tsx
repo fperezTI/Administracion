@@ -24,7 +24,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#1e4fa3",
+  themeColor: "#113456",
 };
 
 export default async function RootLayout({
@@ -36,10 +36,12 @@ export default async function RootLayout({
 
   return (
     <html lang="es" suppressHydrationWarning>
-      <body className={`${plexSans.variable} ${plexMono.variable} antialiased`}>
+      <body
+        className={`${plexSans.variable} ${plexMono.variable} antialiased lg:has-[[data-slot="app-sidebar"]]:pl-56`}
+      >
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
           <NextIntlClientProvider messages={messages}>
-            {children}
+            <main>{children}</main>
             <ServiceWorkerRegistration />
           </NextIntlClientProvider>
         </ThemeProvider>

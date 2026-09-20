@@ -6,12 +6,10 @@ import { INTERNAL_REQUEST_TYPE_LABELS } from "@/lib/request-labels";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { createRequestAction, type CreateRequestActionState } from "./actions";
 
 const initialState: CreateRequestActionState = { error: null };
-
-const selectClassName =
-  "h-8 rounded-lg border border-input bg-transparent px-2.5 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 dark:bg-input/30";
 
 export function CreateRequestForm({
   inWarehouseAssets,
@@ -38,39 +36,48 @@ export function CreateRequestForm({
 
       <div className="flex flex-col gap-1">
         <Label htmlFor="type">Tipo de solicitud</Label>
-        <select
-          id="type"
+        <Select
           name="type"
-          className={selectClassName}
           required
           value={type}
-          onChange={(e) => setType(e.target.value as InternalRequestType)}
+          onValueChange={(value) => setType((value ?? "") as InternalRequestType)}
         >
-          <option value="" disabled>
-            Selecciona
-          </option>
-          {Object.entries(INTERNAL_REQUEST_TYPE_LABELS).map(([value, label]) => (
-            <option key={value} value={value}>
-              {label}
-            </option>
-          ))}
-        </select>
+          <SelectTrigger id="type" className="w-full">
+            <SelectValue placeholder="Selecciona">
+              {(value: keyof typeof INTERNAL_REQUEST_TYPE_LABELS) => INTERNAL_REQUEST_TYPE_LABELS[value]}
+            </SelectValue>
+          </SelectTrigger>
+          <SelectContent>
+            {Object.entries(INTERNAL_REQUEST_TYPE_LABELS).map(([value, label]) => (
+              <SelectItem key={value} value={value}>
+                {label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
 
       <div className="flex flex-col gap-1">
         <Label htmlFor="assetId">
           {type === "Maintenance" ? "Activo (en almacén o asignado a ti)" : "Activo (debe estar en almacén)"}
         </Label>
-        <select id="assetId" name="assetId" className={selectClassName} required defaultValue="">
-          <option value="" disabled>
-            Selecciona
-          </option>
-          {eligibleAssets.map((asset) => (
-            <option key={asset.id} value={asset.id}>
-              {asset.internalFolio} — {asset.brand} {asset.model}
-            </option>
-          ))}
-        </select>
+        <Select name="assetId" required>
+          <SelectTrigger id="assetId" className="w-full">
+            <SelectValue placeholder="Selecciona">
+              {(value: string) => {
+                const asset = eligibleAssets.find((a) => a.id === value);
+                return asset ? `${asset.internalFolio} — ${asset.brand} ${asset.model}` : null;
+              }}
+            </SelectValue>
+          </SelectTrigger>
+          <SelectContent>
+            {eligibleAssets.map((asset) => (
+              <SelectItem key={asset.id} value={asset.id}>
+                {asset.internalFolio} — {asset.brand} {asset.model}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
         {type && eligibleAssets.length === 0 && (
           <p className="text-muted-foreground text-xs">No hay activos elegibles para este tipo de solicitud.</p>
         )}
@@ -96,7 +103,7 @@ export function CreateRequestForm({
         />
       </div>
 
-      {state.error && <p className="text-destructive text-sm">{state.error}</p>}
+      {state.error && <p className="text-destructive text-sm" role="alert">{state.error}</p>}
 
       <div className="flex justify-end">
         <Button type="submit" disabled={pending}>

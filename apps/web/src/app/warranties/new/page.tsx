@@ -23,12 +23,13 @@ export default async function NewWarrantyPage({ searchParams }: { searchParams: 
   const assets = await getAssets(accessToken, { companyId, pageSize: 200 });
 
   return (
-    <div className="mx-auto max-w-md p-8">
+    <>
       <AppHeader
         title="Nueva garantía"
         subtitle="Registra una cobertura de garantía o soporte para un activo."
         activeCompany={<CompanySwitcher companies={me.companies} currentCompanyId={companyId} />}
       />
+    <div className="mx-auto max-w-xl px-8 pb-8">
       <div className="mb-4 flex justify-end">
         <Button variant="outline" render={<Link href={`/warranties?companyId=${companyId}`} />}>
           ← Volver
@@ -36,5 +37,6 @@ export default async function NewWarrantyPage({ searchParams }: { searchParams: 
       </div>
       <CreateWarrantyForm assets={assets.items} companyId={companyId} />
     </div>
+    </>
   );
 }

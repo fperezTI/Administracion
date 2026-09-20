@@ -34,8 +34,9 @@ export default async function WarrantyDetailPage({
   }
 
   return (
-    <div className="mx-auto max-w-md p-8">
+    <>
       <AppHeader title="Editar garantía" subtitle={warranty.assetFolio} />
+    <div className="mx-auto max-w-3xl px-8 pb-8">
       <div className="mb-4 flex justify-end">
         <Button variant="outline" render={<Link href={`/warranties?companyId=${companyId}`} />}>
           ← Volver
@@ -43,5 +44,6 @@ export default async function WarrantyDetailPage({
       </div>
       <EditWarrantyForm warranty={warranty} companyId={companyId} />
     </div>
+    </>
   );
 }

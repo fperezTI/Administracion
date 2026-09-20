@@ -4,12 +4,10 @@ import { useActionState } from "react";
 import type { MaintenanceOrderChecklistResultInfo } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { closeMaintenanceOrderAction, type CloseMaintenanceOrderActionState } from "./actions";
 
 const initialState: CloseMaintenanceOrderActionState = { error: null };
-
-const selectClassName =
-  "h-8 rounded-lg border border-input bg-transparent px-2.5 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 dark:bg-input/30";
 
 export function CloseMaintenanceOrderForm({
   maintenanceOrderId,
@@ -57,13 +55,19 @@ export function CloseMaintenanceOrderForm({
 
       <div className="flex flex-col gap-1">
         <Label htmlFor="resultStatus">Resultado</Label>
-        <select id="resultStatus" name="resultStatus" className={selectClassName} required defaultValue="">
-          <option value="" disabled>
-            Selecciona
-          </option>
-          <option value="InWarehouse">Reparado — vuelve a almacén</option>
-          <option value="Damaged">No se pudo reparar — queda dañado</option>
-        </select>
+        <Select name="resultStatus" required>
+          <SelectTrigger id="resultStatus" className="w-full">
+            <SelectValue placeholder="Selecciona">
+              {(value: "InWarehouse" | "Damaged") =>
+                ({ InWarehouse: "Reparado — vuelve a almacén", Damaged: "No se pudo reparar — queda dañado" })[value]
+              }
+            </SelectValue>
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="InWarehouse">Reparado — vuelve a almacén</SelectItem>
+            <SelectItem value="Damaged">No se pudo reparar — queda dañado</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
 
       <div className="flex flex-col gap-1">
@@ -78,7 +82,7 @@ export function CloseMaintenanceOrderForm({
         />
       </div>
 
-      {state.error && <p className="text-destructive text-sm">{state.error}</p>}
+      {state.error && <p className="text-destructive text-sm" role="alert">{state.error}</p>}
 
       <div className="flex justify-end">
         <Button type="submit" disabled={pending}>

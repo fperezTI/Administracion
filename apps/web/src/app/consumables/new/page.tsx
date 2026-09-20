@@ -21,12 +21,13 @@ export default async function NewConsumablePage({ searchParams }: { searchParams
     : me.companies[0].companyId;
 
   return (
-    <div className="mx-auto max-w-md p-8">
+    <>
       <AppHeader
         title="Nuevo consumible"
         subtitle="Se registra con existencia inicial en cero."
         activeCompany={<CompanySwitcher companies={me.companies} currentCompanyId={companyId} />}
       />
+    <div className="mx-auto max-w-xl px-8 pb-8">
       <div className="mb-4 flex justify-end">
         <Button variant="outline" render={<Link href={`/consumables?companyId=${companyId}`} />}>
           ← Volver
@@ -34,5 +35,6 @@ export default async function NewConsumablePage({ searchParams }: { searchParams
       </div>
       <CreateConsumableForm companyId={companyId} />
     </div>
+    </>
   );
 }

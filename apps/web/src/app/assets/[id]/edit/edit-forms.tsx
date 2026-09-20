@@ -6,7 +6,10 @@ import type { AssetCategoryDetail, AssetDetail, CustomFieldDefinitionSummary } f
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Field } from "@/components/ui/field";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { PHYSICAL_CONDITION_LABELS } from "@/lib/asset-labels";
 import {
   updateContractualAction,
   updateFinancialAction,
@@ -16,34 +19,10 @@ import {
 
 const editInitialState: EditActionState = { error: null, success: false };
 
-const selectClassName =
-  "h-8 rounded-lg border border-input bg-transparent px-2.5 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 dark:bg-input/30";
-
-function Field({
-  label,
-  htmlFor,
-  optional,
-  children,
-}: {
-  label: string;
-  htmlFor: string;
-  optional?: boolean;
-  children: React.ReactNode;
-}) {
-  return (
-    <div className="flex flex-col gap-1">
-      <Label htmlFor={htmlFor}>
-        {label} {optional && <span className="text-muted-foreground font-normal">(opcional)</span>}
-      </Label>
-      {children}
-    </div>
-  );
-}
-
 function SaveBar({ error, success, pending }: { error: string | null; success: boolean; pending: boolean }) {
   return (
     <div className="flex items-center justify-between">
-      <p className="text-sm">
+      <p className="text-sm" role="status">
         {error && <span className="text-destructive">{error}</span>}
         {!error && success && <span className="text-green-600 dark:text-green-500">Guardado.</span>}
       </p>
@@ -73,7 +52,7 @@ export function GeneralInfoForm({
         <form action={formAction} className="flex flex-col gap-4">
           <input type="hidden" name="assetId" value={asset.id} />
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Field label="Marca" htmlFor="brand">
               <Input id="brand" name="brand" defaultValue={asset.brand} required maxLength={100} />
             </Field>
@@ -82,7 +61,7 @@ export function GeneralInfoForm({
             </Field>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Field label="Número de serie" htmlFor="serialNumber" optional>
               <Input id="serialNumber" name="serialNumber" defaultValue={asset.serialNumber ?? ""} maxLength={100} />
             </Field>
@@ -96,21 +75,20 @@ export function GeneralInfoForm({
             </Field>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Field label="Condición física" htmlFor="physicalCondition">
-              <select
-                id="physicalCondition"
-                name="physicalCondition"
-                defaultValue={asset.physicalCondition}
-                className={selectClassName}
-                required
-              >
-                <option value="Excellent">Excelente</option>
-                <option value="Good">Buena</option>
-                <option value="Fair">Regular</option>
-                <option value="Poor">Mala</option>
-                <option value="Damaged">Dañado</option>
-              </select>
+              <Select name="physicalCondition" defaultValue={asset.physicalCondition} required>
+                <SelectTrigger id="physicalCondition" className="w-full">
+                  <SelectValue>{(value: keyof typeof PHYSICAL_CONDITION_LABELS) => PHYSICAL_CONDITION_LABELS[value]}</SelectValue>
+                </SelectTrigger>
+                <SelectContent>
+                  {Object.entries(PHYSICAL_CONDITION_LABELS).map(([value, label]) => (
+                    <SelectItem key={value} value={value}>
+                      {label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </Field>
             <div className="flex flex-col gap-1">
               <Label>Ubicación</Label>
@@ -152,28 +130,32 @@ function CustomFieldInput({ field, defaultValue }: { field: CustomFieldDefinitio
   return (
     <Field label={field.name} htmlFor={htmlId} optional={!field.isRequired}>
       {field.dataType === "Boolean" ? (
-        <select id={htmlId} name={name} className={selectClassName} required={field.isRequired} defaultValue={defaultValue}>
-          <option value="" disabled>
-            Selecciona
-          </option>
-          <option value="true">Sí</option>
-          <option value="false">No</option>
-        </select>
+        <Select name={name} required={field.isRequired} defaultValue={defaultValue || undefined}>
+          <SelectTrigger id={htmlId} className="w-full">
+            <SelectValue placeholder="Selecciona">{(value: string) => (value === "true" ? "Sí" : "No")}</SelectValue>
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="true">Sí</SelectItem>
+            <SelectItem value="false">No</SelectItem>
+          </SelectContent>
+        </Select>
       ) : field.dataType === "Select" ? (
-        <select id={htmlId} name={name} className={selectClassName} required={field.isRequired} defaultValue={defaultValue}>
-          <option value="" disabled>
-            Selecciona
-          </option>
-          {(field.options ?? "")
-            .split(",")
-            .map((option) => option.trim())
-            .filter(Boolean)
-            .map((option) => (
-              <option key={option} value={option}>
-                {option}
-              </option>
-            ))}
-        </select>
+        <Select name={name} required={field.isRequired} defaultValue={defaultValue || undefined}>
+          <SelectTrigger id={htmlId} className="w-full">
+            <SelectValue placeholder="Selecciona" />
+          </SelectTrigger>
+          <SelectContent>
+            {(field.options ?? "")
+              .split(",")
+              .map((option) => option.trim())
+              .filter(Boolean)
+              .map((option) => (
+                <SelectItem key={option} value={option}>
+                  {option}
+                </SelectItem>
+              ))}
+          </SelectContent>
+        </Select>
       ) : (
         <Input
           id={htmlId}
@@ -200,7 +182,7 @@ export function FinancialInfoForm({ asset }: { asset: AssetDetail }) {
         <form action={formAction} className="flex flex-col gap-4">
           <input type="hidden" name="assetId" value={asset.id} />
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Field label="Fecha de adquisición" htmlFor="acquisitionDate" optional>
               <Input id="acquisitionDate" name="acquisitionDate" type="date" defaultValue={asset.acquisitionDate ?? ""} />
             </Field>
@@ -216,7 +198,7 @@ export function FinancialInfoForm({ asset }: { asset: AssetDetail }) {
             </Field>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Field label="Moneda (ISO 4217)" htmlFor="currency" optional>
               <Input id="currency" name="currency" maxLength={3} defaultValue={asset.currency ?? ""} />
             </Field>
@@ -225,7 +207,7 @@ export function FinancialInfoForm({ asset }: { asset: AssetDetail }) {
             </Field>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Field label="Factura" htmlFor="invoice" optional>
               <Input id="invoice" name="invoice" maxLength={100} defaultValue={asset.invoice ?? ""} />
             </Field>
@@ -253,7 +235,7 @@ export function ContractualInfoForm({ asset }: { asset: AssetDetail }) {
         <form action={formAction} className="flex flex-col gap-4">
           <input type="hidden" name="assetId" value={asset.id} />
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Field label="Inicio de garantía" htmlFor="warrantyStartDate" optional>
               <Input
                 id="warrantyStartDate"
@@ -267,7 +249,7 @@ export function ContractualInfoForm({ asset }: { asset: AssetDetail }) {
             </Field>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Field label="Contrato de soporte" htmlFor="supportContract" optional>
               <Input id="supportContract" name="supportContract" maxLength={100} defaultValue={asset.supportContract ?? ""} />
             </Field>

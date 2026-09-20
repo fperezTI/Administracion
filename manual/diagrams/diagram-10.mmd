@@ -1,0 +1,32 @@
+flowchart TD
+    A[Alta del activo\no importación masiva] --> B[Activo en almacén]
+    B --> C{¿Qué se necesita hacer?}
+    C -->|Asignar a una persona| D[Crear asignación]
+    D --> E[Persona firma\nrecepción]
+    E --> F[Activo asignado]
+    F --> G[Devolución]
+    G --> B
+    C -->|Prestar brevemente| H[Crear préstamo]
+    H --> I[Activo prestado]
+    I --> J[Devolución del préstamo]
+    J --> B
+    C -->|Enviar a mantenimiento| K[Abrir orden de mantenimiento]
+    K --> L[Activo en mantenimiento]
+    L --> M{Resultado del cierre}
+    M -->|Reparado| B
+    M -->|No se pudo reparar| N[Activo dañado]
+    N --> O[Solicitar baja]
+    C -->|Transferir a otra empresa| P[Solicitar transferencia]
+    P --> Q[Aprobación del flujo\nconfigurado]
+    Q -->|Aprobada| R[Activo en tránsito]
+    R --> S[Empresa destino confirma\nrecepción con firma]
+    S --> T[Activo en almacén\nde la nueva empresa]
+    Q -->|Rechazada| B
+    C -->|Ya no se usará más| O
+    O --> U{Aprobación de baja}
+    U -->|Rechazada| B
+    U -->|Aprobada| V[Activo dado de baja]
+    V --> W[Solicitar disposición:\nventa, donación o destrucción]
+    W --> X{Aprobación de disposición}
+    X -->|Rechazada| V
+    X -->|Aprobada| Y[Activo vendido / donado / destruido]
