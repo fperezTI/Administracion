@@ -43,3 +43,5 @@ appsettings.*.local.json
 Thumbs.db
 .idea/
 *.swp
+~$*
+.api-dev.log
