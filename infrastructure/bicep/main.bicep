@@ -35,8 +35,11 @@ param apiContainerImageTag string = 'latest'
 @description('Tag of the asset-management-web image — set by the CD workflow to the commit SHA.')
 param webContainerImageTag string = 'latest'
 
-param appServicePlanSkuName string = environmentName == 'prod' ? 'P1v3' : 'B1'
-param sqlSkuName string = environmentName == 'prod' ? 'GP_S_Gen5_2' : 'GP_S_Gen5_1'
+// prod runs on Basic tiers (B1 / SQL Basic) for cost reasons — a deliberate downgrade from the
+// original P1v3 / GP_S_Gen5_2 sizing, made after the first real deployment. Revisit if concurrent
+// usage grows: SQL Basic caps at 5 DTU and 2GB, and B1 has no autoscale or deployment slots.
+param appServicePlanSkuName string = 'B1'
+param sqlSkuName string = environmentName == 'prod' ? 'Basic' : 'GP_S_Gen5_1'
 param acrSkuName string = environmentName == 'prod' ? 'Standard' : 'Basic'
 
 var tags = {

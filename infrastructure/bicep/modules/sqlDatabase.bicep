@@ -7,7 +7,7 @@ param projectName string
 param environmentName string
 param location string = resourceGroup().location
 param tags object = {}
-@allowed(['GP_S_Gen5_1', 'GP_S_Gen5_2', 'GP_Gen5_2', 'S0', 'S1'])
+@allowed(['GP_S_Gen5_1', 'GP_S_Gen5_2', 'GP_Gen5_2', 'S0', 'S1', 'Basic'])
 param sqlSkuName string = 'GP_S_Gen5_1'
 @description('Object id (sid) of the Entra ID user or group that becomes the SQL Server Entra admin.')
 param sqlAdminEntraObjectId string
