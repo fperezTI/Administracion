@@ -21,10 +21,11 @@ resource storageAccount 'Microsoft.Storage/storageAccounts@2023-01-01' = {
   location: location
   tags: tags
   kind: 'StorageV2'
-  // Standard_GRS requires a paired region for geo-replication; mexicocentral has none (no paired
-  // region yet), so prod uses zone redundancy (3 AZs available there) instead.
+  // Standard_GRS requires a paired region for geo-replication; mexicocentral has none. Started on
+  // Standard_ZRS (zone redundancy), then downgraded to Standard_LRS for cost during this initial,
+  // low-traffic stage — revisit if data durability requirements grow.
   sku: {
-    name: environmentName == 'prod' ? 'Standard_ZRS' : 'Standard_LRS'
+    name: 'Standard_LRS'
   }
   properties: {
     minimumTlsVersion: 'TLS1_2'

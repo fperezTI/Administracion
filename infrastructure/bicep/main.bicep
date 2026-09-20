@@ -40,7 +40,7 @@ param webContainerImageTag string = 'latest'
 // usage grows: SQL Basic caps at 5 DTU and 2GB, and B1 has no autoscale or deployment slots.
 param appServicePlanSkuName string = 'B1'
 param sqlSkuName string = environmentName == 'prod' ? 'Basic' : 'GP_S_Gen5_1'
-param acrSkuName string = environmentName == 'prod' ? 'Standard' : 'Basic'
+param acrSkuName string = 'Basic'
 
 var tags = {
   project: projectName
