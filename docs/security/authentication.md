@@ -69,6 +69,19 @@ Entra ID únicamente prueba identidad (quién es el usuario). La estructura orga
 administran **dentro de la aplicación** (ver `docs/security/authorization-rbac.md`) — Entra ID no se usa para
 grupos/roles de la aplicación en V1.
 
+## Pre-alta de usuarios desde el directorio de Entra ID
+
+Además del aprovisionamiento JIT descrito arriba, un administrador con el permiso `Users.Create` puede
+buscar en el directorio del propio tenant (Microsoft Graph, permiso de aplicación `User.Read.All` — ver
+`docs/security/entra-id-setup.md`) y crear el perfil local de alguien **antes** de su primer login, con
+rol y acceso a empresa ya configurados (`CreateUserFromDirectoryCommand`, usa el mismo
+`User.Provision(...)` que el paso 7 de arriba). No es una cuenta ni una identidad nueva — es la misma
+persona del mismo directorio, solo que su fila local se crea antes en vez de en el primer acceso. Cuando
+esa persona sí inicie sesión, `ProvisionOrUpdateUserCommand` encuentra la fila existente por
+`EntraObjectId` y solo actualiza el perfil, nunca la duplica. Esto es distinto de "cuentas locales o
+invitados sin Entra ID" (sigue fuera de alcance, ver abajo): aquí la identidad sigue siendo
+100% de Entra ID, solo se adelanta cuándo se crea el registro local.
+
 ## No implementado (explícitamente fuera de alcance)
 
 - Cuentas locales o invitados sin Entra ID.

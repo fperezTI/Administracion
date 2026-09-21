@@ -3,6 +3,7 @@ import { requireAccessToken } from "@/lib/require-session";
 import { ApiError, getUsers } from "@/lib/api";
 import { AppHeader } from "@/components/app-header";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
 export default async function UsersPage() {
@@ -60,8 +61,14 @@ export default async function UsersPage() {
 
   return (
     <>
-      <AppHeader title="Usuarios" subtitle="Los perfiles se crean automáticamente en el primer inicio de sesión con Entra ID." />
+      <AppHeader
+        title="Usuarios"
+        subtitle="Los perfiles se crean automáticamente en el primer inicio de sesión con Entra ID, o puedes agregarlos antes desde el directorio."
+      />
     <div className="mx-auto max-w-6xl px-8 pb-8">
+      <div className="mb-4 flex justify-end">
+        <Button render={<Link href="/users/new" />}>+ Agregar desde el directorio</Button>
+      </div>
       {content}
     </div>
     </>

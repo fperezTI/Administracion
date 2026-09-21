@@ -39,6 +39,11 @@ services:
       EntraId__Instance: "https://login.microsoftonline.com/"
       EntraId__TenantId: ${ENTRA_TENANT_ID:-}
       EntraId__ClientId: ${ENTRA_API_CLIENT_ID:-}
+      # App-only Graph access to search the tenant directory (docs/security/entra-id-setup.md) — reuses
+      # the API's own App Registration/tenant; empty ClientSecret disables the feature safely.
+      MicrosoftGraph__TenantId: ${ENTRA_TENANT_ID:-}
+      MicrosoftGraph__ClientId: ${ENTRA_API_CLIENT_ID:-}
+      MicrosoftGraph__ClientSecret: ${GRAPH_CLIENT_SECRET:-}
       # Azurite's well-known local dev account key (public, documented on Microsoft Learn — identical
       # on every Azurite install, not a real secret) — only the host changes for the Docker network.
       BlobStorage__ConnectionString: "DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;BlobEndpoint=http://azurite:10000/devstoreaccount1;"

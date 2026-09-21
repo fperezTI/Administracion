@@ -1,11 +1,13 @@
 using AssetManagement.Application.Common.Interfaces;
 using AssetManagement.Infrastructure.Common;
 using AssetManagement.Infrastructure.DataRetention;
+using AssetManagement.Infrastructure.Directory;
 using AssetManagement.Infrastructure.Email;
 using AssetManagement.Infrastructure.ImportExport;
 using AssetManagement.Infrastructure.Persistence;
 using AssetManagement.Infrastructure.Security;
 using AssetManagement.Infrastructure.Storage;
+using Azure.Identity;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -69,6 +71,25 @@ public static class DependencyInjection
         else
         {
             services.AddSingleton<IImportQueue>(_ => new AzureStorageQueueImportQueue(importQueueConnectionString));
+        }
+
+        // Pre-provisioning users from the tenant directory (see CreateUserFromDirectoryCommand) needs an
+        // app-only Microsoft Graph token — a separate concern from EntraId's token *validation* config
+        // above, which needs no secret of its own. Falls back to a search that fails loudly, rather than
+        // silently returning nothing, when Graph app credentials aren't configured yet (see
+        // docs/security/entra-id-setup.md).
+        var graphTenantId = configuration["MicrosoftGraph:TenantId"];
+        var graphClientId = configuration["MicrosoftGraph:ClientId"];
+        var graphClientSecret = configuration["MicrosoftGraph:ClientSecret"];
+        if (!string.IsNullOrWhiteSpace(graphTenantId) && !string.IsNullOrWhiteSpace(graphClientId)
+            && !string.IsNullOrWhiteSpace(graphClientSecret))
+        {
+            services.AddSingleton(new ClientSecretCredential(graphTenantId, graphClientId, graphClientSecret));
+            services.AddHttpClient<IDirectoryUserSearch, GraphDirectoryUserSearch>();
+        }
+        else
+        {
+            services.AddScoped<IDirectoryUserSearch, UnconfiguredDirectoryUserSearch>();
         }
 
         services.AddHostedService<ImportBatchBackgroundService>();

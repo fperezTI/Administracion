@@ -47,6 +47,20 @@ ya tienen UI propia desde F3); el formulario "mover" de
 backend sí lo rechaza — `MoveOrgUnitCommandHandler` — pero el error se muestra como página de error genérica
 de Next.js en vez de un mensaje en el formulario, porque esa acción no pasa por `useActionState`).
 
+**Seguimiento (agregar usuarios desde el directorio de Entra ID)**: hasta ahora un `User` local solo se
+creaba en el primer login (JIT, deliberado — ver `docs/security/authentication.md`), así que un admin no
+podía prepararle rol/acceso a empresa a alguien antes de que entrara por primera vez. Se agregó
+`CreateUserFromDirectoryCommand` (nuevo permiso `Users.Create`) + `SearchDirectoryUsersQuery`, que buscan
+en el directorio del tenant vía **Microsoft Graph REST v1.0 llamado directamente con `HttpClient` +
+`Azure.Identity` (`ClientSecretCredential`)** — deliberadamente sin el SDK `Microsoft.Graph`, una
+superficie grande y sensible a la versión exacta que no se podía verificar con certeza en el momento de
+construir esto. Reutiliza `User.Provision(...)`, el mismo factory del login JIT, así que cuando esa
+persona sí inicia sesión por primera vez no se duplica su fila. **Requiere un paso manual en Azure que
+Claude Code no puede ejecutar**: agregar el permiso de aplicación de Graph `User.Read.All` con
+consentimiento de administrador y un secreto de cliente al App Registration de la API — documentado en
+`docs/security/entra-id-setup.md` §1a. Sin ese secreto configurado (`MicrosoftGraph:ClientSecret` vacío),
+la búsqueda responde con un error claro de "no configurada" en vez de fallar de forma confusa.
+
 ## Estado de F2 (Catálogos + Asset Registry)
 
 **Backend** (con pruebas): `AssetCategory` con campos personalizados configurables por categoría

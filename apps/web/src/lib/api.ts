@@ -578,6 +578,19 @@ export function getUserById(accessToken: string, userId: string): Promise<UserDe
   return apiFetch<UserDetail>(accessToken, `/api/v1/users/${userId}`);
 }
 
+export type DirectoryUser = { entraObjectId: string; displayName: string; email: string };
+
+export function searchDirectoryUsers(accessToken: string, query: string): Promise<DirectoryUser[]> {
+  return apiFetch<DirectoryUser[]>(accessToken, `/api/v1/users/directory/search?query=${encodeURIComponent(query)}`);
+}
+
+export function createUserFromDirectory(
+  accessToken: string,
+  input: { entraObjectId: string; displayName: string; email: string; roleId: string; companyIds: string[] },
+): Promise<string> {
+  return apiFetch<string>(accessToken, "/api/v1/users/directory", { method: "POST", body: JSON.stringify(input) });
+}
+
 export function assignRoleToUser(accessToken: string, userId: string, roleId: string): Promise<void> {
   return apiFetch(accessToken, `/api/v1/users/${userId}/roles/${roleId}`, { method: "POST" });
 }

@@ -31,6 +31,24 @@ public sealed class UsersController(ISender mediator) : ControllerBase
         return Ok(result);
     }
 
+    [HttpGet("directory/search")]
+    [ProducesResponseType(typeof(IReadOnlyList<DirectoryUserResult>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<IReadOnlyList<DirectoryUserResult>>> SearchDirectory(
+        [FromQuery] string query, CancellationToken cancellationToken)
+    {
+        var result = await mediator.Send(new SearchDirectoryUsersQuery(query), cancellationToken);
+        return Ok(result);
+    }
+
+    [HttpPost("directory")]
+    [ProducesResponseType(typeof(Guid), StatusCodes.Status201Created)]
+    public async Task<ActionResult<Guid>> CreateFromDirectory(
+        CreateUserFromDirectoryCommand command, CancellationToken cancellationToken)
+    {
+        var userId = await mediator.Send(command, cancellationToken);
+        return CreatedAtAction(nameof(GetUserById), new { userId, version = "1.0" }, userId);
+    }
+
     [HttpPost("{userId:guid}/roles/{roleId:guid}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     public async Task<IActionResult> AssignRole(Guid userId, Guid roleId, CancellationToken cancellationToken)

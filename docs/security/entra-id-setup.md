@@ -56,7 +56,34 @@ Repite el proceso completo una vez por ambiente (`Dev`, `Test`, `Prod`) cuando l
      emitidos no lo incluyen retroactivamente.
 
 No se necesita secreto ni permisos adicionales en este registro — solo valida los tokens que le llegan
-(`Microsoft.Identity.Web` ya está configurado en `apps/api` para eso).
+(`Microsoft.Identity.Web` ya está configurado en `apps/api` para eso) — **salvo que quieras habilitar
+"agregar usuario desde el directorio"** (buscar gente del tenant y darle rol/acceso a empresa antes de su
+primer login), que sí necesita lo siguiente.
+
+#### 1a. (Opcional) Habilitar la búsqueda del directorio (Microsoft Graph)
+
+Reutiliza el mismo App Registration de la API — no crees uno nuevo:
+
+1. En `AssetManagement-API-Dev` → **Permisos de API** → **Agregar un permiso** → **Microsoft Graph** →
+   **Permisos de aplicación** (no delegados: la búsqueda la hace el backend por sí mismo, sin un usuario
+   que haya iniciado sesión) → busca y marca **`User.Read.All`** → **Agregar permisos**.
+2. Clic en **Conceder consentimiento de administrador para \<tu tenant\>** → **Sí**. Sin este paso, cada
+   búsqueda falla con `403 Insufficient privileges to complete the operation.`
+3. **Certificados y secretos** → **Nuevo secreto de cliente** → descripción + expiración (6–12 meses; en
+   producción usar un certificado respaldado por Key Vault, igual que se recomienda para el frontend) →
+   **Agregar** → copia el valor inmediatamente (no se vuelve a mostrar).
+4. Backend (`apps/api`), vía user-secrets:
+   ```bash
+   dotnet user-secrets set "MicrosoftGraph:TenantId" "<tenant-id>" --project src/AssetManagement.Api
+   dotnet user-secrets set "MicrosoftGraph:ClientId" "<api-client-id>" --project src/AssetManagement.Api
+   dotnet user-secrets set "MicrosoftGraph:ClientSecret" "<el-secreto-que-copiaste>" --project src/AssetManagement.Api
+   ```
+5. Docker Compose: agrega `GRAPH_CLIENT_SECRET=<el-secreto-que-copiaste>` a tu `.env` (ya está conectado
+   en `docker-compose.yml`, reutilizando `ENTRA_TENANT_ID`/`ENTRA_API_CLIENT_ID`).
+
+Si dejas `MicrosoftGraph:ClientSecret` vacío, la funcionalidad queda desactivada de forma segura: el
+endpoint de búsqueda responde con un error claro ("no configurada") en vez de fallar de forma confusa o
+fingir que funciona.
 
 ### 2. Registrar el frontend (Web)
 

@@ -40,6 +40,7 @@ public static class PermissionCatalog
     public static class Users
     {
         public const string Read = "Users.Read";
+        public const string Create = "Users.Create";
         public const string Update = "Users.Update";
         public const string ManageRoles = "Users.ManageRoles";
         public const string ManageCompanies = "Users.ManageCompanies";
@@ -203,6 +204,7 @@ public static class PermissionCatalog
         ("Permissions", "Manage", "Administrar la matriz de permisos por rol"),
 
         ("Users", "Read", "Consultar usuarios"),
+        ("Users", "Create", "Agregar usuarios desde el directorio de Entra ID"),
         ("Users", "Update", "Editar el perfil de un usuario"),
         ("Users", "ManageRoles", "Asignar y quitar roles a usuarios"),
         ("Users", "ManageCompanies", "Otorgar y revocar acceso de usuarios a empresas"),
