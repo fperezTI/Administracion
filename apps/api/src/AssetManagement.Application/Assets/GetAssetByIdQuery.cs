@@ -16,6 +16,8 @@ public sealed record AssetTagInfo(string Code, IdentificationTechnology Technolo
 
 public sealed record AssetCustomFieldValueInfo(Guid CustomFieldDefinitionId, string Value);
 
+public sealed record AssetAccessorySummary(Guid Id, string InternalFolio, string Brand, string Model, AssetStatus Status);
+
 public sealed record AssetDetail(
     Guid Id,
     Guid CompanyId,
@@ -41,6 +43,9 @@ public sealed record AssetDetail(
     string? SupportProvider,
     AssetTagInfo? Tag,
     IReadOnlyCollection<AssetCustomFieldValueInfo> CustomFieldValues,
+    Guid? AccessoryOfAssetId,
+    string? AccessoryOfAssetFolio,
+    IReadOnlyList<AssetAccessorySummary> Accessories,
     DateTimeOffset CreatedAtUtc,
     DateTimeOffset? UpdatedAtUtc);
 
@@ -54,6 +59,21 @@ public sealed class GetAssetByIdQueryHandler(IApplicationDbContext db) : IReques
             .FirstOrDefaultAsync(a => a.Id == request.AssetId, cancellationToken)
             ?? throw new NotFoundException(nameof(Asset), request.AssetId);
 
+        string? accessoryOfAssetFolio = null;
+        if (asset.AccessoryOfAssetId is { } primaryAssetId)
+        {
+            accessoryOfAssetFolio = await db.Assets.AsNoTracking()
+                .Where(a => a.Id == primaryAssetId)
+                .Select(a => a.InternalFolio)
+                .FirstOrDefaultAsync(cancellationToken);
+        }
+
+        var accessories = await db.Assets.AsNoTracking()
+            .Where(a => a.AccessoryOfAssetId == asset.Id)
+            .OrderBy(a => a.InternalFolio)
+            .Select(a => new AssetAccessorySummary(a.Id, a.InternalFolio, a.Brand, a.Model, a.Status))
+            .ToListAsync(cancellationToken);
+
         return new AssetDetail(
             asset.Id, asset.CompanyId, asset.AssetCategoryId, asset.InternalFolio, asset.PatrimonialFolio,
             asset.Brand, asset.Model, asset.SerialNumber, asset.Description, asset.Status, asset.PhysicalCondition,
@@ -62,6 +82,7 @@ public sealed class GetAssetByIdQueryHandler(IApplicationDbContext db) : IReques
             asset.SupportProvider,
             asset.Tag is null ? null : new AssetTagInfo(asset.Tag.Code, asset.Tag.Technology, asset.Tag.PrintCount),
             asset.CustomFieldValues.Select(v => new AssetCustomFieldValueInfo(v.CustomFieldDefinitionId, v.Value)).ToList(),
+            asset.AccessoryOfAssetId, accessoryOfAssetFolio, accessories,
             asset.CreatedAtUtc, asset.UpdatedAtUtc);
     }
 }

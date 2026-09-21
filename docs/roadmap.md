@@ -130,6 +130,31 @@ ubicación sin importar el estado operativo); el selector de destinatario en alt
 lista todos los usuarios del sistema sin filtrar por membresía de empresa (el backend sí valida la
 membresía y rechaza si no aplica — la lista solo podría mostrar opciones que luego se rechazan).
 
+**Seguimiento (reasignación + resguardo imprimible)**: la ficha de un activo (`/assets/[id]`) no enlazaba
+al flujo de asignación existente, y "reasignar" (devolver + asignar a otra persona en un solo paso) nunca
+se construyó — quedó documentado como scope de F3 pero nunca implementado. Se agregó `ReassignAssetCommand`
+(nuevo permiso `Assignments.Reassign`), que compone `Return` + `Create` atómicamente encadenando las
+transiciones `Assigned → InWarehouse → Reserved` (ambas ya válidas en `AssetStateMachine`, sin tocar el
+grafo); botones "Asignar"/"Reasignar" en la ficha del activo; y una página imprimible de resguardo
+(`/assignments/[id]/resguardo`, mismo patrón HTML + `window.print()` que la etiqueta QR — no PDF de
+servidor) como comprobante para el expediente físico, sin reemplazar la firma digital ya existente
+(`SignAssignmentCommand`). La cláusula de responsabilidad del resguardo es un placeholder razonable escrito
+directamente en la página (no se conectó al catálogo `Templates`, que todavía no tiene motor de
+renderizado) — pendiente que legal/RH del cliente la revise y ajuste.
+
+**Seguimiento (activos accesorios — paquetes de asignación)**: pedido del cliente para poder vincular
+activos secundarios a uno principal (ejemplo dado: una laptop y su cargador) de forma que se asignen,
+firmen, devuelvan y reasignen siempre juntos. No existía ningún concepto de relación activo↔activo antes
+de esto. Se agregó `Asset.AccessoryOfAssetId` (FK opcional auto-referenciada, restringida a un solo nivel
+— un accesorio no puede tener accesorios propios) gestionable desde la ficha del activo principal
+(`/assets/[id]/link-accessory`); y `Assignment.AssignmentGroupId` (nullable, sin backfill — una asignación
+sin accesorios sigue sin grupo, comportamiento idéntico al de antes de esta feature). Toda la cascada
+(crear, firmar, devolver, cancelar, reasignar) vive en un único helper compartido
+(`AssignmentGroupSupport.cs`) para no duplicar la lógica en los cinco comandos que la usan. El formulario
+de asignación y el de reasignación muestran los accesorios disponibles del activo principal como casillas
+premarcadas (se pueden excluir por asignación); "Mis asignaciones" agrupa las tarjetas por paquete con una
+sola confirmación de firma; el resguardo imprimible lista todos los activos del paquete cuando aplica.
+
 ## Estado de F4 (Approvals + E-Signature — núcleo)
 
 **Ambigüedades de diseño resueltas**: el boceto original del motor de aprobaciones (`domain-model.md`,

@@ -82,6 +82,31 @@ public sealed class AssetsController(ISender mediator) : ControllerBase
         return NoContent();
     }
 
+    [HttpGet("{assetId:guid}/accessories/candidates")]
+    [ProducesResponseType(typeof(IReadOnlyList<AccessoryCandidate>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<IReadOnlyList<AccessoryCandidate>>> GetAccessoryCandidates(
+        Guid assetId, [FromQuery] Guid companyId, CancellationToken cancellationToken)
+    {
+        var result = await mediator.Send(new GetEligibleAccessoryCandidatesQuery(companyId, assetId), cancellationToken);
+        return Ok(result);
+    }
+
+    [HttpPost("{assetId:guid}/accessories/{accessoryAssetId:guid}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    public async Task<IActionResult> LinkAccessory(Guid assetId, Guid accessoryAssetId, CancellationToken cancellationToken)
+    {
+        await mediator.Send(new LinkAssetAccessoryCommand(assetId, accessoryAssetId), cancellationToken);
+        return NoContent();
+    }
+
+    [HttpDelete("{assetId:guid}/accessories/{accessoryAssetId:guid}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    public async Task<IActionResult> UnlinkAccessory(Guid assetId, Guid accessoryAssetId, CancellationToken cancellationToken)
+    {
+        await mediator.Send(new UnlinkAssetAccessoryCommand(accessoryAssetId), cancellationToken);
+        return NoContent();
+    }
+
     [HttpPost("{assetId:guid}/tag/reprint")]
     [ProducesResponseType(typeof(ReprintAssetTagResult), StatusCodes.Status200OK)]
     public async Task<ActionResult<ReprintAssetTagResult>> ReprintTag(Guid assetId, CancellationToken cancellationToken)

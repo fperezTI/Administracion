@@ -29,16 +29,23 @@ public sealed class CancelPendingAssignmentCommandHandler(
             throw new ForbiddenAccessException("El usuario no tiene acceso a la empresa de esta asignación.");
         }
 
-        var asset = await db.Assets.FirstOrDefaultAsync(a => a.Id == assignment.AssetId, cancellationToken)
-            ?? throw new NotFoundException(nameof(Asset), assignment.AssetId);
-
-        var movement = await db.Movements.FirstOrDefaultAsync(m => m.Id == assignment.MovementId, cancellationToken)
-            ?? throw new NotFoundException(nameof(Movement), assignment.MovementId);
-
         var now = clock.UtcNow;
-        assignment.Cancel(now, currentUser.UserId);
-        movement.Cancel(now, currentUser.UserId);
-        asset.ChangeStatus(AssetStatus.InWarehouse, now, currentUser.UserId);
+
+        var groupMembers = await AssignmentGroupSupport.GetGroupMembersAsync(
+            db, assignment, AssignmentStatus.PendingSignature, cancellationToken);
+
+        foreach (var member in groupMembers)
+        {
+            var asset = await db.Assets.FirstOrDefaultAsync(a => a.Id == member.AssetId, cancellationToken)
+                ?? throw new NotFoundException(nameof(Asset), member.AssetId);
+
+            var movement = await db.Movements.FirstOrDefaultAsync(m => m.Id == member.MovementId, cancellationToken)
+                ?? throw new NotFoundException(nameof(Movement), member.MovementId);
+
+            member.Cancel(now, currentUser.UserId);
+            movement.Cancel(now, currentUser.UserId);
+            asset.ChangeStatus(AssetStatus.InWarehouse, now, currentUser.UserId);
+        }
 
         await db.SaveChangesAsync(cancellationToken);
     }

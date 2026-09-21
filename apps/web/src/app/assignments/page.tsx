@@ -50,6 +50,11 @@ export default async function AssignmentsPage({ searchParams }: { searchParams: 
                     <Link href={`/assignments/${a.id}`} className="hover:text-primary font-mono font-medium hover:underline">
                       {a.assetFolio}
                     </Link>
+                    {a.groupId && (
+                      <Badge variant="secondary" className="ml-2">
+                        Paquete
+                      </Badge>
+                    )}
                   </TableCell>
                   <TableCell>{a.assignedToDisplayName}</TableCell>
                   <TableCell>

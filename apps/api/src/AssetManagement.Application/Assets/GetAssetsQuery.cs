@@ -28,7 +28,8 @@ public sealed record AssetSummary(
     string Model,
     string? SerialNumber,
     AssetStatus Status,
-    PhysicalCondition PhysicalCondition);
+    PhysicalCondition PhysicalCondition,
+    Guid? AccessoryOfAssetId);
 
 public sealed class GetAssetsQueryHandler(IApplicationDbContext db, ICurrentCompanyContext currentCompany)
     : IRequestHandler<GetAssetsQuery, PagedResult<AssetSummary>>
@@ -63,7 +64,8 @@ public sealed class GetAssetsQueryHandler(IApplicationDbContext db, ICurrentComp
         }
 
         var projected = query.OrderBy(a => a.InternalFolio).Select(a => new AssetSummary(
-            a.Id, a.InternalFolio, a.AssetCategoryId, a.Brand, a.Model, a.SerialNumber, a.Status, a.PhysicalCondition));
+            a.Id, a.InternalFolio, a.AssetCategoryId, a.Brand, a.Model, a.SerialNumber, a.Status, a.PhysicalCondition,
+            a.AccessoryOfAssetId));
 
         return PagedResult<AssetSummary>.CreateAsync(projected, request.PageNumber, request.PageSize, cancellationToken);
     }

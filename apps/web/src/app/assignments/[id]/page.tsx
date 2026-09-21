@@ -37,8 +37,33 @@ export default async function AssignmentDetailPage({ params }: { params: Promise
           </Link>
           <p className="text-muted-foreground text-sm">Asignado a {assignment.assignedToDisplayName}</p>
         </div>
-        <Badge variant={assignmentStatusBadgeVariant(assignment.status)}>{ASSIGNMENT_STATUS_LABELS[assignment.status]}</Badge>
+        <div className="flex items-center gap-2">
+          <Badge variant={assignmentStatusBadgeVariant(assignment.status)}>{ASSIGNMENT_STATUS_LABELS[assignment.status]}</Badge>
+          {assignment.status !== "Cancelled" && (
+            <Button variant="outline" render={<Link href={`/assignments/${assignment.id}/resguardo`} />}>
+              Imprimir resguardo
+            </Button>
+          )}
+        </div>
       </div>
+
+      {assignment.groupMembers.length > 1 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-sm">Incluye también</CardTitle>
+          </CardHeader>
+          <CardContent className="flex flex-col gap-1 text-sm">
+            {assignment.groupMembers
+              .filter((m) => m.assetId !== assignment.assetId)
+              .map((member) => (
+                <Link key={member.assetId} href={`/assets/${member.assetId}`} className="hover:text-primary hover:underline">
+                  <span className="font-mono">{member.assetFolio}</span> — {member.brand} {member.model}
+                  {!member.isPrimary && <span className="text-muted-foreground"> (accesorio)</span>}
+                </Link>
+              ))}
+          </CardContent>
+        </Card>
+      )}
 
       <Card>
         <CardHeader>

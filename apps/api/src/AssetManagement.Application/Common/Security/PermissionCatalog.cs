@@ -58,6 +58,7 @@ public static class PermissionCatalog
         public const string Read = "Assignments.Read";
         public const string Create = "Assignments.Create";
         public const string Update = "Assignments.Update";
+        public const string Reassign = "Assignments.Reassign";
     }
 
     public static class Returns
@@ -214,6 +215,7 @@ public static class PermissionCatalog
         ("Assignments", "Read", "Consultar asignaciones"),
         ("Assignments", "Create", "Crear asignaciones"),
         ("Assignments", "Update", "Editar asignaciones"),
+        ("Assignments", "Reassign", "Reasignar activos"),
 
         ("Returns", "Read", "Consultar devoluciones"),
         ("Returns", "Create", "Registrar devoluciones"),

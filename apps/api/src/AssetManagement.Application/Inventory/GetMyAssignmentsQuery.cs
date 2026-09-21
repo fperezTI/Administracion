@@ -20,7 +20,8 @@ public sealed record MyAssignmentSummary(
     string AssetBrand,
     string AssetModel,
     AssignmentStatus Status,
-    DateTimeOffset AssignedAtUtc);
+    DateTimeOffset AssignedAtUtc,
+    Guid? GroupId);
 
 public sealed class GetMyAssignmentsQueryHandler(IApplicationDbContext db, ICurrentUserContext currentUser)
     : IRequestHandler<GetMyAssignmentsQuery, IReadOnlyList<MyAssignmentSummary>>
@@ -40,7 +41,9 @@ public sealed class GetMyAssignmentsQueryHandler(IApplicationDbContext db, ICurr
             // provider emit an invalid nvarchar '^' comparison for the string-converted enum — an
             // explicit CASE-shaped int key (0/1) translates cleanly instead.
             orderby a.Status == AssignmentStatus.PendingSignature ? 0 : 1, a.AssignedAtUtc descending
-            select new MyAssignmentSummary(a.Id, a.AssetId, asset.InternalFolio, asset.Brand, asset.Model, a.Status, a.AssignedAtUtc);
+            select new MyAssignmentSummary(
+                a.Id, a.AssetId, asset.InternalFolio, asset.Brand, asset.Model, a.Status, a.AssignedAtUtc,
+                a.AssignmentGroupId);
 
         return await results.ToListAsync(cancellationToken);
     }

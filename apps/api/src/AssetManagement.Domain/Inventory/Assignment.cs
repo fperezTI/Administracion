@@ -16,6 +16,14 @@ public sealed class Assignment : AuditableAggregateRoot<Guid>
     public Guid AssignedToUserId { get; private set; }
     public Guid? OrgUnitId { get; private set; }
     public Guid MovementId { get; private set; }
+
+    /// <summary>Links assignments created in the same bundle operation (a primary asset plus the
+    /// accessories included with it, e.g. a laptop and its charger) — null for the common case of a
+    /// single-asset assignment, so nothing here changes for existing data or callers that never pass one.
+    /// Every lifecycle step (sign, return, cancel, reassign) cascades to every assignment sharing this id
+    /// instead of acting on just one — see AssetManagement.Application.Inventory.AssignmentGroupSupport.</summary>
+    public Guid? AssignmentGroupId { get; private set; }
+
     public AssignmentStatus Status { get; private set; }
     public Guid? SignatureRecordId { get; private set; }
     public DateTimeOffset AssignedAtUtc { get; private set; }
@@ -30,7 +38,7 @@ public sealed class Assignment : AuditableAggregateRoot<Guid>
 
     private Assignment(
         Guid id, Guid companyId, Guid assetId, Guid assignedToUserId, Guid? orgUnitId, Guid movementId,
-        DateTimeOffset nowUtc, Guid? createdByUserId)
+        Guid? assignmentGroupId, DateTimeOffset nowUtc, Guid? createdByUserId)
         : base(id, nowUtc, createdByUserId)
     {
         CompanyId = companyId;
@@ -38,14 +46,15 @@ public sealed class Assignment : AuditableAggregateRoot<Guid>
         AssignedToUserId = assignedToUserId;
         OrgUnitId = orgUnitId;
         MovementId = movementId;
+        AssignmentGroupId = assignmentGroupId;
         Status = AssignmentStatus.PendingSignature;
         AssignedAtUtc = nowUtc;
     }
 
     public static Assignment Create(
         Guid companyId, Guid assetId, Guid assignedToUserId, Guid? orgUnitId, Guid movementId,
-        DateTimeOffset nowUtc, Guid? createdByUserId) =>
-        new(Guid.NewGuid(), companyId, assetId, assignedToUserId, orgUnitId, movementId, nowUtc, createdByUserId);
+        DateTimeOffset nowUtc, Guid? createdByUserId, Guid? assignmentGroupId = null) =>
+        new(Guid.NewGuid(), companyId, assetId, assignedToUserId, orgUnitId, movementId, assignmentGroupId, nowUtc, createdByUserId);
 
     public void Accept(Guid signatureRecordId, DateTimeOffset nowUtc, Guid? updatedByUserId)
     {

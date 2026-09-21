@@ -25,6 +25,13 @@ public sealed class Asset : AuditableAggregateRoot<Guid>
     public PhysicalCondition PhysicalCondition { get; private set; }
     public Guid? CurrentOrgUnitId { get; private set; }
 
+    /// <summary>Optional link to another <see cref="Asset"/> this one is an accessory of (e.g. a charger
+    /// for a laptop) — restricted to a single level by the commands that set it (an accessory can never
+    /// itself have accessories), so this field alone is never enough to reconstruct a chain deeper than
+    /// one hop. Assigning the primary asset cascades to every asset pointing here — see
+    /// AssetManagement.Application.Inventory.AssignmentGroupSupport.</summary>
+    public Guid? AccessoryOfAssetId { get; private set; }
+
     public DateOnly? AcquisitionDate { get; private set; }
     public decimal? AcquisitionCost { get; private set; }
     public string? Currency { get; private set; }
@@ -142,6 +149,25 @@ public sealed class Asset : AuditableAggregateRoot<Guid>
     public void MoveToOrgUnit(Guid? orgUnitId, DateTimeOffset nowUtc, Guid? updatedByUserId)
     {
         CurrentOrgUnitId = orgUnitId;
+        RecordUpdate(nowUtc, updatedByUserId);
+    }
+
+    /// <summary>Chain-depth and cross-company validation live in the application command (they need to
+    /// query other assets) — this guards only the one invariant the entity can check by itself.</summary>
+    public void LinkAsAccessoryOf(Guid primaryAssetId, DateTimeOffset nowUtc, Guid? updatedByUserId)
+    {
+        if (primaryAssetId == Id)
+        {
+            throw new DomainException("Un activo no puede ser accesorio de sí mismo.");
+        }
+
+        AccessoryOfAssetId = primaryAssetId;
+        RecordUpdate(nowUtc, updatedByUserId);
+    }
+
+    public void UnlinkAccessory(DateTimeOffset nowUtc, Guid? updatedByUserId)
+    {
+        AccessoryOfAssetId = null;
         RecordUpdate(nowUtc, updatedByUserId);
     }
 

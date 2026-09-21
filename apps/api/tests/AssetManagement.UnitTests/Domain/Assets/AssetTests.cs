@@ -156,4 +156,36 @@ public class AssetTests
 
         act.Should().Throw<DomainException>();
     }
+
+    [Fact]
+    public void LinkAsAccessoryOf_sets_the_primary_asset_id()
+    {
+        var asset = CreateAsset();
+        var primaryAssetId = Guid.NewGuid();
+
+        asset.LinkAsAccessoryOf(primaryAssetId, Now, null);
+
+        asset.AccessoryOfAssetId.Should().Be(primaryAssetId);
+    }
+
+    [Fact]
+    public void LinkAsAccessoryOf_rejects_linking_to_itself()
+    {
+        var asset = CreateAsset();
+
+        var act = () => asset.LinkAsAccessoryOf(asset.Id, Now, null);
+
+        act.Should().Throw<DomainException>();
+    }
+
+    [Fact]
+    public void UnlinkAccessory_clears_the_primary_asset_id()
+    {
+        var asset = CreateAsset();
+        asset.LinkAsAccessoryOf(Guid.NewGuid(), Now, null);
+
+        asset.UnlinkAccessory(Now, null);
+
+        asset.AccessoryOfAssetId.Should().BeNull();
+    }
 }

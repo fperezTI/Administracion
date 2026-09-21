@@ -31,6 +31,7 @@ export async function createAssignmentAction(
       assignedToUserId,
       orgUnitId: emptyToNull(formData.get("orgUnitId")),
       notes: emptyToNull(formData.get("notes")),
+      accessoryAssetIds: formData.getAll("accessoryAssetIds").map(String),
     });
     assignmentId = result.assignmentId;
   } catch (error) {

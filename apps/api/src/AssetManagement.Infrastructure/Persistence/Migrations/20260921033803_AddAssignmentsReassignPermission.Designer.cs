@@ -4,6 +4,7 @@ using AssetManagement.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace AssetManagement.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260921033803_AddAssignmentsReassignPermission")]
+    partial class AddAssignmentsReassignPermission
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -169,9 +172,6 @@ namespace AssetManagement.Infrastructure.Persistence.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid?>("AccessoryOfAssetId")
-                        .HasColumnType("uniqueidentifier");
-
                     b.Property<decimal?>("AcquisitionCost")
                         .HasColumnType("decimal(18,2)");
 
@@ -272,8 +272,6 @@ namespace AssetManagement.Infrastructure.Persistence.Migrations
                         .HasColumnType("date");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("AccessoryOfAssetId");
 
                     b.HasIndex("AssetCategoryId");
 
@@ -751,13 +749,6 @@ namespace AssetManagement.Infrastructure.Persistence.Migrations
                             Id = new Guid("c63e9245-979e-0353-3f7f-ea5795c10cde"),
                             Action = "Read",
                             Description = "Consultar usuarios",
-                            Module = "Users"
-                        },
-                        new
-                        {
-                            Id = new Guid("e79d8cef-c806-25f1-6c8a-5d665fce4efe"),
-                            Action = "Create",
-                            Description = "Agregar usuarios desde el directorio de Entra ID",
                             Module = "Users"
                         },
                         new
@@ -1370,9 +1361,6 @@ namespace AssetManagement.Infrastructure.Persistence.Migrations
                     b.Property<Guid>("AssignedToUserId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid?>("AssignmentGroupId")
-                        .HasColumnType("uniqueidentifier");
-
                     b.Property<Guid>("CompanyId")
                         .HasColumnType("uniqueidentifier");
 
@@ -1414,9 +1402,6 @@ namespace AssetManagement.Infrastructure.Persistence.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("AssetId");
-
-                    b.HasIndex("AssignmentGroupId")
-                        .HasFilter("[AssignmentGroupId] IS NOT NULL");
 
                     b.HasIndex("MovementId");
 
@@ -2513,11 +2498,6 @@ namespace AssetManagement.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("AssetManagement.Domain.Assets.Asset", b =>
                 {
-                    b.HasOne("AssetManagement.Domain.Assets.Asset", null)
-                        .WithMany()
-                        .HasForeignKey("AccessoryOfAssetId")
-                        .OnDelete(DeleteBehavior.Restrict);
-
                     b.HasOne("AssetManagement.Domain.Assets.AssetCategory", null)
                         .WithMany()
                         .HasForeignKey("AssetCategoryId")

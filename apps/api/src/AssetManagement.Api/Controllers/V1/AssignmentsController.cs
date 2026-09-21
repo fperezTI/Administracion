@@ -21,9 +21,10 @@ public sealed class AssignmentsController(ISender mediator) : ControllerBase
         [FromQuery] int pageNumber = 1,
         [FromQuery] int pageSize = 50,
         [FromQuery] AssignmentStatus? status = null,
+        [FromQuery] Guid? assetId = null,
         CancellationToken cancellationToken = default)
     {
-        var result = await mediator.Send(new GetAssignmentsQuery(companyId, pageNumber, pageSize, status), cancellationToken);
+        var result = await mediator.Send(new GetAssignmentsQuery(companyId, pageNumber, pageSize, status, assetId), cancellationToken);
         return Ok(result);
     }
 
@@ -76,6 +77,14 @@ public sealed class AssignmentsController(ISender mediator) : ControllerBase
     {
         await mediator.Send(new ReturnAssignmentCommand(assignmentId, request.TypedFullName, request.Notes), cancellationToken);
         return NoContent();
+    }
+
+    [HttpPost("reassign")]
+    [ProducesResponseType(typeof(CreateAssignmentResult), StatusCodes.Status201Created)]
+    public async Task<ActionResult<CreateAssignmentResult>> Reassign(ReassignAssetCommand command, CancellationToken cancellationToken)
+    {
+        var result = await mediator.Send(command, cancellationToken);
+        return CreatedAtAction(nameof(GetById), new { assignmentId = result.AssignmentId, version = "1.0" }, result);
     }
 }
 

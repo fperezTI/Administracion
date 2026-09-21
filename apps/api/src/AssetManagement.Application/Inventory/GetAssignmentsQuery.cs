@@ -8,7 +8,8 @@ using Microsoft.EntityFrameworkCore;
 
 namespace AssetManagement.Application.Inventory;
 
-public sealed record GetAssignmentsQuery(Guid CompanyId, int PageNumber = 1, int PageSize = 50, AssignmentStatus? Status = null)
+public sealed record GetAssignmentsQuery(
+    Guid CompanyId, int PageNumber = 1, int PageSize = 50, AssignmentStatus? Status = null, Guid? AssetId = null)
     : IRequest<PagedResult<AssignmentSummary>>, IRequiresPermission
 {
     public string PermissionCode => PermissionCatalog.Assignments.Read;
@@ -23,7 +24,8 @@ public sealed record AssignmentSummary(
     AssignmentStatus Status,
     DateTimeOffset AssignedAtUtc,
     DateTimeOffset? AcceptedAtUtc,
-    DateTimeOffset? ReturnedAtUtc);
+    DateTimeOffset? ReturnedAtUtc,
+    Guid? GroupId);
 
 public sealed class GetAssignmentsQueryHandler(IApplicationDbContext db, ICurrentCompanyContext currentCompany)
     : IRequestHandler<GetAssignmentsQuery, PagedResult<AssignmentSummary>>
@@ -42,6 +44,11 @@ public sealed class GetAssignmentsQueryHandler(IApplicationDbContext db, ICurren
             query = query.Where(a => a.Status == status);
         }
 
+        if (request.AssetId is { } assetId)
+        {
+            query = query.Where(a => a.AssetId == assetId);
+        }
+
         var projected =
             from a in query
             join asset in db.Assets.AsNoTracking() on a.AssetId equals asset.Id
@@ -49,7 +56,7 @@ public sealed class GetAssignmentsQueryHandler(IApplicationDbContext db, ICurren
             orderby a.AssignedAtUtc descending
             select new AssignmentSummary(
                 a.Id, a.AssetId, asset.InternalFolio, a.AssignedToUserId, user.DisplayName, a.Status,
-                a.AssignedAtUtc, a.AcceptedAtUtc, a.ReturnedAtUtc);
+                a.AssignedAtUtc, a.AcceptedAtUtc, a.ReturnedAtUtc, a.AssignmentGroupId);
 
         return PagedResult<AssignmentSummary>.CreateAsync(projected, request.PageNumber, request.PageSize, cancellationToken);
     }

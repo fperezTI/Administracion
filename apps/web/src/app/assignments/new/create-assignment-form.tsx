@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { useActionState } from "react";
 import type { AssetSummary, OrgUnitNode, UserSummary } from "@/lib/api";
 import { flattenOrgUnitTree } from "@/lib/org-unit-tree";
@@ -15,19 +16,28 @@ export function CreateAssignmentForm({
   assets,
   users,
   orgUnits,
+  defaultAssetId,
 }: {
   assets: AssetSummary[];
   users: UserSummary[];
   orgUnits: OrgUnitNode[];
+  defaultAssetId?: string | null;
 }) {
   const [state, formAction, pending] = useActionState(createAssignmentAction, initialState);
   const orgUnitOptions = flattenOrgUnitTree(orgUnits);
+  const [selectedAssetId, setSelectedAssetId] = useState(defaultAssetId ?? "");
+  const availableAccessories = assets.filter((a) => a.accessoryOfAssetId === selectedAssetId);
 
   return (
     <form action={formAction} className="flex flex-col gap-4">
       <div className="flex flex-col gap-1">
         <Label htmlFor="assetId">Activo (debe estar en almacén)</Label>
-        <Select name="assetId" required>
+        <Select
+          name="assetId"
+          required
+          value={selectedAssetId}
+          onValueChange={(value) => setSelectedAssetId(value ?? "")}
+        >
           <SelectTrigger id="assetId" className="w-full">
             <SelectValue placeholder="Selecciona">
               {(value: string) => {
@@ -48,6 +58,18 @@ export function CreateAssignmentForm({
           <p className="text-muted-foreground text-xs">No hay activos en almacén disponibles para asignar.</p>
         )}
       </div>
+
+      {availableAccessories.length > 0 && (
+        <div className="flex flex-col gap-2">
+          <Label>Accesorios a incluir</Label>
+          {availableAccessories.map((accessory) => (
+            <label key={accessory.id} className="flex items-center gap-2 text-sm">
+              <input type="checkbox" name="accessoryAssetIds" value={accessory.id} defaultChecked className="size-4" />
+              {accessory.internalFolio} — {accessory.brand} {accessory.model}
+            </label>
+          ))}
+        </div>
+      )}
 
       <div className="flex flex-col gap-1">
         <Label htmlFor="assignedToUserId">Destinatario</Label>

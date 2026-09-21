@@ -14,8 +14,8 @@ public class CreateAssignmentCommandHandlerTests
 {
     private static readonly DateTimeOffset Now = new(2026, 9, 15, 12, 0, 0, TimeSpan.Zero);
 
-    private static Asset CreateWarehouseAsset(Guid companyId) => Asset.Create(
-        companyId, Guid.NewGuid(), "ASSET-000001", "Dell", "Latitude 5450", "SN-1", null,
+    private static Asset CreateWarehouseAsset(Guid companyId, string internalFolio = "ASSET-000001") => Asset.Create(
+        companyId, Guid.NewGuid(), internalFolio, "Dell", "Latitude 5450", $"SN-{internalFolio}", null,
         PhysicalCondition.Excellent, Now, null);
 
     private static User CreateUserWithCompanyAccess(Guid companyId)
@@ -69,6 +69,84 @@ public class CreateAssignmentCommandHandlerTests
             db, companyContext, new FakeCurrentUserContext(), new FakeFolioGenerator(), new FakeClock(Now));
 
         var act = () => handler.Handle(new CreateAssignmentCommand(asset.Id, recipient.Id, null, null), CancellationToken.None);
+
+        await act.Should().ThrowAsync<ConflictException>();
+    }
+
+    [Fact]
+    public async Task Includes_accessories_in_the_same_group_as_the_primary_asset()
+    {
+        var companyId = Guid.NewGuid();
+        var companyContext = new FakeCurrentCompanyContext { AccessibleCompanyIds = [companyId] };
+        using var db = InMemoryAppDbContextFactory.Create(companyContext);
+        var laptop = CreateWarehouseAsset(companyId, "ASSET-000001");
+        var charger = CreateWarehouseAsset(companyId, "ASSET-000002");
+        charger.LinkAsAccessoryOf(laptop.Id, Now, null);
+        var recipient = CreateUserWithCompanyAccess(companyId);
+        db.Assets.Add(laptop);
+        db.Assets.Add(charger);
+        db.Users.Add(recipient);
+        await db.SaveChangesAsync();
+
+        var handler = new CreateAssignmentCommandHandler(
+            db, companyContext, new FakeCurrentUserContext(), new FakeFolioGenerator(), new FakeClock(Now));
+
+        var result = await handler.Handle(
+            new CreateAssignmentCommand(laptop.Id, recipient.Id, null, null, [charger.Id]), CancellationToken.None);
+
+        var laptopAssignment = await db.Assignments.SingleAsync(a => a.Id == result.AssignmentId);
+        var chargerAssignment = await db.Assignments.SingleAsync(a => a.AssetId == charger.Id);
+        laptopAssignment.AssignmentGroupId.Should().NotBeNull();
+        chargerAssignment.AssignmentGroupId.Should().Be(laptopAssignment.AssignmentGroupId);
+
+        var reloadedCharger = await db.Assets.SingleAsync(a => a.Id == charger.Id);
+        reloadedCharger.Status.Should().Be(AssetStatus.Reserved);
+    }
+
+    [Fact]
+    public async Task Rejects_an_accessory_that_is_not_linked_to_the_primary_asset()
+    {
+        var companyId = Guid.NewGuid();
+        var companyContext = new FakeCurrentCompanyContext { AccessibleCompanyIds = [companyId] };
+        using var db = InMemoryAppDbContextFactory.Create(companyContext);
+        var laptop = CreateWarehouseAsset(companyId, "ASSET-000001");
+        var unrelatedAsset = CreateWarehouseAsset(companyId, "ASSET-000002");
+        var recipient = CreateUserWithCompanyAccess(companyId);
+        db.Assets.Add(laptop);
+        db.Assets.Add(unrelatedAsset);
+        db.Users.Add(recipient);
+        await db.SaveChangesAsync();
+
+        var handler = new CreateAssignmentCommandHandler(
+            db, companyContext, new FakeCurrentUserContext(), new FakeFolioGenerator(), new FakeClock(Now));
+
+        var act = () => handler.Handle(
+            new CreateAssignmentCommand(laptop.Id, recipient.Id, null, null, [unrelatedAsset.Id]), CancellationToken.None);
+
+        await act.Should().ThrowAsync<ConflictException>();
+    }
+
+    [Fact]
+    public async Task Rejects_an_accessory_that_is_not_available_in_the_warehouse()
+    {
+        var companyId = Guid.NewGuid();
+        var companyContext = new FakeCurrentCompanyContext { AccessibleCompanyIds = [companyId] };
+        using var db = InMemoryAppDbContextFactory.Create(companyContext);
+        var laptop = CreateWarehouseAsset(companyId, "ASSET-000001");
+        var charger = CreateWarehouseAsset(companyId, "ASSET-000002");
+        charger.LinkAsAccessoryOf(laptop.Id, Now, null);
+        charger.ChangeStatus(AssetStatus.InMaintenance, Now, null);
+        var recipient = CreateUserWithCompanyAccess(companyId);
+        db.Assets.Add(laptop);
+        db.Assets.Add(charger);
+        db.Users.Add(recipient);
+        await db.SaveChangesAsync();
+
+        var handler = new CreateAssignmentCommandHandler(
+            db, companyContext, new FakeCurrentUserContext(), new FakeFolioGenerator(), new FakeClock(Now));
+
+        var act = () => handler.Handle(
+            new CreateAssignmentCommand(laptop.Id, recipient.Id, null, null, [charger.Id]), CancellationToken.None);
 
         await act.Should().ThrowAsync<ConflictException>();
     }

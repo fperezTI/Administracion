@@ -20,6 +20,7 @@ public sealed class AssignmentConfiguration : IEntityTypeConfiguration<Assignmen
 
         builder.HasIndex(a => new { a.CompanyId, a.AssetId });
         builder.HasIndex(a => new { a.CompanyId, a.AssignedToUserId });
+        builder.HasIndex(a => a.AssignmentGroupId).HasFilter("[AssignmentGroupId] IS NOT NULL");
 
         builder.HasOne<Domain.Assets.Asset>().WithMany().HasForeignKey(a => a.AssetId).OnDelete(DeleteBehavior.Restrict);
         builder.HasOne<Movement>().WithMany().HasForeignKey(a => a.MovementId).OnDelete(DeleteBehavior.Restrict);

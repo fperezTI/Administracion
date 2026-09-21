@@ -9,7 +9,7 @@ import { CreateAssignmentForm } from "./create-assignment-form";
 export default async function NewAssignmentPage({
   searchParams,
 }: {
-  searchParams: Promise<{ companyId?: string }>;
+  searchParams: Promise<{ companyId?: string; assetId?: string }>;
 }) {
   const accessToken = await requireAccessToken();
   const params = await searchParams;
@@ -38,7 +38,12 @@ export default async function NewAssignmentPage({
           ← Volver
         </Button>
       </div>
-      <CreateAssignmentForm assets={assets.items} users={users.items} orgUnits={orgUnits} />
+      <CreateAssignmentForm
+        assets={assets.items}
+        users={users.items}
+        orgUnits={orgUnits}
+        defaultAssetId={params.assetId ?? null}
+      />
     </div>
     </>
   );

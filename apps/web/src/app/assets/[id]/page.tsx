@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { revalidatePath } from "next/cache";
 import { requireAccessToken } from "@/lib/require-session";
-import { ApiError, getAssetById, getAssetCategoryById, getMovements } from "@/lib/api";
+import { ApiError, getAssetById, getAssetCategoryById, getAssignments, getMovements, unlinkAssetAccessory } from "@/lib/api";
 import { AppHeader } from "@/components/app-header";
 import { Breadcrumbs } from "@/components/layout/breadcrumbs";
 import { DocumentsPanel } from "@/components/documents-panel";
@@ -38,6 +39,25 @@ export default async function AssetDetailPage({ params }: { params: Promise<{ id
     () => null,
   );
 
+  const activeAssignment =
+    asset.status === "Assigned"
+      ? await getAssignments(accessToken, {
+          companyId: asset.companyId,
+          assetId: id,
+          status: "Accepted",
+          pageSize: 1,
+        })
+          .then((result) => result.items[0] ?? null)
+          .catch(() => null)
+      : null;
+
+  async function unlinkAccessory(accessoryAssetId: string) {
+    "use server";
+    const token = await requireAccessToken();
+    await unlinkAssetAccessory(token, id, accessoryAssetId);
+    revalidatePath(`/assets/${id}`);
+  }
+
   return (
     <>
       <AppHeader title="Activos" />
@@ -61,6 +81,32 @@ export default async function AssetDetailPage({ params }: { params: Promise<{ id
           <Button variant="outline" render={<Link href={`/assets/${id}/relocate`} />}>
             Reubicar
           </Button>
+          {asset.accessoryOfAssetId === null && (
+            <Button variant="outline" render={<Link href={`/assets/${id}/link-accessory`} />}>
+              + Vincular accesorio
+            </Button>
+          )}
+          {asset.status === "InWarehouse" && (
+            <Button
+              variant="outline"
+              render={<Link href={`/assignments/new?companyId=${asset.companyId}&assetId=${id}`} />}
+            >
+              Asignar
+            </Button>
+          )}
+          {activeAssignment && (
+            <>
+              <Button variant="outline" render={<Link href={`/assets/${id}/reassign`} />}>
+                Reasignar
+              </Button>
+              <Button
+                variant="outline"
+                render={<Link href={`/assignments/${activeAssignment.id}/resguardo`} />}
+              >
+                Imprimir resguardo
+              </Button>
+            </>
+          )}
           {asset.status === "InWarehouse" && (
             <Button variant="outline" render={<Link href={`/transfers/new?companyId=${asset.companyId}`} />}>
               Solicitar transferencia
@@ -98,6 +144,44 @@ export default async function AssetDetailPage({ params }: { params: Promise<{ id
           <Field label="Descripción" value={asset.description} />
         </CardContent>
       </Card>
+
+      {asset.accessoryOfAssetId && (
+        <p className="text-muted-foreground text-sm">
+          Es accesorio de{" "}
+          <Link href={`/assets/${asset.accessoryOfAssetId}`} className="hover:text-primary underline">
+            {asset.accessoryOfAssetFolio}
+          </Link>
+          .
+        </p>
+      )}
+
+      {asset.accessories.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-sm">Accesorios vinculados</CardTitle>
+          </CardHeader>
+          <CardContent className="flex flex-col gap-2">
+            {asset.accessories.map((accessory) => (
+              <div key={accessory.id} className="flex items-center justify-between gap-2 text-sm">
+                <div>
+                  <Link href={`/assets/${accessory.id}`} className="hover:text-primary font-mono hover:underline">
+                    {accessory.internalFolio}
+                  </Link>
+                  <span className="text-muted-foreground">
+                    {" "}
+                    — {accessory.brand} {accessory.model} — {ASSET_STATUS_LABELS[accessory.status]}
+                  </span>
+                </div>
+                <form action={unlinkAccessory.bind(null, accessory.id)}>
+                  <Button variant="outline" size="sm" type="submit">
+                    Quitar
+                  </Button>
+                </form>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      )}
 
       {asset.tag && (
         <Card>

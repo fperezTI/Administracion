@@ -85,6 +85,7 @@ export type AssetSummary = {
   serialNumber: string | null;
   status: AssetStatus;
   physicalCondition: PhysicalCondition;
+  accessoryOfAssetId: string | null;
 };
 
 export type AssetTagInfo = {
@@ -96,6 +97,14 @@ export type AssetTagInfo = {
 export type AssetCustomFieldValueInfo = {
   customFieldDefinitionId: string;
   value: string;
+};
+
+export type AssetAccessorySummary = {
+  id: string;
+  internalFolio: string;
+  brand: string;
+  model: string;
+  status: AssetStatus;
 };
 
 export type AssetDetail = {
@@ -123,6 +132,9 @@ export type AssetDetail = {
   supportProvider: string | null;
   tag: AssetTagInfo | null;
   customFieldValues: AssetCustomFieldValueInfo[];
+  accessoryOfAssetId: string | null;
+  accessoryOfAssetFolio: string | null;
+  accessories: AssetAccessorySummary[];
   createdAtUtc: string;
   updatedAtUtc: string | null;
 };
@@ -246,6 +258,26 @@ export function reprintAssetTag(
   assetId: string,
 ): Promise<{ code: string; printCount: number }> {
   return apiFetch(accessToken, `/api/v1/assets/${assetId}/tag/reprint`, { method: "POST" });
+}
+
+export type AccessoryCandidate = { id: string; internalFolio: string; brand: string; model: string };
+
+export function getEligibleAccessoryCandidates(
+  accessToken: string,
+  companyId: string,
+  assetId: string,
+): Promise<AccessoryCandidate[]> {
+  return apiFetch<AccessoryCandidate[]>(
+    accessToken, `/api/v1/assets/${assetId}/accessories/candidates?companyId=${companyId}`,
+  );
+}
+
+export function linkAssetAccessory(accessToken: string, assetId: string, accessoryAssetId: string): Promise<void> {
+  return apiFetch(accessToken, `/api/v1/assets/${assetId}/accessories/${accessoryAssetId}`, { method: "POST" });
+}
+
+export function unlinkAssetAccessory(accessToken: string, assetId: string, accessoryAssetId: string): Promise<void> {
+  return apiFetch(accessToken, `/api/v1/assets/${assetId}/accessories/${accessoryAssetId}`, { method: "DELETE" });
 }
 
 export function getAssetCategories(
@@ -587,6 +619,7 @@ export type AssignmentSummary = {
   assignedAtUtc: string;
   acceptedAtUtc: string | null;
   returnedAtUtc: string | null;
+  groupId: string | null;
 };
 
 export type SignatureInfo = {
@@ -595,19 +628,39 @@ export type SignatureInfo = {
   contentHash: string;
 };
 
-export type AssignmentDetail = {
-  id: string;
+export type AssignmentGroupMember = {
   assetId: string;
   assetFolio: string;
+  patrimonialFolio: string | null;
+  brand: string;
+  model: string;
+  serialNumber: string | null;
+  isPrimary: boolean;
+};
+
+export type AssignmentDetail = {
+  id: string;
+  companyId: string;
+  assetId: string;
+  assetFolio: string;
+  assetPatrimonialFolio: string | null;
+  assetBrand: string;
+  assetModel: string;
+  assetSerialNumber: string | null;
+  assetDescription: string | null;
   assignedToUserId: string;
   assignedToDisplayName: string;
+  assignedToEmail: string;
   orgUnitId: string | null;
+  orgUnitName: string | null;
+  movementFolio: string;
   status: AssignmentStatus;
   assignedAtUtc: string;
   acceptedAtUtc: string | null;
   returnedAtUtc: string | null;
   acceptanceSignature: SignatureInfo | null;
   returnSignature: SignatureInfo | null;
+  groupMembers: AssignmentGroupMember[];
 };
 
 export type MyAssignmentSummary = {
@@ -618,6 +671,7 @@ export type MyAssignmentSummary = {
   assetModel: string;
   status: AssignmentStatus;
   assignedAtUtc: string;
+  groupId: string | null;
 };
 
 export type LoanSummary = {
@@ -657,12 +711,19 @@ export type RelocateAssetResult = { movementId: string; movementFolio: string };
 
 export function getAssignments(
   accessToken: string,
-  params: { companyId: string; pageNumber?: number; pageSize?: number; status?: AssignmentStatus },
+  params: {
+    companyId: string;
+    pageNumber?: number;
+    pageSize?: number;
+    status?: AssignmentStatus;
+    assetId?: string;
+  },
 ): Promise<PagedResult<AssignmentSummary>> {
   const query = new URLSearchParams({ companyId: params.companyId });
   if (params.pageNumber) query.set("pageNumber", String(params.pageNumber));
   if (params.pageSize) query.set("pageSize", String(params.pageSize));
   if (params.status) query.set("status", params.status);
+  if (params.assetId) query.set("assetId", params.assetId);
   return apiFetch<PagedResult<AssignmentSummary>>(accessToken, `/api/v1/assignments?${query.toString()}`);
 }
 
@@ -676,7 +737,13 @@ export function getAssignmentById(accessToken: string, assignmentId: string): Pr
 
 export function createAssignment(
   accessToken: string,
-  input: { assetId: string; assignedToUserId: string; orgUnitId: string | null; notes: string | null },
+  input: {
+    assetId: string;
+    assignedToUserId: string;
+    orgUnitId: string | null;
+    notes: string | null;
+    accessoryAssetIds?: string[];
+  },
 ): Promise<CreateAssignmentResult> {
   return apiFetch<CreateAssignmentResult>(accessToken, "/api/v1/assignments", {
     method: "POST",
@@ -704,6 +771,23 @@ export function returnAssignment(
   return apiFetch(accessToken, `/api/v1/assignments/${assignmentId}/return`, {
     method: "POST",
     body: JSON.stringify({ typedFullName, notes }),
+  });
+}
+
+export function reassignAsset(
+  accessToken: string,
+  input: {
+    assetId: string;
+    newAssignedToUserId: string;
+    orgUnitId: string | null;
+    typedFullName: string;
+    notes: string | null;
+    accessoryAssetIds?: string[];
+  },
+): Promise<CreateAssignmentResult> {
+  return apiFetch<CreateAssignmentResult>(accessToken, "/api/v1/assignments/reassign", {
+    method: "POST",
+    body: JSON.stringify(input),
   });
 }
 

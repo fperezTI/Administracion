@@ -47,24 +47,32 @@ public sealed class SignAssignmentCommandHandler(
             throw new ForbiddenAccessException("Solo el destinatario de la asignación puede firmarla.");
         }
 
-        var asset = await db.Assets.FirstOrDefaultAsync(a => a.Id == assignment.AssetId, cancellationToken)
-            ?? throw new NotFoundException(nameof(Asset), assignment.AssetId);
-
-        var movement = await db.Movements.FirstOrDefaultAsync(m => m.Id == assignment.MovementId, cancellationToken)
-            ?? throw new NotFoundException(nameof(Movement), assignment.MovementId);
-
         var now = clock.UtcNow;
-        var payload = $"AssignmentAcceptance|{assignment.Id}|{asset.Id}|{userId}|{now:O}";
-        var signature = Domain.Signature.SignatureRecord.Create(
-            asset.CompanyId, "AssignmentAcceptance", assignment.Id, userId, request.TypedFullName.Trim(),
-            currentUser.IpAddress, currentUser.UserAgent, SignatureHasher.Hash(payload),
-            Domain.Signature.SignatureRecord.TypedConfirmationMechanism, null, now, userId);
 
-        assignment.Accept(signature.Id, now, userId);
-        movement.Complete(now, userId);
-        asset.ChangeStatus(AssetStatus.Assigned, now, userId);
+        var groupMembers = await AssignmentGroupSupport.GetGroupMembersAsync(
+            db, assignment, AssignmentStatus.PendingSignature, cancellationToken);
 
-        db.SignatureRecords.Add(signature);
+        foreach (var member in groupMembers)
+        {
+            var asset = await db.Assets.FirstOrDefaultAsync(a => a.Id == member.AssetId, cancellationToken)
+                ?? throw new NotFoundException(nameof(Asset), member.AssetId);
+
+            var movement = await db.Movements.FirstOrDefaultAsync(m => m.Id == member.MovementId, cancellationToken)
+                ?? throw new NotFoundException(nameof(Movement), member.MovementId);
+
+            var payload = $"AssignmentAcceptance|{member.Id}|{asset.Id}|{userId}|{now:O}";
+            var signature = Domain.Signature.SignatureRecord.Create(
+                asset.CompanyId, "AssignmentAcceptance", member.Id, userId, request.TypedFullName.Trim(),
+                currentUser.IpAddress, currentUser.UserAgent, SignatureHasher.Hash(payload),
+                Domain.Signature.SignatureRecord.TypedConfirmationMechanism, null, now, userId);
+
+            member.Accept(signature.Id, now, userId);
+            movement.Complete(now, userId);
+            asset.ChangeStatus(AssetStatus.Assigned, now, userId);
+
+            db.SignatureRecords.Add(signature);
+        }
+
         await db.SaveChangesAsync(cancellationToken);
     }
 }

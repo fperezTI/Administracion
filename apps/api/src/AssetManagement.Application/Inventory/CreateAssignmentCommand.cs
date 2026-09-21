@@ -2,7 +2,6 @@ using AssetManagement.Application.Common.Exceptions;
 using AssetManagement.Application.Common.Interfaces;
 using AssetManagement.Application.Common.Security;
 using AssetManagement.Domain.Assets;
-using AssetManagement.Domain.Inventory;
 using AssetManagement.Domain.Organization;
 using FluentValidation;
 using MediatR;
@@ -16,7 +15,9 @@ namespace AssetManagement.Application.Inventory;
 /// docs/architecture/domain-model.md requires an accepted signature before an assignment is final; see
 /// <see cref="SignAssignmentCommand"/>.
 /// </summary>
-public sealed record CreateAssignmentCommand(Guid AssetId, Guid AssignedToUserId, Guid? OrgUnitId, string? Notes)
+public sealed record CreateAssignmentCommand(
+    Guid AssetId, Guid AssignedToUserId, Guid? OrgUnitId, string? Notes,
+    IReadOnlyList<Guid>? AccessoryAssetIds = null)
     : IRequest<CreateAssignmentResult>, IRequiresPermission, IAuditableCommand
 {
     public string PermissionCode => PermissionCatalog.Assignments.Create;
@@ -66,21 +67,15 @@ public sealed class CreateAssignmentCommandHandler(
             }
         }
 
+        var accessories = await AssignmentGroupSupport.ValidateAccessoriesAsync(
+            db, asset, request.AccessoryAssetIds, cancellationToken);
+
         var now = clock.UtcNow;
-        var folio = await folioGenerator.NextAsync(asset.CompanyId, FolioDocumentTypes.MovementAssignment, cancellationToken);
 
-        var movement = Movement.Create(
-            asset.CompanyId, asset.Id, MovementType.Assignment, folio, startsCompleted: false,
-            fromOrgUnitId: asset.CurrentOrgUnitId, toOrgUnitId: request.OrgUnitId, fromUserId: null,
-            toUserId: request.AssignedToUserId, notes: request.Notes, now, currentUser.UserId);
+        var (assignment, movement) = await AssignmentGroupSupport.CreateGroupAsync(
+            db, folioGenerator, asset, accessories, request.AssignedToUserId, request.OrgUnitId, request.Notes,
+            now, currentUser.UserId, cancellationToken);
 
-        var assignment = Domain.Inventory.Assignment.Create(
-            asset.CompanyId, asset.Id, request.AssignedToUserId, request.OrgUnitId, movement.Id, now, currentUser.UserId);
-
-        asset.ChangeStatus(AssetStatus.Reserved, now, currentUser.UserId);
-
-        db.Movements.Add(movement);
-        db.Assignments.Add(assignment);
         await db.SaveChangesAsync(cancellationToken);
 
         return new CreateAssignmentResult(assignment.Id, movement.Id, movement.FolioNumber);

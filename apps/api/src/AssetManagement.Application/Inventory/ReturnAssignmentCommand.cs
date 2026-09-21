@@ -1,7 +1,6 @@
 using AssetManagement.Application.Common.Exceptions;
 using AssetManagement.Application.Common.Interfaces;
 using AssetManagement.Application.Common.Security;
-using AssetManagement.Domain.Assets;
 using AssetManagement.Domain.Inventory;
 using FluentValidation;
 using MediatR;
@@ -51,28 +50,14 @@ public sealed class ReturnAssignmentCommandHandler(
             throw new ForbiddenAccessException("El usuario no tiene acceso a la empresa de esta asignación.");
         }
 
-        var asset = await db.Assets.FirstOrDefaultAsync(a => a.Id == assignment.AssetId, cancellationToken)
-            ?? throw new NotFoundException(nameof(Asset), assignment.AssetId);
-
         var now = clock.UtcNow;
-        var folio = await folioGenerator.NextAsync(assignment.CompanyId, FolioDocumentTypes.MovementAssignmentReturn, cancellationToken);
 
-        var returnMovement = Movement.Create(
-            assignment.CompanyId, asset.Id, MovementType.AssignmentReturn, folio, startsCompleted: true,
-            fromOrgUnitId: asset.CurrentOrgUnitId, toOrgUnitId: null, fromUserId: assignment.AssignedToUserId,
-            toUserId: null, notes: request.Notes, now, userId);
+        var groupMembers = await AssignmentGroupSupport.GetGroupMembersAsync(
+            db, assignment, AssignmentStatus.Accepted, cancellationToken);
+        await AssignmentGroupSupport.ReturnGroupAsync(
+            db, folioGenerator, currentUser, groupMembers, request.TypedFullName, request.Notes, now, userId,
+            cancellationToken);
 
-        var payload = $"AssignmentReturn|{assignment.Id}|{asset.Id}|{userId}|{now:O}";
-        var signature = Domain.Signature.SignatureRecord.Create(
-            assignment.CompanyId, "AssignmentReturn", assignment.Id, userId, request.TypedFullName.Trim(),
-            currentUser.IpAddress, currentUser.UserAgent, SignatureHasher.Hash(payload),
-            Domain.Signature.SignatureRecord.TypedConfirmationMechanism, null, now, userId);
-
-        assignment.Return(signature.Id, returnMovement.Id, now, userId);
-        asset.ChangeStatus(AssetStatus.InWarehouse, now, userId);
-
-        db.Movements.Add(returnMovement);
-        db.SignatureRecords.Add(signature);
         await db.SaveChangesAsync(cancellationToken);
     }
 }

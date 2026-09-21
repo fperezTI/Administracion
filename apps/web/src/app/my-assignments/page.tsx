@@ -1,11 +1,25 @@
 import Link from "next/link";
 import { requireAccessToken } from "@/lib/require-session";
-import { ApiError, getMyAssignments } from "@/lib/api";
+import { ApiError, getMyAssignments, type MyAssignmentSummary } from "@/lib/api";
 import { AppHeader } from "@/components/app-header";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { ASSIGNMENT_STATUS_LABELS, assignmentStatusBadgeVariant } from "@/lib/inventory-labels";
 import { SignAssignmentForm } from "./sign-assignment-form";
+
+function groupAssignments(assignments: MyAssignmentSummary[]): MyAssignmentSummary[][] {
+  const groups = new Map<string, MyAssignmentSummary[]>();
+  for (const assignment of assignments) {
+    const key = assignment.groupId ?? assignment.id;
+    const group = groups.get(key);
+    if (group) {
+      group.push(assignment);
+    } else {
+      groups.set(key, [assignment]);
+    }
+  }
+  return [...groups.values()];
+}
 
 export default async function MyAssignmentsPage() {
   const accessToken = await requireAccessToken();
@@ -13,30 +27,44 @@ export default async function MyAssignmentsPage() {
   let content: React.ReactNode;
   try {
     const assignments = await getMyAssignments(accessToken);
+    const groups = groupAssignments(assignments);
 
     content =
-      assignments.length === 0 ? (
+      groups.length === 0 ? (
         <p className="text-muted-foreground text-sm">No tienes activos asignados.</p>
       ) : (
         <div className="flex flex-col gap-3">
-          {assignments.map((a) => (
-            <Card key={a.id}>
-              <CardContent className="flex flex-col gap-3">
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                  <div>
-                    <Link href={`/assets/${a.assetId}`} className="hover:text-primary font-mono font-medium hover:underline">
-                      {a.assetFolio}
-                    </Link>
-                    <p className="text-muted-foreground text-sm">
-                      {a.assetBrand} {a.assetModel}
-                    </p>
+          {groups.map((group) => {
+            const [first, ...rest] = group;
+            return (
+              <Card key={first.id}>
+                <CardContent className="flex flex-col gap-3">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <div className="flex flex-col gap-1">
+                      {group.map((a) => (
+                        <div key={a.id}>
+                          <Link href={`/assets/${a.assetId}`} className="hover:text-primary font-mono font-medium hover:underline">
+                            {a.assetFolio}
+                          </Link>
+                          <span className="text-muted-foreground text-sm">
+                            {" "}
+                            — {a.assetBrand} {a.assetModel}
+                          </span>
+                        </div>
+                      ))}
+                      {rest.length > 0 && (
+                        <p className="text-muted-foreground text-xs">Paquete de {group.length} activos</p>
+                      )}
+                    </div>
+                    <Badge variant={assignmentStatusBadgeVariant(first.status)}>
+                      {ASSIGNMENT_STATUS_LABELS[first.status]}
+                    </Badge>
                   </div>
-                  <Badge variant={assignmentStatusBadgeVariant(a.status)}>{ASSIGNMENT_STATUS_LABELS[a.status]}</Badge>
-                </div>
-                {a.status === "PendingSignature" && <SignAssignmentForm assignmentId={a.id} />}
-              </CardContent>
-            </Card>
-          ))}
+                  {first.status === "PendingSignature" && <SignAssignmentForm assignmentId={first.id} />}
+                </CardContent>
+              </Card>
+            );
+          })}
         </div>
       );
   } catch (error) {

@@ -41,8 +41,16 @@ public sealed class AssetConfiguration : IEntityTypeConfiguration<Asset>
         builder.HasIndex(a => new { a.CompanyId, a.InternalFolio }).IsUnique();
         builder.HasIndex(a => new { a.CompanyId, a.SerialNumber }).IsUnique().HasFilter("[SerialNumber] IS NOT NULL");
         builder.HasIndex(a => new { a.CompanyId, a.Status });
+        builder.HasIndex(a => a.AccessoryOfAssetId);
 
         builder.HasOne<AssetCategory>().WithMany().HasForeignKey(a => a.AssetCategoryId).OnDelete(DeleteBehavior.Restrict);
+
+        // SQL Server refuses SetNull here ("may cause cycles or multiple cascade paths") for a
+        // self-referencing FK on a table that already has other cascading children (AssetTag,
+        // AssetCustomFieldValue) — Restrict is also the right behavior anyway: assets are never hard-deleted
+        // in this app (decommissioned instead, see AssetStateMachine), so this only ever matters for
+        // application-level unlinking (UnlinkAssetAccessoryCommand), never a real delete.
+        builder.HasOne<Asset>().WithMany().HasForeignKey(a => a.AccessoryOfAssetId).OnDelete(DeleteBehavior.Restrict);
 
         builder.HasOne(a => a.Tag).WithOne().HasForeignKey<AssetTag>(t => t.AssetId).OnDelete(DeleteBehavior.Cascade);
 
