@@ -1,10 +1,24 @@
 # Despliegue
 
 Ver `docs/architecture/decisions/0015-azure-cicd.md` para el razonamiento completo de cada decisión de
-esta fase (F13). **Esta fase no incluyó un despliegue real** — no hay suscripción de Azure ni repositorio
-de GitHub remoto conectados a esta conversación (`docs/architecture/00-analysis.md` §18 nunca se llenó).
-Lo que sí existe, completo y correcto: toda la infraestructura como código y los flujos de CI/CD, listos
-para usarse en cuanto la información real esté disponible — esta página es la guía para ese momento.
+esta fase (F13).
+
+**Estado real**: F13 terminó sin haber ejecutado ningún despliegue (sin suscripción de Azure ni
+repositorio de GitHub remoto conectados en ese momento). Después sí se hizo un **primer despliegue real
+contra Azure** (región `mexicocentral`) — a mano, siguiendo exactamente la sección "Primer despliegue
+manual" de abajo (`az login` + `az deployment group create`), no a través de `.github/workflows/cd.yml`:
+este repositorio local sigue sin ningún remoto de git configurado, así que el pipeline (que solo se
+dispara con push a `main`) nunca se ha ejecutado. Ese despliegue manual encontró y corrigió errores reales
+que quedaron reflejados directamente en el Bicep (ver el historial de `infrastructure/bicep/`):
+`Standard_GRS` no es viable en `mexicocentral` (sin región pareada) y se usó `Standard_ZRS`; y, después de
+bajar manualmente de costo en el portal de Azure (App Service Plan a `B1`, SQL a `Basic`, ACR a `Basic`,
+Storage de `ZRS` a `LRS`), los valores por defecto de `main.bicep`/`sqlDatabase.bicep` se actualizaron para
+que coincidan con lo que realmente está corriendo — si no, el siguiente despliegue habría revertido la
+baja de costo en silencio, o directamente fallado (`Basic` no estaba en la lista `@allowed` de SKU de SQL).
+
+No hay confirmación en el historial de que los pasos manuales de la sección 4 (usuario de base de datos
+para la identidad administrada, secretos reales en Key Vault) ya se hayan completado — siguen siendo
+necesarios si no se han hecho todavía.
 
 ## Arquitectura
 
@@ -69,8 +83,11 @@ az deployment group validate \
 
 ## Guía paso a paso para el primer despliegue real
 
-Nada de esto se ejecutó en esta sesión — es la secuencia exacta que alguien con acceso real a Azure/GitHub
-debe seguir.
+Esta es la secuencia que alguien con acceso real a Azure/GitHub debe seguir. La sección 3 (despliegue
+manual) ya se ejecutó al menos para `prod` (ver "Estado real" arriba); no hay evidencia en el historial de
+que las secciones 1, 2 y 4 se hayan completado (App Registration OIDC, Environments/secrets de GitHub,
+usuario SQL para la identidad administrada, secretos reales en Key Vault) — revisar antes de asumir que ya
+están hechas.
 
 ### 1. Azure — una vez por ambiente (`dev`, `test`, `prod`)
 
