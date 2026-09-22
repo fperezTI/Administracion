@@ -38,7 +38,8 @@ public class CreateAssignmentCommandHandlerTests
         await db.SaveChangesAsync();
 
         var handler = new CreateAssignmentCommandHandler(
-            db, companyContext, new FakeCurrentUserContext(), new FakeFolioGenerator(), new FakeClock(Now));
+            db, companyContext, new FakeCurrentUserContext(), new FakeFolioGenerator(), new FakeClock(Now),
+            new FakeNotificationSender(), new FakeFrontendLinkBuilder());
 
         var result = await handler.Handle(new CreateAssignmentCommand(asset.Id, recipient.Id, null, null), CancellationToken.None);
 
@@ -66,7 +67,8 @@ public class CreateAssignmentCommandHandlerTests
         await db.SaveChangesAsync();
 
         var handler = new CreateAssignmentCommandHandler(
-            db, companyContext, new FakeCurrentUserContext(), new FakeFolioGenerator(), new FakeClock(Now));
+            db, companyContext, new FakeCurrentUserContext(), new FakeFolioGenerator(), new FakeClock(Now),
+            new FakeNotificationSender(), new FakeFrontendLinkBuilder());
 
         var act = () => handler.Handle(new CreateAssignmentCommand(asset.Id, recipient.Id, null, null), CancellationToken.None);
 
@@ -89,7 +91,8 @@ public class CreateAssignmentCommandHandlerTests
         await db.SaveChangesAsync();
 
         var handler = new CreateAssignmentCommandHandler(
-            db, companyContext, new FakeCurrentUserContext(), new FakeFolioGenerator(), new FakeClock(Now));
+            db, companyContext, new FakeCurrentUserContext(), new FakeFolioGenerator(), new FakeClock(Now),
+            new FakeNotificationSender(), new FakeFrontendLinkBuilder());
 
         var result = await handler.Handle(
             new CreateAssignmentCommand(laptop.Id, recipient.Id, null, null, [charger.Id]), CancellationToken.None);
@@ -101,6 +104,39 @@ public class CreateAssignmentCommandHandlerTests
 
         var reloadedCharger = await db.Assets.SingleAsync(a => a.Id == charger.Id);
         reloadedCharger.Status.Should().Be(AssetStatus.Reserved);
+    }
+
+    [Fact]
+    public async Task Notifies_the_recipient_once_for_the_whole_group_not_once_per_asset()
+    {
+        var companyId = Guid.NewGuid();
+        var companyContext = new FakeCurrentCompanyContext { AccessibleCompanyIds = [companyId] };
+        using var db = InMemoryAppDbContextFactory.Create(companyContext);
+        var laptop = CreateWarehouseAsset(companyId, "ASSET-000001");
+        var charger = CreateWarehouseAsset(companyId, "ASSET-000002");
+        charger.LinkAsAccessoryOf(laptop.Id, Now, null);
+        var recipient = CreateUserWithCompanyAccess(companyId);
+        db.Assets.Add(laptop);
+        db.Assets.Add(charger);
+        db.Users.Add(recipient);
+        await db.SaveChangesAsync();
+
+        var notificationSender = new FakeNotificationSender();
+        var linkBuilder = new FakeFrontendLinkBuilder();
+        var handler = new CreateAssignmentCommandHandler(
+            db, companyContext, new FakeCurrentUserContext(), new FakeFolioGenerator(), new FakeClock(Now),
+            notificationSender, linkBuilder);
+
+        var result = await handler.Handle(
+            new CreateAssignmentCommand(laptop.Id, recipient.Id, null, null, [charger.Id]), CancellationToken.None);
+
+        notificationSender.Notifications.Should().ContainSingle();
+        var notification = notificationSender.Notifications[0];
+        notification.UserId.Should().Be(recipient.Id);
+        notification.CompanyId.Should().Be(companyId);
+        notification.EmailBodyHtml.Should().NotBeNull();
+        notification.EmailBodyHtml!.Should().Contain(laptop.InternalFolio).And.Contain(charger.InternalFolio)
+            .And.Contain(linkBuilder.MyAssignmentUrl(result.AssignmentId));
     }
 
     [Fact]
@@ -118,7 +154,8 @@ public class CreateAssignmentCommandHandlerTests
         await db.SaveChangesAsync();
 
         var handler = new CreateAssignmentCommandHandler(
-            db, companyContext, new FakeCurrentUserContext(), new FakeFolioGenerator(), new FakeClock(Now));
+            db, companyContext, new FakeCurrentUserContext(), new FakeFolioGenerator(), new FakeClock(Now),
+            new FakeNotificationSender(), new FakeFrontendLinkBuilder());
 
         var act = () => handler.Handle(
             new CreateAssignmentCommand(laptop.Id, recipient.Id, null, null, [unrelatedAsset.Id]), CancellationToken.None);
@@ -143,7 +180,8 @@ public class CreateAssignmentCommandHandlerTests
         await db.SaveChangesAsync();
 
         var handler = new CreateAssignmentCommandHandler(
-            db, companyContext, new FakeCurrentUserContext(), new FakeFolioGenerator(), new FakeClock(Now));
+            db, companyContext, new FakeCurrentUserContext(), new FakeFolioGenerator(), new FakeClock(Now),
+            new FakeNotificationSender(), new FakeFrontendLinkBuilder());
 
         var act = () => handler.Handle(
             new CreateAssignmentCommand(laptop.Id, recipient.Id, null, null, [charger.Id]), CancellationToken.None);
@@ -166,7 +204,8 @@ public class CreateAssignmentCommandHandlerTests
         await db.SaveChangesAsync();
 
         var handler = new CreateAssignmentCommandHandler(
-            db, companyContext, new FakeCurrentUserContext(), new FakeFolioGenerator(), new FakeClock(Now));
+            db, companyContext, new FakeCurrentUserContext(), new FakeFolioGenerator(), new FakeClock(Now),
+            new FakeNotificationSender(), new FakeFrontendLinkBuilder());
 
         var act = () => handler.Handle(new CreateAssignmentCommand(asset.Id, Guid.NewGuid(), null, null), CancellationToken.None);
 

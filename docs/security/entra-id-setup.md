@@ -85,6 +85,36 @@ Si dejas `MicrosoftGraph:ClientSecret` vacío, la funcionalidad queda desactivad
 endpoint de búsqueda responde con un error claro ("no configurada") en vez de fallar de forma confusa o
 fingir que funciona.
 
+#### 1b. (Opcional) Habilitar el correo de confirmación de asignación (Microsoft Graph `sendMail`)
+
+Reutiliza el mismo App Registration y el mismo secreto de cliente del paso 1a — solo agrega un permiso más
+y un buzón real. Necesitas una licencia de Microsoft 365 con un buzón dedicado (ej.
+`notificaciones@tudominio.com`) desde el cual enviar.
+
+1. En `AssetManagement-API-Dev` → **Permisos de API** → **Agregar un permiso** → **Microsoft Graph** →
+   **Permisos de aplicación** → busca y marca **`Mail.Send`** → **Agregar permisos**.
+2. Clic en **Conceder consentimiento de administrador para \<tu tenant\>** → **Sí**.
+3. **(Recomendado, seguridad)** `Mail.Send` de aplicación permite enviar correo *como cualquier persona*
+   del tenant si no se restringe. Limita la app a un solo buzón con una **Application Access Policy** de
+   Exchange Online (PowerShell, una sola vez):
+   ```powershell
+   Connect-ExchangeOnline
+   New-DistributionGroup -Name "AssetManagementSenders" -Members "notificaciones@tudominio.com" -Type Security
+   New-ApplicationAccessPolicy -AppId "<api-client-id>" `
+     -PolicyScopeGroupId "AssetManagementSenders@tudominio.com" `
+     -AccessRight RestrictAccess -Description "Solo puede enviar correo desde el buzón de notificaciones"
+   ```
+4. Backend (`apps/api`), vía user-secrets (junto a los del paso 1a):
+   ```bash
+   dotnet user-secrets set "MicrosoftGraph:SenderMailbox" "notificaciones@tudominio.com" --project src/AssetManagement.Api
+   dotnet user-secrets set "Frontend:BaseUrl" "http://localhost:3000" --project src/AssetManagement.Api
+   ```
+5. Docker Compose: agrega `GRAPH_SENDER_MAILBOX=notificaciones@tudominio.com` a tu `.env`.
+
+Si dejas `MicrosoftGraph:SenderMailbox` vacío, no se manda correo de asignación (cae en `Smtp:Host` si está
+configurado, o en un registro informativo si no hay ningún proveedor de correo) — el resto de la app
+funciona igual.
+
 ### 2. Registrar el frontend (Web)
 
 1. **Nuevo registro** otra vez.

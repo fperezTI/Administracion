@@ -11,7 +11,7 @@ namespace AssetManagement.Infrastructure.Email;
 public sealed class SmtpEmailSender(string host, int port, string? username, string? password, string fromAddress, ILogger<SmtpEmailSender> logger)
     : IEmailSender
 {
-    public async Task SendAsync(string toEmail, string subject, string body, CancellationToken cancellationToken)
+    public async Task SendAsync(string toEmail, string subject, string body, CancellationToken cancellationToken, bool isHtml = false)
     {
         try
         {
@@ -21,7 +21,7 @@ public sealed class SmtpEmailSender(string host, int port, string? username, str
                 client.Credentials = new NetworkCredential(username, password);
             }
 
-            using var message = new MailMessage(fromAddress, toEmail, subject, body);
+            using var message = new MailMessage(fromAddress, toEmail, subject, body) { IsBodyHtml = isHtml };
             await client.SendMailAsync(message, cancellationToken);
         }
         catch (Exception ex)

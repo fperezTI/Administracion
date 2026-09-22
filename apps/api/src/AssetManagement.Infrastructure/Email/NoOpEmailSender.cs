@@ -8,7 +8,7 @@ namespace AssetManagement.Infrastructure.Email;
 /// visible in the log instead of silently swallowing it.</summary>
 public sealed class NoOpEmailSender(ILogger<NoOpEmailSender> logger) : IEmailSender
 {
-    public Task SendAsync(string toEmail, string subject, string body, CancellationToken cancellationToken)
+    public Task SendAsync(string toEmail, string subject, string body, CancellationToken cancellationToken, bool isHtml = false)
     {
         logger.LogInformation(
             "SMTP no configurado — no se envió el correo '{Subject}' a {ToEmail} (la notificación en la app sí se creó).",

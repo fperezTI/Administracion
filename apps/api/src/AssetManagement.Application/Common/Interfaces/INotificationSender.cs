@@ -5,5 +5,6 @@ namespace AssetManagement.Application.Common.Interfaces;
 public interface INotificationSender
 {
     public Task NotifyAsync(
-        Guid userId, string type, string title, string body, Guid? companyId, CancellationToken cancellationToken);
+        Guid userId, string type, string title, string body, Guid? companyId, CancellationToken cancellationToken,
+        string? emailBodyHtml = null);
 }

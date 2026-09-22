@@ -6,5 +6,5 @@ namespace AssetManagement.Application.Common.Interfaces;
 /// queue in V1 — a failed send is not automatically retried.</summary>
 public interface IEmailSender
 {
-    public Task SendAsync(string toEmail, string subject, string body, CancellationToken cancellationToken);
+    public Task SendAsync(string toEmail, string subject, string body, CancellationToken cancellationToken, bool isHtml = false);
 }

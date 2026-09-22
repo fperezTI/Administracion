@@ -748,6 +748,12 @@ export function getAssignmentById(accessToken: string, assignmentId: string): Pr
   return apiFetch<AssignmentDetail>(accessToken, `/api/v1/assignments/${assignmentId}`);
 }
 
+/** Self-service: only the caller's own assignment — the report behind the "confirm what was assigned to
+ * me" email link. Same shape as {@link getAssignmentById}, just gated by ownership instead of RBAC. */
+export function getMyAssignmentById(accessToken: string, assignmentId: string): Promise<AssignmentDetail> {
+  return apiFetch<AssignmentDetail>(accessToken, `/api/v1/assignments/mine/${assignmentId}`);
+}
+
 export function createAssignment(
   accessToken: string,
   input: {

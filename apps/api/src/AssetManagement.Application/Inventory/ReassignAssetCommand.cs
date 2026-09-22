@@ -40,7 +40,7 @@ public sealed class ReassignAssetCommandValidator : AbstractValidator<ReassignAs
 
 public sealed class ReassignAssetCommandHandler(
     IApplicationDbContext db, ICurrentCompanyContext currentCompany, ICurrentUserContext currentUser,
-    IFolioGenerator folioGenerator, IClock clock)
+    IFolioGenerator folioGenerator, IClock clock, INotificationSender notificationSender, IFrontendLinkBuilder linkBuilder)
     : IRequestHandler<ReassignAssetCommand, CreateAssignmentResult>
 {
     public async Task<CreateAssignmentResult> Handle(ReassignAssetCommand request, CancellationToken cancellationToken)
@@ -91,8 +91,8 @@ public sealed class ReassignAssetCommandHandler(
             db, asset, request.AccessoryAssetIds, cancellationToken);
 
         var (newAssignment, assignMovement) = await AssignmentGroupSupport.CreateGroupAsync(
-            db, folioGenerator, asset, accessories, request.NewAssignedToUserId, request.OrgUnitId, request.Notes,
-            now, userId, cancellationToken);
+            db, folioGenerator, notificationSender, linkBuilder, asset, accessories, request.NewAssignedToUserId,
+            request.OrgUnitId, request.Notes, now, userId, cancellationToken);
 
         await db.SaveChangesAsync(cancellationToken);
 

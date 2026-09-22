@@ -55,6 +55,9 @@ export default async function MyAssignmentsPage() {
                       {rest.length > 0 && (
                         <p className="text-muted-foreground text-xs">Paquete de {group.length} activos</p>
                       )}
+                      <Link href={`/my-assignments/${first.id}`} className="text-primary text-xs hover:underline">
+                        Ver detalle
+                      </Link>
                     </div>
                     <Badge variant={assignmentStatusBadgeVariant(first.status)}>
                       {ASSIGNMENT_STATUS_LABELS[first.status]}

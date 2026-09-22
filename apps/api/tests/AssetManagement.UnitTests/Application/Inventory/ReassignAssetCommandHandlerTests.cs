@@ -54,7 +54,8 @@ public class ReassignAssetCommandHandlerTests
         await db.SaveChangesAsync();
 
         var handler = new ReassignAssetCommandHandler(
-            db, companyContext, new FakeCurrentUserContext(), new FakeFolioGenerator(), new FakeClock(Now));
+            db, companyContext, new FakeCurrentUserContext(), new FakeFolioGenerator(), new FakeClock(Now),
+            new FakeNotificationSender(), new FakeFrontendLinkBuilder());
 
         var result = await handler.Handle(
             new ReassignAssetCommand(asset.Id, newRecipient.Id, null, "Someone From IT", null), CancellationToken.None);
@@ -110,7 +111,8 @@ public class ReassignAssetCommandHandlerTests
         await db.SaveChangesAsync();
 
         var handler = new ReassignAssetCommandHandler(
-            db, companyContext, new FakeCurrentUserContext(), new FakeFolioGenerator(), new FakeClock(Now));
+            db, companyContext, new FakeCurrentUserContext(), new FakeFolioGenerator(), new FakeClock(Now),
+            new FakeNotificationSender(), new FakeFrontendLinkBuilder());
 
         var result = await handler.Handle(
             new ReassignAssetCommand(laptop.Id, newRecipient.Id, null, "Someone From IT", null, [charger.Id]),
@@ -143,7 +145,8 @@ public class ReassignAssetCommandHandlerTests
         await db.SaveChangesAsync();
 
         var handler = new ReassignAssetCommandHandler(
-            db, companyContext, new FakeCurrentUserContext(), new FakeFolioGenerator(), new FakeClock(Now));
+            db, companyContext, new FakeCurrentUserContext(), new FakeFolioGenerator(), new FakeClock(Now),
+            new FakeNotificationSender(), new FakeFrontendLinkBuilder());
 
         var act = () => handler.Handle(
             new ReassignAssetCommand(asset.Id, newRecipient.Id, null, "Someone From IT", null), CancellationToken.None);
@@ -168,7 +171,8 @@ public class ReassignAssetCommandHandlerTests
         await db.SaveChangesAsync();
 
         var handler = new ReassignAssetCommandHandler(
-            db, companyContext, new FakeCurrentUserContext(), new FakeFolioGenerator(), new FakeClock(Now));
+            db, companyContext, new FakeCurrentUserContext(), new FakeFolioGenerator(), new FakeClock(Now),
+            new FakeNotificationSender(), new FakeFrontendLinkBuilder());
 
         var act = () => handler.Handle(
             new ReassignAssetCommand(asset.Id, newRecipientWithoutAccess.Id, null, "Someone From IT", null),

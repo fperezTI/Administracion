@@ -12,6 +12,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 
 namespace AssetManagement.Infrastructure;
 
@@ -44,12 +45,28 @@ public static class DependencyInjection
         var blobStorageConnectionString = configuration["BlobStorage:ConnectionString"] ?? "UseDevelopmentStorage=true";
         services.AddSingleton<IFileStorage>(_ => new AzureBlobFileStorage(blobStorageConnectionString));
 
-        var smtpHost = configuration["Smtp:Host"];
-        if (string.IsNullOrWhiteSpace(smtpHost))
+        // Pre-provisioning users from the tenant directory (see CreateUserFromDirectoryCommand) and
+        // sending assignment notification emails (see AssignmentGroupSupport) both need the same app-only
+        // Microsoft Graph token — a separate concern from EntraId's token *validation* config above, which
+        // needs no secret of its own. Registered once here so both features share one credential/HttpClient.
+        var graphTenantId = configuration["MicrosoftGraph:TenantId"];
+        var graphClientId = configuration["MicrosoftGraph:ClientId"];
+        var graphClientSecret = configuration["MicrosoftGraph:ClientSecret"];
+        var graphSenderMailbox = configuration["MicrosoftGraph:SenderMailbox"];
+        var graphCredentialConfigured = !string.IsNullOrWhiteSpace(graphTenantId) && !string.IsNullOrWhiteSpace(graphClientId)
+            && !string.IsNullOrWhiteSpace(graphClientSecret);
+        if (graphCredentialConfigured)
         {
-            services.AddSingleton<IEmailSender, NoOpEmailSender>();
+            services.AddSingleton(new ClientSecretCredential(graphTenantId, graphClientId, graphClientSecret));
+            services.AddHttpClient<IDirectoryUserSearch, GraphDirectoryUserSearch>();
         }
         else
+        {
+            services.AddScoped<IDirectoryUserSearch, UnconfiguredDirectoryUserSearch>();
+        }
+
+        var smtpHost = configuration["Smtp:Host"];
+        if (!string.IsNullOrWhiteSpace(smtpHost))
         {
             var smtpPort = configuration.GetValue("Smtp:Port", 25);
             var smtpUsername = configuration["Smtp:Username"];
@@ -57,7 +74,30 @@ public static class DependencyInjection
             var smtpFromAddress = configuration["Smtp:FromAddress"] ?? "no-reply@example.com";
             services.AddSingleton<IEmailSender>(sp => new SmtpEmailSender(
                 smtpHost, smtpPort, smtpUsername, smtpPassword, smtpFromAddress,
-                sp.GetRequiredService<Microsoft.Extensions.Logging.ILogger<SmtpEmailSender>>()));
+                sp.GetRequiredService<ILogger<SmtpEmailSender>>()));
+        }
+        else if (graphCredentialConfigured && !string.IsNullOrWhiteSpace(graphSenderMailbox))
+        {
+            services.AddHttpClient("GraphMail");
+            services.AddSingleton<IEmailSender>(sp => new GraphEmailSender(
+                sp.GetRequiredService<IHttpClientFactory>().CreateClient("GraphMail"),
+                sp.GetRequiredService<ClientSecretCredential>(),
+                graphSenderMailbox,
+                sp.GetRequiredService<ILogger<GraphEmailSender>>()));
+        }
+        else
+        {
+            services.AddSingleton<IEmailSender, NoOpEmailSender>();
+        }
+
+        var frontendBaseUrl = configuration["Frontend:BaseUrl"];
+        if (!string.IsNullOrWhiteSpace(frontendBaseUrl))
+        {
+            services.AddSingleton<IFrontendLinkBuilder>(new FrontendLinkBuilder(frontendBaseUrl));
+        }
+        else
+        {
+            services.AddSingleton<IFrontendLinkBuilder>(new FrontendLinkBuilder("http://localhost:3000"));
         }
 
         // ADR 0003/0011: Azure Storage Queue when a real connection string is configured (production),
@@ -71,25 +111,6 @@ public static class DependencyInjection
         else
         {
             services.AddSingleton<IImportQueue>(_ => new AzureStorageQueueImportQueue(importQueueConnectionString));
-        }
-
-        // Pre-provisioning users from the tenant directory (see CreateUserFromDirectoryCommand) needs an
-        // app-only Microsoft Graph token — a separate concern from EntraId's token *validation* config
-        // above, which needs no secret of its own. Falls back to a search that fails loudly, rather than
-        // silently returning nothing, when Graph app credentials aren't configured yet (see
-        // docs/security/entra-id-setup.md).
-        var graphTenantId = configuration["MicrosoftGraph:TenantId"];
-        var graphClientId = configuration["MicrosoftGraph:ClientId"];
-        var graphClientSecret = configuration["MicrosoftGraph:ClientSecret"];
-        if (!string.IsNullOrWhiteSpace(graphTenantId) && !string.IsNullOrWhiteSpace(graphClientId)
-            && !string.IsNullOrWhiteSpace(graphClientSecret))
-        {
-            services.AddSingleton(new ClientSecretCredential(graphTenantId, graphClientId, graphClientSecret));
-            services.AddHttpClient<IDirectoryUserSearch, GraphDirectoryUserSearch>();
-        }
-        else
-        {
-            services.AddScoped<IDirectoryUserSearch, UnconfiguredDirectoryUserSearch>();
         }
 
         services.AddHostedService<ImportBatchBackgroundService>();

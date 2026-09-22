@@ -169,6 +169,22 @@ de asignación y el de reasignación muestran los accesorios disponibles del act
 premarcadas (se pueden excluir por asignación); "Mis asignaciones" agrupa las tarjetas por paquete con una
 sola confirmación de firma; el resguardo imprimible lista todos los activos del paquete cuando aplica.
 
+**Seguimiento (correo de confirmación al asignar)**: hasta ahora quien recibía un activo solo se enteraba
+si entraba por su cuenta a "Mis asignaciones" — no había ningún aviso. Se agregó una notificación (in-app +
+correo best-effort, mismo mecanismo `INotificationSender`/`IEmailSender` de F8, extendido con soporte de
+HTML) disparada una vez por destinatario desde `AssignmentGroupSupport.CreateGroupAsync` — cubre tanto alta
+nueva como reasignación, una sola vez por grupo aunque incluya accesorios. El correo enlaza a
+`/my-assignments/{id}`, una página nueva de autoservicio (`GetMyAssignmentByIdQuery`, gateada por dueño del
+`AssignedToUserId`, no por permiso RBAC — la página `/assignments/{id}` existente requiere
+`Assignments.Read`, que un destinatario común no tiene) con el reporte de esa asignación y el mismo
+`SignAssignmentForm` que ya existía en "Mis asignaciones", reutilizado tal cual. El envío real usa
+Microsoft Graph `sendMail` (`GraphEmailSender`, mismo patrón REST-sin-SDK que `GraphDirectoryUserSearch`)
+reutilizando el App Registration ya configurado para el directorio — requiere el permiso de aplicación
+`Mail.Send` adicional + un buzón real (licencia de Microsoft 365), documentado en
+`docs/security/entra-id-setup.md` §1b junto con la recomendación de restringirlo con una Application
+Access Policy de Exchange Online. Sin `MicrosoftGraph:SenderMailbox` configurado, la notificación in-app se
+sigue creando; solo el correo no sale (cae en `Smtp:Host` si existe, o queda solo registrado en log).
+
 ## Estado de F4 (Approvals + E-Signature — núcleo)
 
 **Ambigüedades de diseño resueltas**: el boceto original del motor de aprobaciones (`domain-model.md`,

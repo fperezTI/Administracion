@@ -44,6 +44,10 @@ services:
       MicrosoftGraph__TenantId: ${ENTRA_TENANT_ID:-}
       MicrosoftGraph__ClientId: ${ENTRA_API_CLIENT_ID:-}
       MicrosoftGraph__ClientSecret: ${GRAPH_CLIENT_SECRET:-}
+      # Optional: sends assignment notification emails via Graph's sendMail when set (needs the extra
+      # Mail.Send application permission on top of User.Read.All) — empty disables email delivery.
+      MicrosoftGraph__SenderMailbox: ${GRAPH_SENDER_MAILBOX:-}
+      Frontend__BaseUrl: http://localhost:3000
       # Azurite's well-known local dev account key (public, documented on Microsoft Learn — identical
       # on every Azurite install, not a real secret) — only the host changes for the Docker network.
       BlobStorage__ConnectionString: "DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;BlobEndpoint=http://azurite:10000/devstoreaccount1;"

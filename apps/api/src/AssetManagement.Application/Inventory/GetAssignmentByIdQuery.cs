@@ -50,11 +50,20 @@ public sealed record AssignmentDetail(
 public sealed class GetAssignmentByIdQueryHandler(IApplicationDbContext db)
     : IRequestHandler<GetAssignmentByIdQuery, AssignmentDetail>
 {
-    public async Task<AssignmentDetail> Handle(GetAssignmentByIdQuery request, CancellationToken cancellationToken)
+    public Task<AssignmentDetail> Handle(GetAssignmentByIdQuery request, CancellationToken cancellationToken) =>
+        AssignmentDetailBuilder.BuildAsync(db, request.AssignmentId, cancellationToken);
+}
+
+/// <summary>Shared report-building logic for <see cref="GetAssignmentByIdQuery"/> (gated by
+/// `Assignments.Read`) and <see cref="GetMyAssignmentByIdQuery"/> (self-service, gated by ownership
+/// instead) — same content either way, only who's allowed to ask for it differs.</summary>
+internal static class AssignmentDetailBuilder
+{
+    public static async Task<AssignmentDetail> BuildAsync(IApplicationDbContext db, Guid assignmentId, CancellationToken cancellationToken)
     {
         var assignment = await db.Assignments.AsNoTracking()
-            .FirstOrDefaultAsync(a => a.Id == request.AssignmentId, cancellationToken)
-            ?? throw new NotFoundException(nameof(Assignment), request.AssignmentId);
+            .FirstOrDefaultAsync(a => a.Id == assignmentId, cancellationToken)
+            ?? throw new NotFoundException(nameof(Assignment), assignmentId);
 
         var asset = await db.Assets.AsNoTracking()
             .FirstOrDefaultAsync(a => a.Id == assignment.AssetId, cancellationToken)

@@ -53,11 +53,14 @@ internal static class AssignmentGroupSupport
 
     /// <summary>Creates one Movement + Assignment per asset (primary first, then each accessory), all
     /// sharing a fresh AssignmentGroupId — or no group id at all when there are no accessories, so a
-    /// plain single-asset assignment looks exactly like it did before this feature existed.</summary>
+    /// plain single-asset assignment looks exactly like it did before this feature existed. Also notifies
+    /// the recipient (in-app + best-effort email with a link to confirm) once per call — i.e. once per
+    /// group, never once per asset — covering both a fresh CreateAssignmentCommand and the new group half
+    /// of ReassignAssetCommand identically.</summary>
     public static async Task<(Domain.Inventory.Assignment PrimaryAssignment, Domain.Inventory.Movement PrimaryMovement)> CreateGroupAsync(
-        IApplicationDbContext db, IFolioGenerator folioGenerator, Asset primaryAsset, IReadOnlyList<Asset> accessories,
-        Guid assignedToUserId, Guid? orgUnitId, string? notes, DateTimeOffset now, Guid? userId,
-        CancellationToken cancellationToken)
+        IApplicationDbContext db, IFolioGenerator folioGenerator, INotificationSender notificationSender,
+        IFrontendLinkBuilder linkBuilder, Asset primaryAsset, IReadOnlyList<Asset> accessories, Guid assignedToUserId,
+        Guid? orgUnitId, string? notes, DateTimeOffset now, Guid? userId, CancellationToken cancellationToken)
     {
         Guid? groupId = accessories.Count > 0 ? Guid.NewGuid() : null;
 
@@ -70,7 +73,46 @@ internal static class AssignmentGroupSupport
                 db, folioGenerator, accessory, assignedToUserId, orgUnitId, notes, groupId, now, userId, cancellationToken);
         }
 
+        var link = linkBuilder.MyAssignmentUrl(primary.Assignment.Id);
+        var allAssets = new List<Asset> { primaryAsset }.Concat(accessories).ToList();
+        await notificationSender.NotifyAsync(
+            assignedToUserId, "AssignmentPendingSignature", "Se te asignó un equipo",
+            BuildPlainTextBody(allAssets, link), primaryAsset.CompanyId, cancellationToken,
+            emailBodyHtml: BuildHtmlBody(allAssets, link));
+
         return primary;
+    }
+
+    private static string BuildPlainTextBody(IReadOnlyList<Asset> assets, string link)
+    {
+        var items = string.Join(", ", assets.Select(a => $"{a.InternalFolio} ({a.Brand} {a.Model})"));
+        return $"Se te asignó: {items}. Ingresa a {link} para confirmar la recepción.";
+    }
+
+    private static string BuildHtmlBody(IReadOnlyList<Asset> assets, string link)
+    {
+        var rows = string.Join("", assets.Select(a =>
+            $"<tr><td style=\"padding:4px 12px;border:1px solid #ddd;font-family:monospace\">{System.Net.WebUtility.HtmlEncode(a.InternalFolio)}</td>" +
+            $"<td style=\"padding:4px 12px;border:1px solid #ddd\">{System.Net.WebUtility.HtmlEncode(a.Brand)} {System.Net.WebUtility.HtmlEncode(a.Model)}</td>" +
+            $"<td style=\"padding:4px 12px;border:1px solid #ddd;font-family:monospace\">{System.Net.WebUtility.HtmlEncode(a.SerialNumber ?? "—")}</td></tr>"));
+
+        return $"""
+            <p>Se te asignó el siguiente equipo:</p>
+            <table style="border-collapse:collapse;margin:12px 0">
+              <thead><tr>
+                <th style="padding:4px 12px;border:1px solid #ddd;text-align:left">Folio</th>
+                <th style="padding:4px 12px;border:1px solid #ddd;text-align:left">Marca / modelo</th>
+                <th style="padding:4px 12px;border:1px solid #ddd;text-align:left">Serie</th>
+              </tr></thead>
+              <tbody>{rows}</tbody>
+            </table>
+            <p>
+              <a href="{link}" style="display:inline-block;padding:10px 20px;background:#1a56db;color:#fff;text-decoration:none;border-radius:6px">
+                Ver y confirmar recepción
+              </a>
+            </p>
+            <p style="color:#666;font-size:12px">Si el botón no funciona, copia y pega este enlace: {link}</p>
+            """;
     }
 
     private static async Task<(Domain.Inventory.Assignment Assignment, Domain.Inventory.Movement Movement)> CreateSingleAsync(

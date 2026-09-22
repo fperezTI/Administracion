@@ -46,6 +46,16 @@ public sealed class AssignmentsController(ISender mediator) : ControllerBase
         return Ok(result);
     }
 
+    /// <summary>Self-service: only the named recipient may call this successfully (enforced in the
+    /// handler) — the report behind the "confirm what was assigned to me" email link.</summary>
+    [HttpGet("mine/{assignmentId:guid}")]
+    [ProducesResponseType(typeof(AssignmentDetail), StatusCodes.Status200OK)]
+    public async Task<ActionResult<AssignmentDetail>> GetMineById(Guid assignmentId, CancellationToken cancellationToken)
+    {
+        var result = await mediator.Send(new GetMyAssignmentByIdQuery(assignmentId), cancellationToken);
+        return Ok(result);
+    }
+
     [HttpPost]
     [ProducesResponseType(typeof(CreateAssignmentResult), StatusCodes.Status201Created)]
     public async Task<ActionResult<CreateAssignmentResult>> Create(CreateAssignmentCommand command, CancellationToken cancellationToken)

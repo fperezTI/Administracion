@@ -37,7 +37,7 @@ public sealed class CreateAssignmentCommandValidator : AbstractValidator<CreateA
 
 public sealed class CreateAssignmentCommandHandler(
     IApplicationDbContext db, ICurrentCompanyContext currentCompany, ICurrentUserContext currentUser,
-    IFolioGenerator folioGenerator, IClock clock)
+    IFolioGenerator folioGenerator, IClock clock, INotificationSender notificationSender, IFrontendLinkBuilder linkBuilder)
     : IRequestHandler<CreateAssignmentCommand, CreateAssignmentResult>
 {
     public async Task<CreateAssignmentResult> Handle(CreateAssignmentCommand request, CancellationToken cancellationToken)
@@ -73,8 +73,8 @@ public sealed class CreateAssignmentCommandHandler(
         var now = clock.UtcNow;
 
         var (assignment, movement) = await AssignmentGroupSupport.CreateGroupAsync(
-            db, folioGenerator, asset, accessories, request.AssignedToUserId, request.OrgUnitId, request.Notes,
-            now, currentUser.UserId, cancellationToken);
+            db, folioGenerator, notificationSender, linkBuilder, asset, accessories, request.AssignedToUserId,
+            request.OrgUnitId, request.Notes, now, currentUser.UserId, cancellationToken);
 
         await db.SaveChangesAsync(cancellationToken);
 
