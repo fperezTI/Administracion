@@ -13,7 +13,7 @@
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="9.0.0" />
     <!-- Pure in-memory computation libraries (parsing/serialization, no network/external resource) —
          referenced directly here like FluentValidation/MediatR already are, see ADR 0011 decision 8. -->
-    <PackageReference Include="CsvHelper" Version="33.0.1" />
+    <PackageReference Include="CsvHelper" Version="33.1.0" />
     <PackageReference Include="ClosedXML" Version="0.104.2" />
     <PackageReference Include="PdfSharp" Version="6.1.1" />
   </ItemGroup>
