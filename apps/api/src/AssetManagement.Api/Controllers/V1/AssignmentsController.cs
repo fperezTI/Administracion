@@ -81,6 +81,16 @@ public sealed class AssignmentsController(ISender mediator) : ControllerBase
         return NoContent();
     }
 
+    /// <summary>Self-service: only the named recipient may call this successfully (enforced in the
+    /// handler) — the mirror image of Sign, with no permission check either.</summary>
+    [HttpPost("{assignmentId:guid}/reject")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    public async Task<IActionResult> Reject(Guid assignmentId, CancellationToken cancellationToken)
+    {
+        await mediator.Send(new RejectAssignmentCommand(assignmentId), cancellationToken);
+        return NoContent();
+    }
+
     [HttpPost("{assignmentId:guid}/return")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     public async Task<IActionResult> Return(Guid assignmentId, ReturnAssignmentRequest request, CancellationToken cancellationToken)

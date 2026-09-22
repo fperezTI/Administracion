@@ -1,12 +1,13 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { requireAccessToken } from "@/lib/require-session";
-import { ApiError, getAssignmentById } from "@/lib/api";
+import { ApiError, getAssignmentById, getMe } from "@/lib/api";
 import { AppHeader } from "@/components/app-header";
 import { Breadcrumbs } from "@/components/layout/breadcrumbs";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { formatDateTime, resolveTimeZone } from "@/lib/format-date";
 import { ASSIGNMENT_STATUS_LABELS, assignmentStatusBadgeVariant } from "@/lib/inventory-labels";
 import { cancelAssignmentAction } from "./actions";
 import { ReturnAssignmentForm } from "./return-assignment-form";
@@ -24,6 +25,9 @@ export default async function AssignmentDetailPage({ params }: { params: Promise
     }
     throw error;
   }
+
+  const me = await getMe(accessToken);
+  const timeZone = resolveTimeZone(me.companies, assignment.companyId);
 
   return (
     <>
@@ -74,7 +78,7 @@ export default async function AssignmentDetailPage({ params }: { params: Promise
             <div className="grid gap-1">
               <p>{assignment.acceptanceSignature.signerDisplayName}</p>
               <p className="text-muted-foreground text-xs">
-                {new Date(assignment.acceptanceSignature.signedAtUtc).toLocaleString("es-MX")}
+                {formatDateTime(assignment.acceptanceSignature.signedAtUtc, timeZone)}
               </p>
               <p className="font-mono text-xs break-all">{assignment.acceptanceSignature.contentHash}</p>
             </div>
@@ -95,7 +99,7 @@ export default async function AssignmentDetailPage({ params }: { params: Promise
             <div className="grid gap-1">
               <p>{assignment.returnSignature.signerDisplayName}</p>
               <p className="text-muted-foreground text-xs">
-                {new Date(assignment.returnSignature.signedAtUtc).toLocaleString("es-MX")}
+                {formatDateTime(assignment.returnSignature.signedAtUtc, timeZone)}
               </p>
             </div>
           </CardContent>

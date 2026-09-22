@@ -1,12 +1,13 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { requireAccessToken } from "@/lib/require-session";
-import { ApiError, getImportBatchById } from "@/lib/api";
+import { ApiError, getImportBatchById, getMe } from "@/lib/api";
 import { AppHeader } from "@/components/app-header";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { formatDateTime, resolveTimeZone } from "@/lib/format-date";
 import { IMPORT_BATCH_STATUS_LABELS, importBatchStatusBadgeVariant } from "@/lib/import-export-labels";
 import { CommitImportBatchForm } from "./commit-import-batch-form";
 import { cancelImportBatchAction } from "./actions";
@@ -28,6 +29,9 @@ export default async function ImportBatchDetailPage({ params }: { params: Promis
     throw error;
   }
 
+  const me = await getMe(accessToken);
+  const timeZone = resolveTimeZone(me.companies, batch.companyId);
+
   return (
     <>
       <AppHeader title="Importaciones" />
@@ -41,7 +45,7 @@ export default async function ImportBatchDetailPage({ params }: { params: Promis
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h2 className="text-lg font-semibold tracking-tight">{batch.fileName}</h2>
-          <p className="text-muted-foreground text-sm">Subido el {new Date(batch.createdAtUtc).toLocaleString("es-MX")}</p>
+          <p className="text-muted-foreground text-sm">Subido el {formatDateTime(batch.createdAtUtc, timeZone)}</p>
         </div>
         <Badge variant={importBatchStatusBadgeVariant(batch.status)}>{IMPORT_BATCH_STATUS_LABELS[batch.status]}</Badge>
       </div>

@@ -7,6 +7,7 @@ import { EmptyCompanyState } from "@/components/empty-company-state";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { formatDate, resolveTimeZone } from "@/lib/format-date";
 import { INTERNAL_REQUEST_STATUS_LABELS, INTERNAL_REQUEST_TYPE_LABELS, internalRequestStatusBadgeVariant } from "@/lib/request-labels";
 
 export default async function InternalRequestsPage({ searchParams }: { searchParams: Promise<{ companyId?: string }> }) {
@@ -21,6 +22,7 @@ export default async function InternalRequestsPage({ searchParams }: { searchPar
   const companyId = params.companyId && me.companies.some((c) => c.companyId === params.companyId)
     ? params.companyId
     : me.companies[0].companyId;
+  const timeZone = resolveTimeZone(me.companies, companyId);
 
   let content: React.ReactNode;
   try {
@@ -57,7 +59,7 @@ export default async function InternalRequestsPage({ searchParams }: { searchPar
                   <TableCell>
                     <Badge variant={internalRequestStatusBadgeVariant(r.status)}>{INTERNAL_REQUEST_STATUS_LABELS[r.status]}</Badge>
                   </TableCell>
-                  <TableCell className="hidden sm:table-cell">{new Date(r.requestedAtUtc).toLocaleDateString("es-MX")}</TableCell>
+                  <TableCell className="hidden sm:table-cell">{formatDate(r.requestedAtUtc, timeZone)}</TableCell>
                 </TableRow>
               ))
             )}

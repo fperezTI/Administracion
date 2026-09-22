@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { requireAccessToken } from "@/lib/require-session";
-import { ApiError, getAssetById, getAssetCategoryById, getAssignments, getMovements, unlinkAssetAccessory } from "@/lib/api";
+import { ApiError, getAssetById, getAssetCategoryById, getAssignments, getMe, getMovements, unlinkAssetAccessory } from "@/lib/api";
 import { AppHeader } from "@/components/app-header";
 import { Breadcrumbs } from "@/components/layout/breadcrumbs";
 import { DocumentsPanel } from "@/components/documents-panel";
@@ -17,6 +17,7 @@ import {
   assetStatusBadgeVariant,
   canRequestDecommission,
 } from "@/lib/asset-labels";
+import { formatDateTime, resolveTimeZone } from "@/lib/format-date";
 import { MOVEMENT_TYPE_LABELS } from "@/lib/inventory-labels";
 
 export default async function AssetDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -33,6 +34,8 @@ export default async function AssetDetailPage({ params }: { params: Promise<{ id
     throw error;
   }
 
+  const me = await getMe(accessToken);
+  const timeZone = resolveTimeZone(me.companies, asset.companyId);
   const category = await getAssetCategoryById(accessToken, asset.assetCategoryId).catch(() => null);
   const fieldNameById = new Map((category?.customFields ?? []).map((f) => [f.id, f.name]));
   const movements = await getMovements(accessToken, { companyId: asset.companyId, assetId: id, pageSize: 20 }).catch(
@@ -269,7 +272,7 @@ export default async function AssetDetailPage({ params }: { params: Promise<{ id
                   <TableRow key={m.id}>
                     <TableCell className="font-mono">{m.folioNumber}</TableCell>
                     <TableCell>{MOVEMENT_TYPE_LABELS[m.type]}</TableCell>
-                    <TableCell>{new Date(m.effectiveAtUtc).toLocaleString("es-MX")}</TableCell>
+                    <TableCell>{formatDateTime(m.effectiveAtUtc, timeZone)}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>

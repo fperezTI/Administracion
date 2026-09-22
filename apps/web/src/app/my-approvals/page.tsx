@@ -1,13 +1,17 @@
 import Link from "next/link";
 import { requireAccessToken } from "@/lib/require-session";
-import { ApiError, getMyPendingApprovals } from "@/lib/api";
+import { ApiError, getMe, getMyPendingApprovals } from "@/lib/api";
 import { AppHeader } from "@/components/app-header";
 import { Card, CardContent } from "@/components/ui/card";
 import { describeApprovalContext } from "@/lib/approval-labels";
+import { formatDate, resolveTimeZone } from "@/lib/format-date";
 import { DecideApprovalForm } from "./decide-approval-form";
 
 export default async function MyApprovalsPage() {
   const accessToken = await requireAccessToken();
+  const me = await getMe(accessToken);
+  // ApprovalInstance has no companyId exposed on this DTO — falls back to the viewer's first company.
+  const timeZone = resolveTimeZone(me.companies, null);
 
   let content: React.ReactNode;
   try {
@@ -25,7 +29,7 @@ export default async function MyApprovalsPage() {
                   <div>
                     <p className="font-medium">{describeApprovalContext(a.contextType)}</p>
                     <p className="text-muted-foreground text-sm">
-                      Solicitado por {a.requestedByDisplayName} — {new Date(a.createdAtUtc).toLocaleDateString("es-MX")}
+                      Solicitado por {a.requestedByDisplayName} — {formatDate(a.createdAtUtc, timeZone)}
                     </p>
                     {a.comment && <p className="text-sm">&ldquo;{a.comment}&rdquo;</p>}
                   </div>

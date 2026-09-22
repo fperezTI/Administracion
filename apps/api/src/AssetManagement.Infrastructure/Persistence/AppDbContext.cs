@@ -3,6 +3,7 @@ using AssetManagement.Application.Common.Interfaces;
 using AssetManagement.Domain.Approvals;
 using AssetManagement.Domain.Assets;
 using AssetManagement.Domain.Audit;
+using AssetManagement.Domain.Configuration;
 using AssetManagement.Domain.Documents;
 using AssetManagement.Domain.Identity;
 using AssetManagement.Domain.ImportExport;
@@ -94,6 +95,8 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options, ICurren
     public DbSet<AuditEntry> AuditEntries => Set<AuditEntry>();
 
     public DbSet<ImportBatch> ImportBatches => Set<ImportBatch>();
+
+    public DbSet<SystemSettings> SystemSettings => Set<SystemSettings>();
 
     /// <summary>Not part of IApplicationDbContext — only EfFolioGenerator (Infrastructure) needs it, via
     /// the raw-SQL atomic increment that generates folios without optimistic-concurrency retries.</summary>

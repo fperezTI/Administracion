@@ -1,13 +1,18 @@
 import Link from "next/link";
 import { requireAccessToken } from "@/lib/require-session";
-import { ApiError, getUsers } from "@/lib/api";
+import { ApiError, getMe, getUsers } from "@/lib/api";
 import { AppHeader } from "@/components/app-header";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { formatDateTime, resolveTimeZone } from "@/lib/format-date";
 
 export default async function UsersPage() {
   const accessToken = await requireAccessToken();
+  const me = await getMe(accessToken);
+  // Users are inherently multi-company and this list has no CompanySwitcher (tenant-wide admin view) —
+  // falls back to the viewing admin's own first company.
+  const timeZone = resolveTimeZone(me.companies, null);
 
   let content: React.ReactNode;
   try {
@@ -42,7 +47,7 @@ export default async function UsersPage() {
                     <Badge variant={user.isActive ? "success" : "outline"}>{user.isActive ? "Activo" : "Inactivo"}</Badge>
                   </TableCell>
                   <TableCell>
-                    {user.lastLoginAtUtc ? new Date(user.lastLoginAtUtc).toLocaleString("es-MX") : "—"}
+                    {user.lastLoginAtUtc ? formatDateTime(user.lastLoginAtUtc, timeZone) : "—"}
                   </TableCell>
                 </TableRow>
               ))

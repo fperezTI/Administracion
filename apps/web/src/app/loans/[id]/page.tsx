@@ -1,10 +1,11 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { requireAccessToken } from "@/lib/require-session";
-import { ApiError, getLoanById } from "@/lib/api";
+import { ApiError, getLoanById, getMe } from "@/lib/api";
 import { AppHeader } from "@/components/app-header";
 import { Breadcrumbs } from "@/components/layout/breadcrumbs";
 import { Badge } from "@/components/ui/badge";
+import { formatDate, resolveTimeZone } from "@/lib/format-date";
 import { LOAN_STATUS_LABELS, loanStatusBadgeVariant } from "@/lib/inventory-labels";
 import { ReturnLoanForm } from "./return-loan-form";
 
@@ -21,6 +22,9 @@ export default async function LoanDetailPage({ params }: { params: Promise<{ id:
     }
     throw error;
   }
+
+  const me = await getMe(accessToken);
+  const timeZone = resolveTimeZone(me.companies, loan.companyId);
 
   return (
     <>
@@ -40,7 +44,7 @@ export default async function LoanDetailPage({ params }: { params: Promise<{ id:
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 rounded-lg border p-4 text-sm">
         <div>
           <p className="text-muted-foreground text-xs">Fecha de préstamo</p>
-          <p>{new Date(loan.loanedAtUtc).toLocaleDateString("es-MX")}</p>
+          <p>{formatDate(loan.loanedAtUtc, timeZone)}</p>
         </div>
         <div>
           <p className="text-muted-foreground text-xs">Devolución esperada</p>
@@ -49,7 +53,7 @@ export default async function LoanDetailPage({ params }: { params: Promise<{ id:
         {loan.returnedAtUtc && (
           <div>
             <p className="text-muted-foreground text-xs">Devuelto</p>
-            <p>{new Date(loan.returnedAtUtc).toLocaleDateString("es-MX")}</p>
+            <p>{formatDate(loan.returnedAtUtc, timeZone)}</p>
           </div>
         )}
       </div>

@@ -7,6 +7,7 @@ import { EmptyCompanyState } from "@/components/empty-company-state";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { formatDateTime, resolveTimeZone } from "@/lib/format-date";
 import { IMPORT_BATCH_STATUS_LABELS, importBatchStatusBadgeVariant } from "@/lib/import-export-labels";
 
 export default async function ImportBatchesPage({ searchParams }: { searchParams: Promise<{ companyId?: string }> }) {
@@ -21,6 +22,7 @@ export default async function ImportBatchesPage({ searchParams }: { searchParams
   const companyId = params.companyId && me.companies.some((c) => c.companyId === params.companyId)
     ? params.companyId
     : me.companies[0].companyId;
+  const timeZone = resolveTimeZone(me.companies, companyId);
 
   let content: React.ReactNode;
   try {
@@ -59,7 +61,7 @@ export default async function ImportBatchesPage({ searchParams }: { searchParams
                       ? "—"
                       : `${b.validRows ?? 0} válidas / ${b.invalidRows ?? 0} inválidas de ${b.totalRows}`}
                   </TableCell>
-                  <TableCell>{new Date(b.createdAtUtc).toLocaleString("es-MX")}</TableCell>
+                  <TableCell>{formatDateTime(b.createdAtUtc, timeZone)}</TableCell>
                 </TableRow>
               ))
             )}

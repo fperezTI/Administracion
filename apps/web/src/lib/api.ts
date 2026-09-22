@@ -7,6 +7,7 @@ export type SystemInfoResponse = {
 export type MeCompany = {
   companyId: string;
   tradeName: string;
+  timeZone: string;
 };
 
 export type MeResponse = {
@@ -542,6 +543,31 @@ export function getPermissions(accessToken: string): Promise<PermissionModuleGro
   return apiFetch<PermissionModuleGroup[]>(accessToken, "/api/v1/permissions");
 }
 
+// --- System configuration ---
+
+export type SystemSettings = {
+  senderMailbox: string;
+  graphTenantId: string;
+  graphClientId: string;
+  hasGraphClientSecretConfigured: boolean;
+};
+
+export type UpdateSystemSettingsInput = {
+  senderMailbox: string | null;
+  graphTenantId: string | null;
+  graphClientId: string | null;
+  /** null/empty leaves the previously stored secret unchanged — never pre-filled from a GET. */
+  graphClientSecret: string | null;
+};
+
+export function getSystemSettings(accessToken: string): Promise<SystemSettings> {
+  return apiFetch<SystemSettings>(accessToken, "/api/v1/system/settings");
+}
+
+export function updateSystemSettings(accessToken: string, input: UpdateSystemSettingsInput): Promise<void> {
+  return apiFetch(accessToken, "/api/v1/system/settings", { method: "PUT", body: JSON.stringify(input) });
+}
+
 // --- Identity: Users ---
 
 export type UserSummary = {
@@ -699,7 +725,7 @@ export type LoanSummary = {
   returnedAtUtc: string | null;
 };
 
-export type LoanDetail = LoanSummary;
+export type LoanDetail = LoanSummary & { companyId: string };
 
 export type MovementSummary = {
   id: string;
@@ -779,6 +805,11 @@ export function signAssignment(accessToken: string, assignmentId: string, typedF
 
 export function cancelAssignment(accessToken: string, assignmentId: string): Promise<void> {
   return apiFetch(accessToken, `/api/v1/assignments/${assignmentId}/cancel`, { method: "POST" });
+}
+
+/** Self-service — only the assignment's own recipient can call this successfully. */
+export function rejectAssignment(accessToken: string, assignmentId: string): Promise<void> {
+  return apiFetch(accessToken, `/api/v1/assignments/${assignmentId}/reject`, { method: "POST" });
 }
 
 export function returnAssignment(
@@ -1442,6 +1473,7 @@ export type MyInternalRequestSummary = {
 
 export type InternalRequestDetail = {
   id: string;
+  companyId: string;
   type: InternalRequestType;
   assetId: string;
   assetFolio: string;

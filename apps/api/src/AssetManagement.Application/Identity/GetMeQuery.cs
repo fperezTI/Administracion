@@ -18,7 +18,7 @@ public sealed record MeResponse(
     IReadOnlyCollection<MeCompany> Companies,
     Guid? ActiveCompanyId);
 
-public sealed record MeCompany(Guid CompanyId, string TradeName);
+public sealed record MeCompany(Guid CompanyId, string TradeName, string TimeZone);
 
 public sealed class GetMeQueryHandler(IApplicationDbContext db, ICurrentUserContext currentUser, ICurrentCompanyContext currentCompany)
     : IRequestHandler<GetMeQuery, MeResponse>
@@ -39,7 +39,7 @@ public sealed class GetMeQueryHandler(IApplicationDbContext db, ICurrentUserCont
             from userCompany in db.UserCompanies
             join company in db.Companies on userCompany.CompanyId equals company.Id
             where userCompany.UserId == userId
-            select new MeCompany(company.Id, company.TradeName))
+            select new MeCompany(company.Id, company.TradeName, company.TimeZone))
             .ToListAsync(cancellationToken);
 
         return new MeResponse(

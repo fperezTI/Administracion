@@ -1,8 +1,9 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { requireAccessToken } from "@/lib/require-session";
-import { ApiError, getMaintenanceOrderById } from "@/lib/api";
+import { ApiError, getMaintenanceOrderById, getMe } from "@/lib/api";
 import { ASSET_STATUS_LABELS } from "@/lib/asset-labels";
+import { formatDateTime, resolveTimeZone } from "@/lib/format-date";
 import { MAINTENANCE_ORDER_STATUS_LABELS, MAINTENANCE_ORDER_TYPE_LABELS, maintenanceOrderStatusBadgeVariant } from "@/lib/maintenance-labels";
 import { AppHeader } from "@/components/app-header";
 import { DocumentsPanel } from "@/components/documents-panel";
@@ -24,6 +25,9 @@ export default async function MaintenanceOrderDetailPage({ params }: { params: P
     }
     throw error;
   }
+
+  const me = await getMe(accessToken);
+  const timeZone = resolveTimeZone(me.companies, order.companyId);
 
   return (
     <>
@@ -52,7 +56,7 @@ export default async function MaintenanceOrderDetailPage({ params }: { params: P
         <CardContent>
           <p className="text-sm whitespace-pre-wrap">{order.description}</p>
           <p className="text-muted-foreground mt-2 text-xs">
-            Abierta el {new Date(order.openedAtUtc).toLocaleString("es-MX")}
+            Abierta el {formatDateTime(order.openedAtUtc, timeZone)}
           </p>
         </CardContent>
       </Card>
@@ -75,7 +79,7 @@ export default async function MaintenanceOrderDetailPage({ params }: { params: P
             <p className="text-sm">
               <span className="font-medium">{order.resultStatus ? ASSET_STATUS_LABELS[order.resultStatus] : "—"}</span>
               {" — "}
-              {order.closedAtUtc && new Date(order.closedAtUtc).toLocaleString("es-MX")}
+              {order.closedAtUtc && formatDateTime(order.closedAtUtc, timeZone)}
             </p>
             <p className="text-sm whitespace-pre-wrap">{order.resultNotes}</p>
             {order.checklistResults.length > 0 && (

@@ -104,16 +104,32 @@ y un buzón real. Necesitas una licencia de Microsoft 365 con un buzón dedicado
      -PolicyScopeGroupId "AssetManagementSenders@tudominio.com" `
      -AccessRight RestrictAccess -Description "Solo puede enviar correo desde el buzón de notificaciones"
    ```
-4. Backend (`apps/api`), vía user-secrets (junto a los del paso 1a):
+4. Backend (`apps/api`), vía user-secrets (junto a los del paso 1a) — esto es el arranque inicial /
+   "bootstrap"; ver el punto 6 para la forma recomendada de mantenerlo actualizado después:
    ```bash
    dotnet user-secrets set "MicrosoftGraph:SenderMailbox" "notificaciones@tudominio.com" --project src/AssetManagement.Api
    dotnet user-secrets set "Frontend:BaseUrl" "http://localhost:3000" --project src/AssetManagement.Api
    ```
 5. Docker Compose: agrega `GRAPH_SENDER_MAILBOX=notificaciones@tudominio.com` a tu `.env`.
+6. **Alternativa sin CLI/redeploy**: una vez que el paso 1a/1b esté hecho al menos una vez (permiso
+   `Mail.Send` con consentimiento de administrador), el buzón remitente y las credenciales
+   (`TenantId`/`ClientId`/`ClientSecret`) también se pueden configurar — y cambiar después — desde
+   **Administración → Configuración** en la app (`/system-settings`, requiere el permiso
+   `Configuration.Update`). El valor guardado ahí tiene prioridad sobre `appsettings`/variables de
+   entorno campo por campo, y el cambio aplica de inmediato (sin redeploy) al próximo correo o búsqueda
+   de directorio. El `ClientSecret` se guarda cifrado con el Data Protection API de ASP.NET Core, nunca
+   en texto plano, y nunca se vuelve a mostrar una vez guardado. **Requisito de producción**: la clave de
+   cifrado se persiste en el mismo Storage Account que ya se usa para documentos (contenedor
+   `dataprotection-keys`, creado automáticamente) — si `BlobStorage:ConnectionString` no está configurado
+   con un Storage Account real, el cifrado usa una clave local efímera y cualquier secreto guardado desde
+   esta pantalla dejará de poder leerse la próxima vez que el contenedor de la API se reinicie. Recomendado
+   como hardening adicional (no bloqueante): envolver esa clave con Key Vault
+   (`ProtectKeysWithAzureKeyVault`), igual que ya se hace con la Application Access Policy de Exchange del
+   punto 3.
 
-Si dejas `MicrosoftGraph:SenderMailbox` vacío, no se manda correo de asignación (cae en `Smtp:Host` si está
-configurado, o en un registro informativo si no hay ningún proveedor de correo) — el resto de la app
-funciona igual.
+Si dejas tanto `MicrosoftGraph:SenderMailbox` como el equivalente en la base de datos vacíos, no se manda
+correo de asignación (cae en `Smtp:Host` si está configurado, o en un registro informativo si no hay
+ningún proveedor de correo) — el resto de la app funciona igual.
 
 ### 2. Registrar el frontend (Web)
 

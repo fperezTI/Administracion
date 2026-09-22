@@ -83,9 +83,20 @@ internal static class AssignmentGroupSupport
         return primary;
     }
 
+    private static readonly Dictionary<PhysicalCondition, string> PhysicalConditionLabels = new()
+    {
+        [PhysicalCondition.Excellent] = "Excelente",
+        [PhysicalCondition.Good] = "Buena",
+        [PhysicalCondition.Fair] = "Regular",
+        [PhysicalCondition.Poor] = "Mala",
+        [PhysicalCondition.Damaged] = "Dañado",
+    };
+
     private static string BuildPlainTextBody(IReadOnlyList<Asset> assets, string link)
     {
-        var items = string.Join(", ", assets.Select(a => $"{a.InternalFolio} ({a.Brand} {a.Model})"));
+        var items = string.Join(", ", assets.Select(a =>
+            $"{a.InternalFolio} ({a.Brand} {a.Model}, condición: {PhysicalConditionLabels[a.PhysicalCondition]}" +
+            (string.IsNullOrWhiteSpace(a.Description) ? "" : $", {a.Description}") + ")"));
         return $"Se te asignó: {items}. Ingresa a {link} para confirmar la recepción.";
     }
 
@@ -94,7 +105,9 @@ internal static class AssignmentGroupSupport
         var rows = string.Join("", assets.Select(a =>
             $"<tr><td style=\"padding:4px 12px;border:1px solid #ddd;font-family:monospace\">{System.Net.WebUtility.HtmlEncode(a.InternalFolio)}</td>" +
             $"<td style=\"padding:4px 12px;border:1px solid #ddd\">{System.Net.WebUtility.HtmlEncode(a.Brand)} {System.Net.WebUtility.HtmlEncode(a.Model)}</td>" +
-            $"<td style=\"padding:4px 12px;border:1px solid #ddd;font-family:monospace\">{System.Net.WebUtility.HtmlEncode(a.SerialNumber ?? "—")}</td></tr>"));
+            $"<td style=\"padding:4px 12px;border:1px solid #ddd;font-family:monospace\">{System.Net.WebUtility.HtmlEncode(a.SerialNumber ?? "—")}</td>" +
+            $"<td style=\"padding:4px 12px;border:1px solid #ddd\">{System.Net.WebUtility.HtmlEncode(PhysicalConditionLabels[a.PhysicalCondition])}</td>" +
+            $"<td style=\"padding:4px 12px;border:1px solid #ddd\">{System.Net.WebUtility.HtmlEncode(a.Description ?? "—")}</td></tr>"));
 
         return $"""
             <p>Se te asignó el siguiente equipo:</p>
@@ -103,6 +116,8 @@ internal static class AssignmentGroupSupport
                 <th style="padding:4px 12px;border:1px solid #ddd;text-align:left">Folio</th>
                 <th style="padding:4px 12px;border:1px solid #ddd;text-align:left">Marca / modelo</th>
                 <th style="padding:4px 12px;border:1px solid #ddd;text-align:left">Serie</th>
+                <th style="padding:4px 12px;border:1px solid #ddd;text-align:left">Condición</th>
+                <th style="padding:4px 12px;border:1px solid #ddd;text-align:left">Descripción</th>
               </tr></thead>
               <tbody>{rows}</tbody>
             </table>

@@ -4,6 +4,7 @@ import { requireAccessToken } from "@/lib/require-session";
 import { ApiError, getAssignmentById, getCompanyById } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { PrintButton } from "@/components/print-button";
+import { formatDate, formatDateTime } from "@/lib/format-date";
 
 export default async function AssignmentReceiptPage({ params }: { params: Promise<{ id: string }> }) {
   const accessToken = await requireAccessToken();
@@ -20,6 +21,7 @@ export default async function AssignmentReceiptPage({ params }: { params: Promis
   }
 
   const company = await getCompanyById(accessToken, assignment.companyId).catch(() => null);
+  const timeZone = company?.timeZone ?? "UTC";
 
   return (
     <div className="mx-auto flex max-w-2xl flex-col gap-6 p-8 print:p-0">
@@ -84,7 +86,7 @@ export default async function AssignmentReceiptPage({ params }: { params: Promis
           <Field label="Nombre" value={assignment.assignedToDisplayName} />
           <Field label="Correo" value={assignment.assignedToEmail} />
           <Field label="Unidad organizacional" value={assignment.orgUnitName} />
-          <Field label="Fecha de entrega" value={new Date(assignment.assignedAtUtc).toLocaleDateString("es-MX")} />
+          <Field label="Fecha de entrega" value={formatDate(assignment.assignedAtUtc, timeZone)} />
         </section>
 
         <section>
@@ -92,7 +94,7 @@ export default async function AssignmentReceiptPage({ params }: { params: Promis
           {assignment.acceptanceSignature ? (
             <p className="text-muted-foreground text-xs">
               Recepción confirmada digitalmente por {assignment.acceptanceSignature.signerDisplayName} el{" "}
-              {new Date(assignment.acceptanceSignature.signedAtUtc).toLocaleString("es-MX")}.
+              {formatDateTime(assignment.acceptanceSignature.signedAtUtc, timeZone)}.
             </p>
           ) : (
             <p className="text-muted-foreground text-xs">

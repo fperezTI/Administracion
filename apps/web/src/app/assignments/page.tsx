@@ -7,7 +7,9 @@ import { EmptyCompanyState } from "@/components/empty-company-state";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { formatDate, resolveTimeZone } from "@/lib/format-date";
 import { ASSIGNMENT_STATUS_LABELS, assignmentStatusBadgeVariant } from "@/lib/inventory-labels";
+import { cancelAssignmentAction } from "./[id]/actions";
 
 export default async function AssignmentsPage({ searchParams }: { searchParams: Promise<{ companyId?: string }> }) {
   const accessToken = await requireAccessToken();
@@ -21,6 +23,7 @@ export default async function AssignmentsPage({ searchParams }: { searchParams: 
   const companyId = params.companyId && me.companies.some((c) => c.companyId === params.companyId)
     ? params.companyId
     : me.companies[0].companyId;
+  const timeZone = resolveTimeZone(me.companies, companyId);
 
   let content: React.ReactNode;
   try {
@@ -34,12 +37,13 @@ export default async function AssignmentsPage({ searchParams }: { searchParams: 
               <TableHead>Asignado a</TableHead>
               <TableHead>Estado</TableHead>
               <TableHead className="hidden sm:table-cell">Fecha</TableHead>
+              <TableHead className="text-right">Acciones</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {assignments.items.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={4} className="text-muted-foreground py-8 text-center">
+                <TableCell colSpan={5} className="text-muted-foreground py-8 text-center">
                   No hay asignaciones todavía.
                 </TableCell>
               </TableRow>
@@ -60,7 +64,16 @@ export default async function AssignmentsPage({ searchParams }: { searchParams: 
                   <TableCell>
                     <Badge variant={assignmentStatusBadgeVariant(a.status)}>{ASSIGNMENT_STATUS_LABELS[a.status]}</Badge>
                   </TableCell>
-                  <TableCell className="hidden sm:table-cell">{new Date(a.assignedAtUtc).toLocaleDateString("es-MX")}</TableCell>
+                  <TableCell className="hidden sm:table-cell">{formatDate(a.assignedAtUtc, timeZone)}</TableCell>
+                  <TableCell className="text-right">
+                    {a.status === "PendingSignature" && (
+                      <form action={cancelAssignmentAction.bind(null, a.id)}>
+                        <Button type="submit" variant="outline" size="sm">
+                          Cancelar
+                        </Button>
+                      </form>
+                    )}
+                  </TableCell>
                 </TableRow>
               ))
             )}

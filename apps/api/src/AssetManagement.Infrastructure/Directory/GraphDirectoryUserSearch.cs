@@ -15,12 +15,15 @@ namespace AssetManagement.Infrastructure.Directory;
 /// long-standing API) handles acquiring and caching the app-only token internally — no manual token cache
 /// needed here.
 /// </summary>
-public sealed class GraphDirectoryUserSearch(HttpClient httpClient, ClientSecretCredential credential) : IDirectoryUserSearch
+public sealed class GraphDirectoryUserSearch(HttpClient httpClient, string tenantId, string clientId, string clientSecret) : IDirectoryUserSearch
 {
     private static readonly string[] GraphScopes = ["https://graph.microsoft.com/.default"];
 
     public async Task<IReadOnlyList<DirectoryUser>> SearchAsync(string query, CancellationToken cancellationToken)
     {
+        // Built fresh per call (not injected as a fixed singleton) so a credential change made from the
+        // admin settings screen takes effect on the very next search — see SystemSettingsProvider.
+        var credential = new ClientSecretCredential(tenantId, clientId, clientSecret);
         var token = await credential.GetTokenAsync(new TokenRequestContext(GraphScopes), cancellationToken);
 
         var escaped = EscapeODataLiteral(query);

@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { requireAccessToken } from "@/lib/require-session";
-import { ApiError, signAssignment } from "@/lib/api";
+import { ApiError, rejectAssignment, signAssignment } from "@/lib/api";
 
 export type SignActionState = { error: string | null; success: boolean };
 
@@ -29,4 +29,11 @@ export async function signAssignmentAction(
 
   revalidatePath("/my-assignments");
   return { error: null, success: true };
+}
+
+export async function rejectAssignmentAction(assignmentId: string, _formData: FormData) {
+  const accessToken = await requireAccessToken();
+  await rejectAssignment(accessToken, assignmentId);
+  revalidatePath("/my-assignments");
+  revalidatePath(`/my-assignments/${assignmentId}`);
 }

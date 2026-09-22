@@ -7,6 +7,7 @@ import { EmptyCompanyState } from "@/components/empty-company-state";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { formatDate, resolveTimeZone } from "@/lib/format-date";
 import { TRANSFER_STATUS_LABELS, transferStatusBadgeVariant } from "@/lib/transfer-labels";
 
 export default async function TransfersPage({ searchParams }: { searchParams: Promise<{ companyId?: string }> }) {
@@ -57,7 +58,9 @@ export default async function TransfersPage({ searchParams }: { searchParams: Pr
                   <TableCell>
                     <Badge variant={transferStatusBadgeVariant(t.status)}>{TRANSFER_STATUS_LABELS[t.status]}</Badge>
                   </TableCell>
-                  <TableCell className="hidden sm:table-cell">{new Date(t.requestedAtUtc).toLocaleDateString("es-MX")}</TableCell>
+                  <TableCell className="hidden sm:table-cell">
+                    {formatDate(t.requestedAtUtc, resolveTimeZone(me.companies, t.fromCompanyId))}
+                  </TableCell>
                 </TableRow>
               ))
             )}

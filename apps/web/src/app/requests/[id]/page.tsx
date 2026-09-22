@@ -1,11 +1,12 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { requireAccessToken } from "@/lib/require-session";
-import { ApiError, getInternalRequestById } from "@/lib/api";
+import { ApiError, getInternalRequestById, getMe } from "@/lib/api";
 import { AppHeader } from "@/components/app-header";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { formatDateTime, resolveTimeZone } from "@/lib/format-date";
 import { INTERNAL_REQUEST_STATUS_LABELS, INTERNAL_REQUEST_TYPE_LABELS, internalRequestStatusBadgeVariant } from "@/lib/request-labels";
 
 export default async function InternalRequestDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -21,6 +22,9 @@ export default async function InternalRequestDetailPage({ params }: { params: Pr
     }
     throw error;
   }
+
+  const me = await getMe(accessToken);
+  const timeZone = resolveTimeZone(me.companies, request.companyId);
 
   return (
     <>
@@ -52,8 +56,8 @@ export default async function InternalRequestDetailPage({ params }: { params: Pr
             <p className="text-muted-foreground text-xs">Devolución esperada: {request.expectedReturnDate}</p>
           )}
           <p className="text-muted-foreground text-xs">
-            Solicitada el {new Date(request.requestedAtUtc).toLocaleString("es-MX")}
-            {request.decidedAtUtc && ` — decidida el ${new Date(request.decidedAtUtc).toLocaleString("es-MX")}`}
+            Solicitada el {formatDateTime(request.requestedAtUtc, timeZone)}
+            {request.decidedAtUtc && ` — decidida el ${formatDateTime(request.decidedAtUtc, timeZone)}`}
           </p>
         </CardContent>
       </Card>

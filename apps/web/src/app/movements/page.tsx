@@ -5,6 +5,7 @@ import { AppHeader } from "@/components/app-header";
 import { CompanySwitcher } from "@/components/company-switcher";
 import { EmptyCompanyState } from "@/components/empty-company-state";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { formatDateTime, resolveTimeZone } from "@/lib/format-date";
 import { MOVEMENT_TYPE_LABELS } from "@/lib/inventory-labels";
 import { MovementTypeFilterField } from "./movement-type-filter-field";
 import { TablePagination, type SearchParams } from "@/components/layout/table-pagination";
@@ -23,6 +24,7 @@ export default async function MovementsPage({ searchParams }: { searchParams: Pr
   const companyId = params.companyId && me.companies.some((c) => c.companyId === params.companyId)
     ? params.companyId
     : me.companies[0].companyId;
+  const timeZone = resolveTimeZone(me.companies, companyId);
   const pageNumber = params.pageNumber ? Math.max(1, Number(params.pageNumber)) : 1;
 
   let content: React.ReactNode;
@@ -64,7 +66,7 @@ export default async function MovementsPage({ searchParams }: { searchParams: Pr
                       </Link>
                     </TableCell>
                     <TableCell>{MOVEMENT_TYPE_LABELS[m.type]}</TableCell>
-                    <TableCell className="hidden sm:table-cell">{new Date(m.effectiveAtUtc).toLocaleString("es-MX")}</TableCell>
+                    <TableCell className="hidden sm:table-cell">{formatDateTime(m.effectiveAtUtc, timeZone)}</TableCell>
                     <TableCell className="hidden text-muted-foreground sm:table-cell">{m.notes ?? "—"}</TableCell>
                   </TableRow>
                 ))

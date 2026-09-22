@@ -14,6 +14,7 @@ public sealed record GetLoanByIdQuery(Guid LoanId) : IRequest<LoanDetail>, IRequ
 
 public sealed record LoanDetail(
     Guid Id,
+    Guid CompanyId,
     Guid AssetId,
     string AssetFolio,
     Guid BorrowerUserId,
@@ -37,7 +38,7 @@ public sealed class GetLoanByIdQueryHandler(IApplicationDbContext db) : IRequest
             ?? throw new NotFoundException(nameof(Domain.Identity.User), loan.BorrowerUserId);
 
         return new LoanDetail(
-            loan.Id, loan.AssetId, asset.InternalFolio, loan.BorrowerUserId, borrower.DisplayName,
+            loan.Id, loan.CompanyId, loan.AssetId, asset.InternalFolio, loan.BorrowerUserId, borrower.DisplayName,
             loan.ExpectedReturnDate, loan.Status, loan.LoanedAtUtc, loan.ReturnedAtUtc);
     }
 }

@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { formatDate, resolveTimeZone } from "@/lib/format-date";
 import { CONSUMABLE_STOCK_DIRECTION_LABELS, CONSUMABLE_STOCK_MOVEMENT_REASON_LABELS } from "@/lib/maintenance-labels";
 import { RegisterMovementForm } from "./register-movement-form";
 
@@ -30,6 +31,7 @@ export default async function ConsumableDetailPage({
   const companyId = searchParamsValue.companyId && me.companies.some((c) => c.companyId === searchParamsValue.companyId)
     ? searchParamsValue.companyId
     : me.companies[0].companyId;
+  const timeZone = resolveTimeZone(me.companies, companyId);
 
   const [consumables, movements, orgUnits] = await Promise.all([
     getConsumables(accessToken, companyId),
@@ -110,7 +112,7 @@ export default async function ConsumableDetailPage({
                     <TableCell>{CONSUMABLE_STOCK_DIRECTION_LABELS[m.direction]}</TableCell>
                     <TableCell>{CONSUMABLE_STOCK_MOVEMENT_REASON_LABELS[m.reason]}</TableCell>
                     <TableCell>{m.quantity}</TableCell>
-                    <TableCell>{new Date(m.occurredAtUtc).toLocaleDateString("es-MX")}</TableCell>
+                    <TableCell>{formatDate(m.occurredAtUtc, timeZone)}</TableCell>
                   </TableRow>
                 ))
               )}

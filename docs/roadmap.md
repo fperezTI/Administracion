@@ -185,6 +185,21 @@ reutilizando el App Registration ya configurado para el directorio — requiere 
 Access Policy de Exchange Online. Sin `MicrosoftGraph:SenderMailbox` configurado, la notificación in-app se
 sigue creando; solo el correo no sale (cae en `Smtp:Host` si existe, o queda solo registrado en log).
 
+**Seguimiento (pantalla de administración para el buzón y las credenciales de Graph)**: lo anterior solo se
+podía configurar editando `appsettings`/variables de entorno/App Settings de Azure — requería acceso de
+infraestructura y un redeploy. Se agregó `Administración → Configuración` (`/system-settings`, permisos ya
+existentes `Configuration.Read`/`Configuration.Update`, nunca antes enforced) donde el buzón remitente y
+`TenantId`/`ClientId`/`ClientSecret` de Microsoft Graph se pueden editar en caliente. Los valores en base de
+datos (`SystemSettings`, fila única) tienen prioridad sobre la configuración campo por campo — lo que ya
+funciona hoy vía Key Vault sigue funcionando igual hasta que alguien sobrescriba un campo específico desde
+la pantalla. `GraphEmailSender`/`GraphDirectoryUserSearch` dejaron de construir su credencial una sola vez
+al iniciar la API; ahora la resuelven en cada llamada vía `ISystemSettingsProvider`, para que un cambio
+hecho desde la pantalla tenga efecto inmediato. El `ClientSecret` nunca se guarda en texto plano (cifrado
+con el Data Protection API de ASP.NET Core, ver `docs/security/entra-id-setup.md` §1b punto 6), nunca se
+regresa al frontend, y se excluye explícitamente (`[JsonIgnore]`) de lo que `AuditBehavior` graba en
+`AuditEntry` — de lo contrario habría quedado en texto plano en el registro de auditoría, legible por
+cualquiera con `Audit.Read`, un permiso más amplio que `Configuration.Update`.
+
 ## Estado de F4 (Approvals + E-Signature — núcleo)
 
 **Ambigüedades de diseño resueltas**: el boceto original del motor de aprobaciones (`domain-model.md`,

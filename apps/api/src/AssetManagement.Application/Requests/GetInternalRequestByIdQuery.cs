@@ -13,7 +13,7 @@ public sealed record GetInternalRequestByIdQuery(Guid InternalRequestId) : IRequ
 }
 
 public sealed record InternalRequestDetail(
-    Guid Id, InternalRequestType Type, Guid AssetId, string AssetFolio, Guid RequestedByUserId,
+    Guid Id, Guid CompanyId, InternalRequestType Type, Guid AssetId, string AssetFolio, Guid RequestedByUserId,
     string RequestedByDisplayName, string Justification, DateOnly? ExpectedReturnDate, InternalRequestStatus Status,
     Guid? FulfillmentReferenceId, DateTimeOffset RequestedAtUtc, DateTimeOffset? DecidedAtUtc);
 
@@ -30,7 +30,8 @@ public sealed class GetInternalRequestByIdQueryHandler(IApplicationDbContext db)
         var requester = await db.Users.AsNoTracking().FirstOrDefaultAsync(u => u.Id == internalRequest.RequestedByUserId, cancellationToken);
 
         return new InternalRequestDetail(
-            internalRequest.Id, internalRequest.Type, internalRequest.AssetId, asset?.InternalFolio ?? "(activo eliminado)",
+            internalRequest.Id, internalRequest.CompanyId, internalRequest.Type, internalRequest.AssetId,
+            asset?.InternalFolio ?? "(activo eliminado)",
             internalRequest.RequestedByUserId, requester?.DisplayName ?? "(usuario eliminado)", internalRequest.Justification,
             internalRequest.ExpectedReturnDate, internalRequest.Status, internalRequest.FulfillmentReferenceId,
             internalRequest.RequestedAtUtc, internalRequest.DecidedAtUtc);

@@ -3,8 +3,10 @@ import { requireAccessToken } from "@/lib/require-session";
 import { ApiError, getMyAssignments, type MyAssignmentSummary } from "@/lib/api";
 import { AppHeader } from "@/components/app-header";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { ASSIGNMENT_STATUS_LABELS, assignmentStatusBadgeVariant } from "@/lib/inventory-labels";
+import { rejectAssignmentAction } from "./actions";
 import { SignAssignmentForm } from "./sign-assignment-form";
 
 function groupAssignments(assignments: MyAssignmentSummary[]): MyAssignmentSummary[][] {
@@ -63,7 +65,16 @@ export default async function MyAssignmentsPage() {
                       {ASSIGNMENT_STATUS_LABELS[first.status]}
                     </Badge>
                   </div>
-                  {first.status === "PendingSignature" && <SignAssignmentForm assignmentId={first.id} />}
+                  {first.status === "PendingSignature" && (
+                    <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+                      <SignAssignmentForm assignmentId={first.id} />
+                      <form action={rejectAssignmentAction.bind(null, first.id)}>
+                        <Button type="submit" variant="outline" size="sm">
+                          Rechazar
+                        </Button>
+                      </form>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             );

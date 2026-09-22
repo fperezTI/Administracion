@@ -1,13 +1,18 @@
 import { requireAccessToken } from "@/lib/require-session";
-import { ApiError, getMyNotifications } from "@/lib/api";
+import { ApiError, getMe, getMyNotifications } from "@/lib/api";
 import { AppHeader } from "@/components/app-header";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { formatDateTime, resolveTimeZone } from "@/lib/format-date";
 import { markAsReadAction } from "./actions";
 
 export default async function NotificationsPage() {
   const accessToken = await requireAccessToken();
+  const me = await getMe(accessToken);
+  // Notification has no companyId to key an exact zone off of — a self-service, potentially
+  // cross-company feed. Falls back to the viewer's first company (see resolveTimeZone).
+  const timeZone = resolveTimeZone(me.companies, null);
 
   let content: React.ReactNode;
   try {
@@ -27,7 +32,7 @@ export default async function NotificationsPage() {
                     {!n.isRead && <Badge variant="warning">Nueva</Badge>}
                   </div>
                   <p className="text-muted-foreground text-sm">{n.body}</p>
-                  <p className="text-muted-foreground mt-1 text-xs">{new Date(n.createdAtUtc).toLocaleString("es-MX")}</p>
+                  <p className="text-muted-foreground mt-1 text-xs">{formatDateTime(n.createdAtUtc, timeZone)}</p>
                 </div>
                 {!n.isRead && (
                   <form action={markAsReadAction.bind(null, n.id)}>

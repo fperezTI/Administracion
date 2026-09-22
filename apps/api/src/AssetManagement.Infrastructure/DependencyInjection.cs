@@ -1,5 +1,6 @@
 using AssetManagement.Application.Common.Interfaces;
 using AssetManagement.Infrastructure.Common;
+using AssetManagement.Infrastructure.Configuration;
 using AssetManagement.Infrastructure.DataRetention;
 using AssetManagement.Infrastructure.Directory;
 using AssetManagement.Infrastructure.Email;
@@ -7,7 +8,8 @@ using AssetManagement.Infrastructure.ImportExport;
 using AssetManagement.Infrastructure.Persistence;
 using AssetManagement.Infrastructure.Security;
 using AssetManagement.Infrastructure.Storage;
-using Azure.Identity;
+using Azure.Storage.Blobs;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -45,50 +47,36 @@ public static class DependencyInjection
         var blobStorageConnectionString = configuration["BlobStorage:ConnectionString"] ?? "UseDevelopmentStorage=true";
         services.AddSingleton<IFileStorage>(_ => new AzureBlobFileStorage(blobStorageConnectionString));
 
-        // Pre-provisioning users from the tenant directory (see CreateUserFromDirectoryCommand) and
-        // sending assignment notification emails (see AssignmentGroupSupport) both need the same app-only
-        // Microsoft Graph token — a separate concern from EntraId's token *validation* config above, which
-        // needs no secret of its own. Registered once here so both features share one credential/HttpClient.
-        var graphTenantId = configuration["MicrosoftGraph:TenantId"];
-        var graphClientId = configuration["MicrosoftGraph:ClientId"];
-        var graphClientSecret = configuration["MicrosoftGraph:ClientSecret"];
-        var graphSenderMailbox = configuration["MicrosoftGraph:SenderMailbox"];
-        var graphCredentialConfigured = !string.IsNullOrWhiteSpace(graphTenantId) && !string.IsNullOrWhiteSpace(graphClientId)
-            && !string.IsNullOrWhiteSpace(graphClientSecret);
-        if (graphCredentialConfigured)
+        // The Data Protection key ring encrypts SystemSettings.GraphClientSecretCiphertext (see
+        // ISecretProtector). It MUST be persisted somewhere durable in production — otherwise every secret
+        // ever protected becomes permanently undecryptable the next time the App Service container
+        // restarts (which happens routinely on redeploy). Reuses the same Storage account already used for
+        // document blobs — only a new container. Locally (Azurite / no real storage configured) falls back
+        // to ASP.NET Core's default local key storage: fine for dev, just means a re-entered secret after
+        // the container is recreated.
+        var dataProtectionBuilder = services.AddDataProtection().SetApplicationName("AssetManagement");
+        if (!string.IsNullOrWhiteSpace(blobStorageConnectionString) && blobStorageConnectionString != "UseDevelopmentStorage=true")
         {
-            services.AddSingleton(new ClientSecretCredential(graphTenantId, graphClientId, graphClientSecret));
-            services.AddHttpClient<IDirectoryUserSearch, GraphDirectoryUserSearch>();
-        }
-        else
-        {
-            services.AddScoped<IDirectoryUserSearch, UnconfiguredDirectoryUserSearch>();
+            var keysContainerClient = new BlobContainerClient(blobStorageConnectionString, "dataprotection-keys");
+            keysContainerClient.CreateIfNotExists();
+            dataProtectionBuilder.PersistKeysToAzureBlobStorage(keysContainerClient.GetBlobClient("keys.xml"));
         }
 
-        var smtpHost = configuration["Smtp:Host"];
-        if (!string.IsNullOrWhiteSpace(smtpHost))
-        {
-            var smtpPort = configuration.GetValue("Smtp:Port", 25);
-            var smtpUsername = configuration["Smtp:Username"];
-            var smtpPassword = configuration["Smtp:Password"];
-            var smtpFromAddress = configuration["Smtp:FromAddress"] ?? "no-reply@example.com";
-            services.AddSingleton<IEmailSender>(sp => new SmtpEmailSender(
-                smtpHost, smtpPort, smtpUsername, smtpPassword, smtpFromAddress,
-                sp.GetRequiredService<ILogger<SmtpEmailSender>>()));
-        }
-        else if (graphCredentialConfigured && !string.IsNullOrWhiteSpace(graphSenderMailbox))
-        {
-            services.AddHttpClient("GraphMail");
-            services.AddSingleton<IEmailSender>(sp => new GraphEmailSender(
-                sp.GetRequiredService<IHttpClientFactory>().CreateClient("GraphMail"),
-                sp.GetRequiredService<ClientSecretCredential>(),
-                graphSenderMailbox,
-                sp.GetRequiredService<ILogger<GraphEmailSender>>()));
-        }
-        else
-        {
-            services.AddSingleton<IEmailSender, NoOpEmailSender>();
-        }
+        services.AddSingleton<ISecretProtector, DataProtectionSecretProtector>();
+        services.AddScoped<ISystemSettingsProvider, SystemSettingsProvider>();
+
+        // Pre-provisioning users from the tenant directory (see CreateUserFromDirectoryCommand) and
+        // sending assignment notification emails (see AssignmentGroupSupport) both need the same app-only
+        // Microsoft Graph credential — a separate concern from EntraId's token *validation* config above,
+        // which needs no secret of its own. Both ConfigurableXxx classes below resolve the current
+        // effective credentials (database override, or MicrosoftGraph:* configuration) via
+        // ISystemSettingsProvider on every call, rather than once at startup, so a change made from the
+        // system settings admin screen (Configuration.Update) takes effect immediately.
+        services.AddHttpClient("GraphDirectory");
+        services.AddScoped<IDirectoryUserSearch, ConfigurableDirectoryUserSearch>();
+
+        services.AddHttpClient("GraphMail");
+        services.AddScoped<IEmailSender, ConfigurableEmailSender>();
 
         var frontendBaseUrl = configuration["Frontend:BaseUrl"];
         if (!string.IsNullOrWhiteSpace(frontendBaseUrl))

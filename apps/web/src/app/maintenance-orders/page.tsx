@@ -7,6 +7,7 @@ import { EmptyCompanyState } from "@/components/empty-company-state";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { formatDate, resolveTimeZone } from "@/lib/format-date";
 import {
   MAINTENANCE_ORDER_STATUS_LABELS,
   MAINTENANCE_ORDER_TYPE_LABELS,
@@ -25,6 +26,7 @@ export default async function MaintenanceOrdersPage({ searchParams }: { searchPa
   const companyId = params.companyId && me.companies.some((c) => c.companyId === params.companyId)
     ? params.companyId
     : me.companies[0].companyId;
+  const timeZone = resolveTimeZone(me.companies, companyId);
 
   let content: React.ReactNode;
   try {
@@ -61,7 +63,7 @@ export default async function MaintenanceOrdersPage({ searchParams }: { searchPa
                   <TableCell>
                     <Badge variant={maintenanceOrderStatusBadgeVariant(o.status)}>{MAINTENANCE_ORDER_STATUS_LABELS[o.status]}</Badge>
                   </TableCell>
-                  <TableCell className="hidden sm:table-cell">{new Date(o.openedAtUtc).toLocaleDateString("es-MX")}</TableCell>
+                  <TableCell className="hidden sm:table-cell">{formatDate(o.openedAtUtc, timeZone)}</TableCell>
                 </TableRow>
               ))
             )}

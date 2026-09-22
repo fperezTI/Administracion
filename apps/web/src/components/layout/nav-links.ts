@@ -60,6 +60,7 @@ export const NAV_GROUPS: NavGroup[] = [
       { href: "/roles", label: "Roles" },
       { href: "/users", label: "Usuarios" },
       { href: "/audit", label: "Auditoría" },
+      { href: "/system-settings", label: "Configuración" },
     ],
   },
 ];

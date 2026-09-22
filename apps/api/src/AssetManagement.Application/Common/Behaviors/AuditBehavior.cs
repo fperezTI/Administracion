@@ -31,7 +31,13 @@ public sealed class AuditBehavior<TRequest, TResponse>(IApplicationDbContext db,
         string? detailsJson;
         try
         {
-            detailsJson = JsonSerializer.Serialize(request, request.GetType(), SerializerOptions);
+            // A command carrying a real external credential (e.g. UpdateSystemSettingsCommand's Graph
+            // client secret) provides its own redacted representation instead — see IRedactsAuditDetails.
+            // The sensitive property itself is never [JsonIgnore]d, since that would also silently drop it
+            // during ASP.NET Core's model binding, not just here.
+            detailsJson = request is IRedactsAuditDetails redacted
+                ? redacted.ToRedactedAuditJson()
+                : JsonSerializer.Serialize(request, request.GetType(), SerializerOptions);
         }
         catch (NotSupportedException)
         {

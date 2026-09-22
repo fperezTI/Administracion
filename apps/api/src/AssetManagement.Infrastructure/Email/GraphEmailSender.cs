@@ -10,12 +10,13 @@ namespace AssetManagement.Infrastructure.Email;
 /// <summary>
 /// Real email delivery via the Microsoft Graph REST API (`POST /users/{mailbox}/sendMail`), reusing the
 /// same app-only credential and REST-over-SDK approach as
-/// <see cref="AssetManagement.Infrastructure.Directory.GraphDirectoryUserSearch"/> — registered only when
-/// <c>MicrosoftGraph:SenderMailbox</c> is configured (and no <c>Smtp:Host</c> takes precedence, see
-/// DependencyInjection.cs). Requires the Graph *application* permission `Mail.Send` with admin consent on
-/// the same App Registration used for directory search — see docs/security/entra-id-setup.md.
+/// <see cref="AssetManagement.Infrastructure.Directory.GraphDirectoryUserSearch"/> — invoked only when
+/// <c>ConfigurableEmailSender</c> resolves Graph as the current channel (and no <c>Smtp:Host</c> takes
+/// precedence). Requires the Graph *application* permission `Mail.Send` with admin consent on the same App
+/// Registration used for directory search — see docs/security/entra-id-setup.md.
 /// </summary>
-public sealed class GraphEmailSender(HttpClient httpClient, ClientSecretCredential credential, string senderMailbox, ILogger<GraphEmailSender> logger)
+public sealed class GraphEmailSender(
+    HttpClient httpClient, string tenantId, string clientId, string clientSecret, string senderMailbox, ILogger<GraphEmailSender> logger)
     : IEmailSender
 {
     private static readonly string[] GraphScopes = ["https://graph.microsoft.com/.default"];
@@ -24,6 +25,9 @@ public sealed class GraphEmailSender(HttpClient httpClient, ClientSecretCredenti
     {
         try
         {
+            // Built fresh per call (not injected as a fixed singleton) so a credential change made from
+            // the admin settings screen takes effect on the very next send — see SystemSettingsProvider.
+            var credential = new ClientSecretCredential(tenantId, clientId, clientSecret);
             var token = await credential.GetTokenAsync(new TokenRequestContext(GraphScopes), cancellationToken);
 
             var payload = new

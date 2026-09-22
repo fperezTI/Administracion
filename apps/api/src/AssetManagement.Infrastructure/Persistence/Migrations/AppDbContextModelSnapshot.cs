@@ -573,6 +573,41 @@ namespace AssetManagement.Infrastructure.Persistence.Migrations
                     b.ToTable("AuditEntries", "audit");
                 });
 
+            modelBuilder.Entity("AssetManagement.Domain.Configuration.SystemSettings", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("GraphClientId")
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)");
+
+                    b.Property<string>("GraphClientSecretCiphertext")
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<string>("GraphTenantId")
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)");
+
+                    b.Property<string>("SenderMailbox")
+                        .HasMaxLength(320)
+                        .HasColumnType("nvarchar(320)");
+
+                    b.Property<DateTimeOffset>("UpdatedAtUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid?>("UpdatedByUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UpdatedByUserId");
+
+                    b.ToTable("SystemSettings", "configuration");
+                });
+
             modelBuilder.Entity("AssetManagement.Domain.Documents.Document", b =>
                 {
                     b.Property<Guid>("Id")
@@ -2556,6 +2591,14 @@ namespace AssetManagement.Infrastructure.Persistence.Migrations
                         .HasForeignKey("AssetCategoryId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("AssetManagement.Domain.Configuration.SystemSettings", b =>
+                {
+                    b.HasOne("AssetManagement.Domain.Identity.User", null)
+                        .WithMany()
+                        .HasForeignKey("UpdatedByUserId")
+                        .OnDelete(DeleteBehavior.SetNull);
                 });
 
             modelBuilder.Entity("AssetManagement.Domain.Identity.RolePermission", b =>

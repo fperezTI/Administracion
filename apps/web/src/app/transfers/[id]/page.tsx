@@ -1,11 +1,12 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { requireAccessToken } from "@/lib/require-session";
-import { ApiError, getTransferById } from "@/lib/api";
+import { ApiError, getMe, getTransferById } from "@/lib/api";
 import { AppHeader } from "@/components/app-header";
 import { Breadcrumbs } from "@/components/layout/breadcrumbs";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { formatDateTime, resolveTimeZone } from "@/lib/format-date";
 import { TRANSFER_STATUS_LABELS, transferStatusBadgeVariant } from "@/lib/transfer-labels";
 import { cancelTransferAction } from "./actions";
 import { ReceiveTransferForm } from "./receive-transfer-form";
@@ -23,6 +24,12 @@ export default async function TransferDetailPage({ params }: { params: Promise<{
     }
     throw error;
   }
+
+  const me = await getMe(accessToken);
+  // A transfer spans two companies, possibly two timezones: the request/departure happen at the origin,
+  // the completion happens at the destination.
+  const originTimeZone = resolveTimeZone(me.companies, transfer.fromCompanyId);
+  const destinationTimeZone = resolveTimeZone(me.companies, transfer.toCompanyId);
 
   return (
     <>
@@ -48,18 +55,18 @@ export default async function TransferDetailPage({ params }: { params: Promise<{
         </div>
         <div>
           <p className="text-muted-foreground text-xs">Fecha de solicitud</p>
-          <p>{new Date(transfer.requestedAtUtc).toLocaleString("es-MX")}</p>
+          <p>{formatDateTime(transfer.requestedAtUtc, originTimeZone)}</p>
         </div>
         {transfer.departedAtUtc && (
           <div>
             <p className="text-muted-foreground text-xs">Salió el</p>
-            <p>{new Date(transfer.departedAtUtc).toLocaleString("es-MX")}</p>
+            <p>{formatDateTime(transfer.departedAtUtc, originTimeZone)}</p>
           </div>
         )}
         {transfer.completedAtUtc && (
           <div>
             <p className="text-muted-foreground text-xs">Recibido el</p>
-            <p>{new Date(transfer.completedAtUtc).toLocaleString("es-MX")}</p>
+            <p>{formatDateTime(transfer.completedAtUtc, destinationTimeZone)}</p>
           </div>
         )}
         {transfer.notes && (

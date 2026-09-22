@@ -1,6 +1,7 @@
 using AssetManagement.Domain.Approvals;
 using AssetManagement.Domain.Assets;
 using AssetManagement.Domain.Audit;
+using AssetManagement.Domain.Configuration;
 using AssetManagement.Domain.Documents;
 using AssetManagement.Domain.Identity;
 using AssetManagement.Domain.ImportExport;
@@ -89,6 +90,8 @@ public interface IApplicationDbContext
     public DbSet<AuditEntry> AuditEntries { get; }
 
     public DbSet<ImportBatch> ImportBatches { get; }
+
+    public DbSet<SystemSettings> SystemSettings { get; }
 
     public Task<int> SaveChangesAsync(CancellationToken cancellationToken);
 }

@@ -1,11 +1,12 @@
 import { notFound } from "next/navigation";
 import { requireAccessToken } from "@/lib/require-session";
-import { ApiError, getApprovalInstanceById } from "@/lib/api";
+import { ApiError, getApprovalInstanceById, getMe } from "@/lib/api";
 import { AppHeader } from "@/components/app-header";
 import { Breadcrumbs } from "@/components/layout/breadcrumbs";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { APPROVAL_MODE_LABELS, APPROVAL_STATUS_LABELS, approvalStatusBadgeVariant, describeApprovalContext } from "@/lib/approval-labels";
+import { formatDateTime, resolveTimeZone } from "@/lib/format-date";
 
 export default async function ApprovalDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const accessToken = await requireAccessToken();
@@ -20,6 +21,10 @@ export default async function ApprovalDetailPage({ params }: { params: Promise<{
     }
     throw error;
   }
+
+  const me = await getMe(accessToken);
+  // ApprovalInstanceDetail has no companyId exposed on this DTO — falls back to the viewer's first company.
+  const timeZone = resolveTimeZone(me.companies, null);
 
   return (
     <>
@@ -61,7 +66,7 @@ export default async function ApprovalDetailPage({ params }: { params: Promise<{
                 <p>
                   <span className="font-medium">{step.approverDisplayName}</span> —{" "}
                   {step.decision === "Approved" ? "Aprobó" : "Rechazó"} el{" "}
-                  {new Date(step.decidedAtUtc).toLocaleString("es-MX")}
+                  {formatDateTime(step.decidedAtUtc, timeZone)}
                 </p>
                 {step.comment && <p className="text-muted-foreground">&ldquo;{step.comment}&rdquo;</p>}
               </div>

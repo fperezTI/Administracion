@@ -1,10 +1,11 @@
 import { requireAccessToken } from "@/lib/require-session";
-import { ApiError, getAuditEntries } from "@/lib/api";
+import { ApiError, getAuditEntries, getCompanies, getMe } from "@/lib/api";
 import { AppHeader } from "@/components/app-header";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { formatDateTime, resolveTimeZone } from "@/lib/format-date";
 
 /** No CompanySwitcher — Audit.Read is a tenant-wide admin permission with no per-company membership
  * filter, same treatment as /companies (see the F8 plan and AppDbContext's remarks on AuditEntry). */
@@ -15,6 +16,12 @@ export default async function AuditPage({
 }) {
   const accessToken = await requireAccessToken();
   const params = await searchParams;
+  const me = await getMe(accessToken);
+  // Audit.Read can show entries for companies the viewer doesn't belong to — try the full company list
+  // (needs Companies.Read too) for a per-row timezone, falling back to the viewer's own companies if that
+  // permission isn't held, and "UTC" for rows with no companyId at all (tenant-wide actions).
+  const allCompanies = await getCompanies(accessToken, { pageSize: 200 }).catch(() => null);
+  const companiesForTimeZone = allCompanies?.items.map((c) => ({ companyId: c.id, timeZone: c.timeZone })) ?? me.companies;
 
   let content: React.ReactNode;
   try {
@@ -46,7 +53,9 @@ export default async function AuditPage({
             ) : (
               entries.items.map((e) => (
                 <TableRow key={e.id}>
-                  <TableCell className="text-xs whitespace-nowrap">{new Date(e.occurredAtUtc).toLocaleString("es-MX")}</TableCell>
+                  <TableCell className="text-xs whitespace-nowrap">
+                    {formatDateTime(e.occurredAtUtc, resolveTimeZone(companiesForTimeZone, e.companyId))}
+                  </TableCell>
                   <TableCell>{e.userDisplayName ?? "—"}</TableCell>
                   <TableCell className="font-mono text-xs">{e.commandName}</TableCell>
                   <TableCell className="text-xs">{e.module && e.action ? `${e.module}.${e.action}` : "—"}</TableCell>

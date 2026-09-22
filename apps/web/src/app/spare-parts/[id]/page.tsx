@@ -1,9 +1,10 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { requireAccessToken } from "@/lib/require-session";
-import { ApiError, getAssets, getOrgUnitTree, getSparePartById } from "@/lib/api";
+import { ApiError, getAssets, getMe, getOrgUnitTree, getSparePartById } from "@/lib/api";
 import { SPARE_PART_STATUS_LABELS, sparePartStatusBadgeVariant } from "@/lib/maintenance-labels";
 import { AppHeader } from "@/components/app-header";
+import { formatDate, resolveTimeZone } from "@/lib/format-date";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -33,6 +34,8 @@ export default async function SparePartDetailPage({
   }
 
   const companyId = queryCompanyId ?? sparePart.companyId;
+  const me = await getMe(accessToken);
+  const timeZone = resolveTimeZone(me.companies, companyId);
 
   const [inWarehouseAssets, orgUnits] = await Promise.all([
     sparePart.status === "InStock" ? getAssets(accessToken, { companyId, status: "InWarehouse", pageSize: 200 }) : null,
@@ -95,9 +98,9 @@ export default async function SparePartDetailPage({
                 <p className="text-sm">
                   <span className="font-medium">{i.assetFolio}</span>
                   {" — "}
-                  {new Date(i.installedAtUtc).toLocaleDateString("es-MX")}
+                  {formatDate(i.installedAtUtc, timeZone)}
                   {" → "}
-                  {i.removedAtUtc ? new Date(i.removedAtUtc).toLocaleDateString("es-MX") : "actualmente instalada"}
+                  {i.removedAtUtc ? formatDate(i.removedAtUtc, timeZone) : "actualmente instalada"}
                 </p>
               </div>
             ))

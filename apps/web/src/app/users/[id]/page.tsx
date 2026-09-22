@@ -5,6 +5,7 @@ import { ApiError, getCompanies, getRoles, getUserById } from "@/lib/api";
 import { AppHeader } from "@/components/app-header";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { formatDateTime } from "@/lib/format-date";
 import { anonymizeUserAction, assignRoleAction, grantCompanyAction, removeRoleAction, revokeCompanyAction } from "./actions";
 import { AssignSelect } from "./assign-select";
 
@@ -29,6 +30,10 @@ export default async function UserDetailPage({ params }: { params: Promise<{ id:
 
   const roleNameById = new Map(allRoles.items.map((r) => [r.id, r.name]));
   const companyNameById = new Map(allCompanies.items.map((c) => [c.id, c.tradeName]));
+  // Uses this specific user's own companies (more precise than the viewing admin's) — this list already
+  // covers the whole tenant, so it's a better source than falling back to the viewer's own company.
+  const timeZone =
+    allCompanies.items.find((c) => user.companyIds.includes(c.id))?.timeZone ?? allCompanies.items[0]?.timeZone ?? "UTC";
   const assignableRoles = allRoles.items.filter((r) => !user.roleIds.includes(r.id));
   const grantableCompanies = allCompanies.items.filter((c) => !user.companyIds.includes(c.id));
 
@@ -112,7 +117,7 @@ export default async function UserDetailPage({ params }: { params: Promise<{ id:
         <p className="text-sm font-medium">Privacidad</p>
         {user.anonymizedAtUtc ? (
           <p className="text-muted-foreground text-sm">
-            Anonimizado el {new Date(user.anonymizedAtUtc).toLocaleString("es-MX")}. El nombre y correo reales ya no están disponibles.
+            Anonimizado el {formatDateTime(user.anonymizedAtUtc, timeZone)}. El nombre y correo reales ya no están disponibles.
           </p>
         ) : (
           <>

@@ -1,12 +1,14 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { requireAccessToken } from "@/lib/require-session";
-import { ApiError, getMyAssignmentById } from "@/lib/api";
+import { ApiError, getMe, getMyAssignmentById } from "@/lib/api";
 import { AppHeader } from "@/components/app-header";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { formatDateTime, resolveTimeZone } from "@/lib/format-date";
 import { ASSIGNMENT_STATUS_LABELS, assignmentStatusBadgeVariant } from "@/lib/inventory-labels";
+import { rejectAssignmentAction } from "../actions";
 import { SignAssignmentForm } from "../sign-assignment-form";
 
 export default async function MyAssignmentDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -22,6 +24,9 @@ export default async function MyAssignmentDetailPage({ params }: { params: Promi
     }
     throw error;
   }
+
+  const me = await getMe(accessToken);
+  const timeZone = resolveTimeZone(me.companies, assignment.companyId);
 
   return (
     <>
@@ -70,8 +75,13 @@ export default async function MyAssignmentDetailPage({ params }: { params: Promi
 
       {assignment.status === "PendingSignature" ? (
         <Card>
-          <CardContent>
+          <CardContent className="flex flex-col gap-3">
             <SignAssignmentForm assignmentId={assignment.id} />
+            <form action={rejectAssignmentAction.bind(null, assignment.id)}>
+              <Button type="submit" variant="outline" size="sm">
+                Rechazar
+              </Button>
+            </form>
           </CardContent>
         </Card>
       ) : (
@@ -80,7 +90,7 @@ export default async function MyAssignmentDetailPage({ params }: { params: Promi
             {assignment.acceptanceSignature ? (
               <p className="text-success font-medium">
                 Ya confirmaste la recepción el{" "}
-                {new Date(assignment.acceptanceSignature.signedAtUtc).toLocaleString("es-MX")}.
+                {formatDateTime(assignment.acceptanceSignature.signedAtUtc, timeZone)}.
               </p>
             ) : (
               <p className="text-muted-foreground">
