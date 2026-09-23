@@ -288,13 +288,24 @@ export function unlinkAssetAccessory(accessToken: string, assetId: string, acces
   return apiFetch(accessToken, `/api/v1/assets/${assetId}/accessories/${accessoryAssetId}`, { method: "DELETE" });
 }
 
+export type AssetCategorySortField = "name" | "code" | "defaultIdentificationTechnology" | "customFieldCount" | "isActive";
+
 export function getAssetCategories(
   accessToken: string,
-  params?: { isActive?: boolean; pageSize?: number },
+  params?: {
+    isActive?: boolean;
+    pageNumber?: number;
+    pageSize?: number;
+    sortBy?: AssetCategorySortField;
+    sortDescending?: boolean;
+  },
 ): Promise<PagedResult<AssetCategorySummary>> {
   const query = new URLSearchParams();
   if (params?.isActive !== undefined) query.set("isActive", String(params.isActive));
+  if (params?.pageNumber) query.set("pageNumber", String(params.pageNumber));
   query.set("pageSize", String(params?.pageSize ?? 100));
+  if (params?.sortBy) query.set("sortBy", params.sortBy);
+  if (params?.sortDescending) query.set("sortDescending", "true");
 
   return apiFetch<PagedResult<AssetCategorySummary>>(accessToken, `/api/v1/asset-categories?${query.toString()}`);
 }
@@ -393,14 +404,24 @@ export type CompanySummary = {
   isActive: boolean;
 };
 
+export type CompanySortField = "tradeName" | "legalName" | "taxId" | "baseCurrency" | "timeZone" | "isActive";
+
 export function getCompanies(
   accessToken: string,
-  params?: { pageNumber?: number; pageSize?: number; isActive?: boolean },
+  params?: {
+    pageNumber?: number;
+    pageSize?: number;
+    isActive?: boolean;
+    sortBy?: CompanySortField;
+    sortDescending?: boolean;
+  },
 ): Promise<PagedResult<CompanySummary>> {
   const query = new URLSearchParams();
   query.set("pageNumber", String(params?.pageNumber ?? 1));
   query.set("pageSize", String(params?.pageSize ?? 50));
   if (params?.isActive !== undefined) query.set("isActive", String(params.isActive));
+  if (params?.sortBy) query.set("sortBy", params.sortBy);
+  if (params?.sortDescending) query.set("sortDescending", "true");
   return apiFetch<PagedResult<CompanySummary>>(accessToken, `/api/v1/companies?${query.toString()}`);
 }
 
@@ -501,14 +522,24 @@ export type PermissionModuleGroup = {
   permissions: PermissionSummary[];
 };
 
+export type RoleSortField = "name" | "description" | "permissionCount" | "isActive";
+
 export function getRoles(
   accessToken: string,
-  params?: { pageNumber?: number; pageSize?: number; isActive?: boolean },
+  params?: {
+    pageNumber?: number;
+    pageSize?: number;
+    isActive?: boolean;
+    sortBy?: RoleSortField;
+    sortDescending?: boolean;
+  },
 ): Promise<PagedResult<RoleSummary>> {
   const query = new URLSearchParams();
   query.set("pageNumber", String(params?.pageNumber ?? 1));
   query.set("pageSize", String(params?.pageSize ?? 50));
   if (params?.isActive !== undefined) query.set("isActive", String(params.isActive));
+  if (params?.sortBy) query.set("sortBy", params.sortBy);
+  if (params?.sortDescending) query.set("sortDescending", "true");
   return apiFetch<PagedResult<RoleSummary>>(accessToken, `/api/v1/roles?${query.toString()}`);
 }
 
@@ -596,14 +627,24 @@ export type UserDetail = {
   companyIds: string[];
 };
 
+export type UserSortField = "displayName" | "email" | "isActive" | "lastLoginAtUtc";
+
 export function getUsers(
   accessToken: string,
-  params?: { pageNumber?: number; pageSize?: number; isActive?: boolean },
+  params?: {
+    pageNumber?: number;
+    pageSize?: number;
+    isActive?: boolean;
+    sortBy?: UserSortField;
+    sortDescending?: boolean;
+  },
 ): Promise<PagedResult<UserSummary>> {
   const query = new URLSearchParams();
   query.set("pageNumber", String(params?.pageNumber ?? 1));
   query.set("pageSize", String(params?.pageSize ?? 50));
   if (params?.isActive !== undefined) query.set("isActive", String(params.isActive));
+  if (params?.sortBy) query.set("sortBy", params.sortBy);
+  if (params?.sortDescending) query.set("sortDescending", "true");
   return apiFetch<PagedResult<UserSummary>>(accessToken, `/api/v1/users?${query.toString()}`);
 }
 
@@ -1700,13 +1741,23 @@ export type ImportBatchDetail = {
   updatedAtUtc: string | null;
 };
 
+export type ImportBatchSortField = "createdAtUtc" | "fileName" | "status" | "totalRows";
+
 export function getImportBatches(
   accessToken: string,
-  params: { companyId: string; pageNumber?: number; pageSize?: number },
+  params: {
+    companyId: string;
+    pageNumber?: number;
+    pageSize?: number;
+    sortBy?: ImportBatchSortField;
+    sortDescending?: boolean;
+  },
 ): Promise<PagedResult<ImportBatchSummary>> {
   const query = new URLSearchParams({ companyId: params.companyId });
   if (params.pageNumber) query.set("pageNumber", String(params.pageNumber));
   if (params.pageSize) query.set("pageSize", String(params.pageSize));
+  if (params.sortBy) query.set("sortBy", params.sortBy);
+  if (params.sortDescending) query.set("sortDescending", "true");
   return apiFetch<PagedResult<ImportBatchSummary>>(accessToken, `/api/v1/import-batches?${query.toString()}`);
 }
 

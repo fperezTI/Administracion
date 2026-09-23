@@ -18,9 +18,11 @@ public sealed class AssetCategoriesController(ISender mediator) : ControllerBase
     [ProducesResponseType(typeof(PagedResult<AssetCategorySummary>), StatusCodes.Status200OK)]
     public async Task<ActionResult<PagedResult<AssetCategorySummary>>> GetCategories(
         [FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 50, [FromQuery] bool? isActive = null,
+        [FromQuery] string? sortBy = null, [FromQuery] bool sortDescending = false,
         CancellationToken cancellationToken = default)
     {
-        var result = await mediator.Send(new GetAssetCategoriesQuery(pageNumber, pageSize, isActive), cancellationToken);
+        var result = await mediator.Send(
+            new GetAssetCategoriesQuery(pageNumber, pageSize, isActive, sortBy, sortDescending), cancellationToken);
         return Ok(result);
     }
 

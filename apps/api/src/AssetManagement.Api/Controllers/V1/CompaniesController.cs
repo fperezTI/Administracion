@@ -17,9 +17,11 @@ public sealed class CompaniesController(ISender mediator) : ControllerBase
     [ProducesResponseType(typeof(PagedResult<CompanySummary>), StatusCodes.Status200OK)]
     public async Task<ActionResult<PagedResult<CompanySummary>>> GetCompanies(
         [FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 50, [FromQuery] bool? isActive = null,
+        [FromQuery] string? sortBy = null, [FromQuery] bool sortDescending = false,
         CancellationToken cancellationToken = default)
     {
-        var result = await mediator.Send(new GetCompaniesQuery(pageNumber, pageSize, isActive), cancellationToken);
+        var result = await mediator.Send(
+            new GetCompaniesQuery(pageNumber, pageSize, isActive, sortBy, sortDescending), cancellationToken);
         return Ok(result);
     }
 

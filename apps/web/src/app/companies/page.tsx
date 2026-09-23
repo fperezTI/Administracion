@@ -1,29 +1,54 @@
 import Link from "next/link";
 import { Plus } from "lucide-react";
 import { requireAccessToken } from "@/lib/require-session";
-import { ApiError, getCompanies } from "@/lib/api";
+import { ApiError, getCompanies, type CompanySortField } from "@/lib/api";
 import { AppHeader } from "@/components/app-header";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { toggleCompanyActiveAction } from "./actions";
+import { TablePagination, type SearchParams } from "@/components/layout/table-pagination";
+import { SortableTableHead } from "@/components/layout/sortable-table-head";
 
-export default async function CompaniesPage() {
+const PAGE_SIZE = 50;
+const DEFAULT_SORT: CompanySortField = "tradeName";
+
+export default async function CompaniesPage({ searchParams }: { searchParams: Promise<SearchParams> }) {
   const accessToken = await requireAccessToken();
+  const params = await searchParams;
+  const pageNumber = params.pageNumber ? Math.max(1, Number(params.pageNumber)) : 1;
+  const sortBy = (params.sortBy as CompanySortField | undefined) ?? DEFAULT_SORT;
+  const sortDescending = params.sortDescending === "true";
 
   let content: React.ReactNode;
   try {
-    const companies = await getCompanies(accessToken, { pageSize: 100 });
+    const companies = await getCompanies(accessToken, { pageNumber, pageSize: PAGE_SIZE, sortBy, sortDescending });
+    const totalPages = Math.max(1, Math.ceil(companies.totalCount / PAGE_SIZE));
     content = (
+      <>
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Nombre comercial</TableHead>
-              <TableHead>Razón social</TableHead>
-              <TableHead>RFC / Id. fiscal</TableHead>
-              <TableHead>Moneda</TableHead>
-              <TableHead>Zona horaria</TableHead>
-              <TableHead>Estado</TableHead>
+              {[
+                { key: "tradeName", label: "Nombre comercial" },
+                { key: "legalName", label: "Razón social" },
+                { key: "taxId", label: "RFC / Id. fiscal" },
+                { key: "baseCurrency", label: "Moneda" },
+                { key: "timeZone", label: "Zona horaria" },
+                { key: "isActive", label: "Estado" },
+              ].map((column) => (
+                <SortableTableHead
+                  key={column.key}
+                  basePath="/companies"
+                  params={params}
+                  sortKey={column.key}
+                  defaultSortKey={DEFAULT_SORT}
+                  currentSortBy={params.sortBy}
+                  currentSortDescending={sortDescending}
+                >
+                  {column.label}
+                </SortableTableHead>
+              ))}
               <TableHead />
             </TableRow>
           </TableHeader>
@@ -59,6 +84,16 @@ export default async function CompaniesPage() {
             )}
           </TableBody>
         </Table>
+        <TablePagination
+          basePath="/companies"
+          params={params}
+          pageNumber={pageNumber}
+          totalPages={totalPages}
+          totalCount={companies.totalCount}
+          itemLabel="empresa"
+          itemLabelPlural="empresas"
+        />
+      </>
     );
   } catch (error) {
     const status = error instanceof ApiError ? error.status : undefined;

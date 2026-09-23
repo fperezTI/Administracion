@@ -17,9 +17,11 @@ public sealed class RolesController(ISender mediator) : ControllerBase
     [ProducesResponseType(typeof(PagedResult<RoleSummary>), StatusCodes.Status200OK)]
     public async Task<ActionResult<PagedResult<RoleSummary>>> GetRoles(
         [FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 50, [FromQuery] bool? isActive = null,
+        [FromQuery] string? sortBy = null, [FromQuery] bool sortDescending = false,
         CancellationToken cancellationToken = default)
     {
-        var result = await mediator.Send(new GetRolesQuery(pageNumber, pageSize, isActive), cancellationToken);
+        var result = await mediator.Send(
+            new GetRolesQuery(pageNumber, pageSize, isActive, sortBy, sortDescending), cancellationToken);
         return Ok(result);
     }
 

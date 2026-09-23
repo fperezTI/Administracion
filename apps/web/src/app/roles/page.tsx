@@ -1,26 +1,51 @@
 import Link from "next/link";
 import { Plus } from "lucide-react";
 import { requireAccessToken } from "@/lib/require-session";
-import { ApiError, getRoles } from "@/lib/api";
+import { ApiError, getRoles, type RoleSortField } from "@/lib/api";
 import { AppHeader } from "@/components/app-header";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Table, TableBody, TableCell, TableHeader, TableRow } from "@/components/ui/table";
+import { TablePagination, type SearchParams } from "@/components/layout/table-pagination";
+import { SortableTableHead } from "@/components/layout/sortable-table-head";
 
-export default async function RolesPage() {
+const PAGE_SIZE = 50;
+const DEFAULT_SORT: RoleSortField = "name";
+
+export default async function RolesPage({ searchParams }: { searchParams: Promise<SearchParams> }) {
   const accessToken = await requireAccessToken();
+  const params = await searchParams;
+  const pageNumber = params.pageNumber ? Math.max(1, Number(params.pageNumber)) : 1;
+  const sortBy = (params.sortBy as RoleSortField | undefined) ?? DEFAULT_SORT;
+  const sortDescending = params.sortDescending === "true";
 
   let content: React.ReactNode;
   try {
-    const roles = await getRoles(accessToken, { pageSize: 100 });
+    const roles = await getRoles(accessToken, { pageNumber, pageSize: PAGE_SIZE, sortBy, sortDescending });
+    const totalPages = Math.max(1, Math.ceil(roles.totalCount / PAGE_SIZE));
     content = (
+      <>
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Nombre</TableHead>
-              <TableHead>Descripción</TableHead>
-              <TableHead>Permisos</TableHead>
-              <TableHead>Estado</TableHead>
+              {[
+                { key: "name", label: "Nombre" },
+                { key: "description", label: "Descripción" },
+                { key: "permissionCount", label: "Permisos" },
+                { key: "isActive", label: "Estado" },
+              ].map((column) => (
+                <SortableTableHead
+                  key={column.key}
+                  basePath="/roles"
+                  params={params}
+                  sortKey={column.key}
+                  defaultSortKey={DEFAULT_SORT}
+                  currentSortBy={params.sortBy}
+                  currentSortDescending={sortDescending}
+                >
+                  {column.label}
+                </SortableTableHead>
+              ))}
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -48,6 +73,16 @@ export default async function RolesPage() {
             )}
           </TableBody>
         </Table>
+        <TablePagination
+          basePath="/roles"
+          params={params}
+          pageNumber={pageNumber}
+          totalPages={totalPages}
+          totalCount={roles.totalCount}
+          itemLabel="rol"
+          itemLabelPlural="roles"
+        />
+      </>
     );
   } catch (error) {
     const status = error instanceof ApiError ? error.status : undefined;

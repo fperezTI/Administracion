@@ -1,31 +1,57 @@
 import Link from "next/link";
 import { Plus } from "lucide-react";
 import { requireAccessToken } from "@/lib/require-session";
-import { ApiError, getMe, getUsers } from "@/lib/api";
+import { ApiError, getMe, getUsers, type UserSortField } from "@/lib/api";
 import { AppHeader } from "@/components/app-header";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Table, TableBody, TableCell, TableHeader, TableRow } from "@/components/ui/table";
 import { formatDateTime, resolveTimeZone } from "@/lib/format-date";
+import { TablePagination, type SearchParams } from "@/components/layout/table-pagination";
+import { SortableTableHead } from "@/components/layout/sortable-table-head";
 
-export default async function UsersPage() {
+const PAGE_SIZE = 50;
+const DEFAULT_SORT: UserSortField = "displayName";
+
+export default async function UsersPage({ searchParams }: { searchParams: Promise<SearchParams> }) {
   const accessToken = await requireAccessToken();
+  const params = await searchParams;
   const me = await getMe(accessToken);
   // Users are inherently multi-company and this list has no CompanySwitcher (tenant-wide admin view) —
   // falls back to the viewing admin's own first company.
   const timeZone = resolveTimeZone(me.companies, null);
 
+  const pageNumber = params.pageNumber ? Math.max(1, Number(params.pageNumber)) : 1;
+  const sortBy = (params.sortBy as UserSortField | undefined) ?? DEFAULT_SORT;
+  const sortDescending = params.sortDescending === "true";
+
   let content: React.ReactNode;
   try {
-    const users = await getUsers(accessToken, { pageSize: 100 });
+    const users = await getUsers(accessToken, { pageNumber, pageSize: PAGE_SIZE, sortBy, sortDescending });
+    const totalPages = Math.max(1, Math.ceil(users.totalCount / PAGE_SIZE));
     content = (
+      <>
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Nombre</TableHead>
-              <TableHead>Correo</TableHead>
-              <TableHead>Estado</TableHead>
-              <TableHead>Último acceso</TableHead>
+              {[
+                { key: "displayName", label: "Nombre" },
+                { key: "email", label: "Correo" },
+                { key: "isActive", label: "Estado" },
+                { key: "lastLoginAtUtc", label: "Último acceso" },
+              ].map((column) => (
+                <SortableTableHead
+                  key={column.key}
+                  basePath="/users"
+                  params={params}
+                  sortKey={column.key}
+                  defaultSortKey={DEFAULT_SORT}
+                  currentSortBy={params.sortBy}
+                  currentSortDescending={sortDescending}
+                >
+                  {column.label}
+                </SortableTableHead>
+              ))}
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -55,6 +81,16 @@ export default async function UsersPage() {
             )}
           </TableBody>
         </Table>
+        <TablePagination
+          basePath="/users"
+          params={params}
+          pageNumber={pageNumber}
+          totalPages={totalPages}
+          totalCount={users.totalCount}
+          itemLabel="usuario"
+          itemLabelPlural="usuarios"
+        />
+      </>
     );
   } catch (error) {
     const status = error instanceof ApiError ? error.status : undefined;

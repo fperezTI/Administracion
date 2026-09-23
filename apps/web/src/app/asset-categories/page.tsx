@@ -1,28 +1,58 @@
 import Link from "next/link";
 import { Plus } from "lucide-react";
 import { requireAccessToken } from "@/lib/require-session";
-import { ApiError, getAssetCategories } from "@/lib/api";
+import { ApiError, getAssetCategories, type AssetCategorySortField } from "@/lib/api";
 import { AppHeader } from "@/components/app-header";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Table, TableBody, TableCell, TableHeader, TableRow } from "@/components/ui/table";
 import { IDENTIFICATION_TECHNOLOGY_LABELS } from "@/lib/asset-labels";
+import { TablePagination, type SearchParams } from "@/components/layout/table-pagination";
+import { SortableTableHead } from "@/components/layout/sortable-table-head";
 
-export default async function AssetCategoriesPage() {
+const PAGE_SIZE = 50;
+const DEFAULT_SORT: AssetCategorySortField = "name";
+
+export default async function AssetCategoriesPage({ searchParams }: { searchParams: Promise<SearchParams> }) {
   const accessToken = await requireAccessToken();
+  const params = await searchParams;
+  const pageNumber = params.pageNumber ? Math.max(1, Number(params.pageNumber)) : 1;
+  const sortBy = (params.sortBy as AssetCategorySortField | undefined) ?? DEFAULT_SORT;
+  const sortDescending = params.sortDescending === "true";
 
   let content: React.ReactNode;
   try {
-    const categories = await getAssetCategories(accessToken, { pageSize: 200 });
+    const categories = await getAssetCategories(accessToken, {
+      pageNumber,
+      pageSize: PAGE_SIZE,
+      sortBy,
+      sortDescending,
+    });
+    const totalPages = Math.max(1, Math.ceil(categories.totalCount / PAGE_SIZE));
     content = (
+      <>
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Nombre</TableHead>
-              <TableHead>Código</TableHead>
-              <TableHead>Tecnología por defecto</TableHead>
-              <TableHead>Campos personalizados</TableHead>
-              <TableHead>Estado</TableHead>
+              {[
+                { key: "name", label: "Nombre" },
+                { key: "code", label: "Código" },
+                { key: "defaultIdentificationTechnology", label: "Tecnología por defecto" },
+                { key: "customFieldCount", label: "Campos personalizados" },
+                { key: "isActive", label: "Estado" },
+              ].map((column) => (
+                <SortableTableHead
+                  key={column.key}
+                  basePath="/asset-categories"
+                  params={params}
+                  sortKey={column.key}
+                  defaultSortKey={DEFAULT_SORT}
+                  currentSortBy={params.sortBy}
+                  currentSortDescending={sortDescending}
+                >
+                  {column.label}
+                </SortableTableHead>
+              ))}
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -45,6 +75,16 @@ export default async function AssetCategoriesPage() {
             ))}
           </TableBody>
         </Table>
+        <TablePagination
+          basePath="/asset-categories"
+          params={params}
+          pageNumber={pageNumber}
+          totalPages={totalPages}
+          totalCount={categories.totalCount}
+          itemLabel="categoría"
+          itemLabelPlural="categorías"
+        />
+      </>
     );
   } catch (error) {
     const status = error instanceof ApiError ? error.status : undefined;

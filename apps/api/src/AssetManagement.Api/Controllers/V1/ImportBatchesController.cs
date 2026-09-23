@@ -19,9 +19,11 @@ public sealed class ImportBatchesController(ISender mediator) : ControllerBase
     [ProducesResponseType(typeof(PagedResult<ImportBatchSummary>), StatusCodes.Status200OK)]
     public async Task<ActionResult<PagedResult<ImportBatchSummary>>> GetBatches(
         [FromQuery] Guid companyId, [FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 50,
+        [FromQuery] string? sortBy = null, [FromQuery] bool sortDescending = false,
         CancellationToken cancellationToken = default)
     {
-        var result = await mediator.Send(new GetImportBatchesQuery(companyId, pageNumber, pageSize), cancellationToken);
+        var result = await mediator.Send(
+            new GetImportBatchesQuery(companyId, pageNumber, pageSize, sortBy, sortDescending), cancellationToken);
         return Ok(result);
     }
 

@@ -1,17 +1,22 @@
 import Link from "next/link";
 import { Plus } from "lucide-react";
 import { requireAccessToken } from "@/lib/require-session";
-import { ApiError, getImportBatches, getMe } from "@/lib/api";
+import { ApiError, getImportBatches, getMe, type ImportBatchSortField } from "@/lib/api";
 import { AppHeader } from "@/components/app-header";
 import { CompanySwitcher } from "@/components/company-switcher";
 import { EmptyCompanyState } from "@/components/empty-company-state";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Table, TableBody, TableCell, TableHeader, TableRow } from "@/components/ui/table";
 import { formatDateTime, resolveTimeZone } from "@/lib/format-date";
 import { IMPORT_BATCH_STATUS_LABELS, importBatchStatusBadgeVariant } from "@/lib/import-export-labels";
+import { TablePagination, type SearchParams } from "@/components/layout/table-pagination";
+import { SortableTableHead } from "@/components/layout/sortable-table-head";
 
-export default async function ImportBatchesPage({ searchParams }: { searchParams: Promise<{ companyId?: string }> }) {
+const PAGE_SIZE = 50;
+const DEFAULT_SORT: ImportBatchSortField = "createdAtUtc";
+
+export default async function ImportBatchesPage({ searchParams }: { searchParams: Promise<SearchParams> }) {
   const accessToken = await requireAccessToken();
   const params = await searchParams;
   const me = await getMe(accessToken);
@@ -24,19 +29,47 @@ export default async function ImportBatchesPage({ searchParams }: { searchParams
     ? params.companyId
     : me.companies[0].companyId;
   const timeZone = resolveTimeZone(me.companies, companyId);
+  const pageNumber = params.pageNumber ? Math.max(1, Number(params.pageNumber)) : 1;
+  // Sin sortBy en la URL, el default histórico del backend es createdAtUtc descendente (más
+  // reciente primero) sin importar sortDescending.
+  const sortBy = (params.sortBy as ImportBatchSortField | undefined) ?? DEFAULT_SORT;
+  const sortDescending = params.sortBy === undefined ? true : params.sortDescending === "true";
 
   let content: React.ReactNode;
   try {
-    const batches = await getImportBatches(accessToken, { companyId, pageSize: 100 });
+    const batches = await getImportBatches(accessToken, {
+      companyId,
+      pageNumber,
+      pageSize: PAGE_SIZE,
+      sortBy,
+      sortDescending,
+    });
+    const totalPages = Math.max(1, Math.ceil(batches.totalCount / PAGE_SIZE));
 
     content = (
+      <>
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Archivo</TableHead>
-              <TableHead>Estado</TableHead>
-              <TableHead>Filas</TableHead>
-              <TableHead>Subido</TableHead>
+              {[
+                { key: "fileName", label: "Archivo" },
+                { key: "status", label: "Estado" },
+                { key: "totalRows", label: "Filas" },
+                { key: "createdAtUtc", label: "Subido" },
+              ].map((column) => (
+                <SortableTableHead
+                  key={column.key}
+                  basePath="/imports"
+                  params={params}
+                  companyId={companyId}
+                  sortKey={column.key}
+                  defaultSortKey={DEFAULT_SORT}
+                  currentSortBy={params.sortBy}
+                  currentSortDescending={sortDescending}
+                >
+                  {column.label}
+                </SortableTableHead>
+              ))}
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -68,6 +101,17 @@ export default async function ImportBatchesPage({ searchParams }: { searchParams
             )}
           </TableBody>
         </Table>
+        <TablePagination
+          basePath="/imports"
+          params={params}
+          companyId={companyId}
+          pageNumber={pageNumber}
+          totalPages={totalPages}
+          totalCount={batches.totalCount}
+          itemLabel="lote"
+          itemLabelPlural="lotes"
+        />
+      </>
     );
   } catch (error) {
     const status = error instanceof ApiError ? error.status : undefined;
