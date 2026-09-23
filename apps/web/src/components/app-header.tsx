@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { AppNav } from "@/components/layout/app-nav";
+import { Logomark } from "@/components/logomark";
 
 /** Clears the local session and also ends the session at Entra ID (federated logout) — without this,
  * "cerrar sesión" only forgets the app's cookie; the browser would still be signed in to Microsoft. */
@@ -36,12 +37,7 @@ export function AppHeader({
        * contenido de abajo use una columna angosta (formularios) o ancha (listas). */}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-3">
-          <span
-            aria-hidden
-            className="bg-primary text-primary-foreground flex size-8 shrink-0 items-center justify-center rounded-md font-mono text-xs font-semibold tracking-tight lg:hidden"
-          >
-            AT
-          </span>
+          <Logomark className="lg:hidden" />
           <div>
             <h1 className="text-lg leading-tight font-semibold tracking-tight">{title}</h1>
             {subtitle && <p className="text-muted-foreground text-sm">{subtitle}</p>}

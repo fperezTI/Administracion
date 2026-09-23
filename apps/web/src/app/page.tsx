@@ -3,6 +3,7 @@ import { getTranslations } from "next-intl/server";
 import { auth, signIn } from "@/auth";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { Logomark } from "@/components/logomark";
 import { getSystemInfo } from "@/lib/api";
 
 export default async function Home() {
@@ -26,9 +27,7 @@ export default async function Home() {
         <ThemeToggle />
       </div>
       <div className="flex flex-col items-center gap-4 text-center">
-        <span className="bg-primary text-primary-foreground flex size-12 items-center justify-center rounded-md font-mono text-base font-semibold tracking-tight">
-          AT
-        </span>
+        <Logomark withWordmark size="lg" className="flex-col" />
         <div className="flex flex-col items-center gap-1.5">
           <h1 className="max-w-sm text-2xl font-semibold tracking-tight text-balance">{t("title")}</h1>
           <p className="text-muted-foreground max-w-xs text-sm text-balance">{t("subtitle")}</p>

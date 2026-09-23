@@ -1,6 +1,7 @@
 {
   "App": {
-    "name": "Gestión de Activos de TI"
+    "name": "Gestión de Activos de TI",
+    "shortName": "AssetHub"
   },
   "Home": {
     "title": "Gestión de Activos de TI e Infraestructura",

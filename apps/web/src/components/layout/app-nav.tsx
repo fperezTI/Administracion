@@ -17,6 +17,7 @@ import {
 import { cn } from "cn";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { Logomark } from "@/components/logomark";
 import { NAV_GROUPS, SELF_SERVICE_LINKS } from "./nav-links";
 
 function isActiveHref(pathname: string, href: string) {
@@ -93,10 +94,13 @@ function NavGroupList({
               aria-expanded={isOpen}
               className="hover:bg-muted flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm font-semibold"
             >
-              {Icon && <Icon className="size-4 shrink-0" aria-hidden />}
+              {Icon && <Icon className="size-4 shrink-0 stroke-[1.5]" aria-hidden />}
               <span className="flex-1">{group.label}</span>
               <ChevronDown
-                className={cn("text-muted-foreground size-4 shrink-0 transition-transform", isOpen && "rotate-180")}
+                className={cn(
+                  "text-muted-foreground size-4 shrink-0 stroke-[1.5] transition-transform",
+                  isOpen && "rotate-180"
+                )}
                 aria-hidden
               />
             </button>
@@ -111,8 +115,10 @@ function NavGroupList({
                       onClick={onNavigate}
                       aria-current={active ? "page" : undefined}
                       className={cn(
-                        "rounded-md px-2 py-1.5 text-sm",
-                        active ? "bg-accent text-primary font-medium" : "hover:bg-muted"
+                        "relative rounded-md px-2 py-1.5 text-sm",
+                        active
+                          ? "bg-accent text-primary before:bg-brand font-medium before:absolute before:top-1.5 before:bottom-1.5 before:-left-3 before:w-0.5 before:rounded-full"
+                          : "hover:bg-muted"
                       )}
                     >
                       {link.label}
@@ -137,7 +143,7 @@ export function AppNav() {
       {/* <1024px: botón de hamburguesa que abre el drawer con la misma nav agrupada. */}
       <div className="lg:hidden">
         <Button variant="outline" size="icon" aria-label="Abrir menú" onClick={() => setOpen(true)}>
-          <Menu className="size-4" />
+          <Menu className="size-4 stroke-[1.5]" />
         </Button>
       </div>
 
@@ -158,13 +164,8 @@ export function AppNav() {
         data-slot="app-sidebar"
         className="fixed top-0 left-0 z-40 hidden h-screen w-56 flex-col border-r bg-card p-4 lg:flex"
       >
-        <Link href="/dashboard" className="mb-4 flex items-center gap-2" aria-label="Ir a mi dashboard">
-          <span
-            aria-hidden
-            className="bg-primary text-primary-foreground flex size-8 shrink-0 items-center justify-center rounded-md font-mono text-xs font-semibold tracking-tight"
-          >
-            AT
-          </span>
+        <Link href="/dashboard" className="mb-4 flex items-center" aria-label="Ir a mi dashboard">
+          <Logomark withWordmark />
         </Link>
         <nav className="flex flex-1 flex-col gap-1 overflow-y-auto">
           <NavGroupList pathname={pathname} />

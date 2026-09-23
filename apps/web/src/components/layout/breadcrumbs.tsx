@@ -24,7 +24,7 @@ function Breadcrumbs({
           const isLast = index === items.length - 1;
           return (
             <li key={`${item.label}-${index}`} className="flex items-center gap-1.5">
-              {index > 0 && <ChevronRight aria-hidden className="size-3.5" />}
+              {index > 0 && <ChevronRight aria-hidden className="size-3.5 stroke-[1.5]" />}
               {item.href && !isLast ? (
                 <Link
                   href={item.href}

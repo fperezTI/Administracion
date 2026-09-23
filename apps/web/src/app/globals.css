@@ -35,6 +35,8 @@
   --color-popover: var(--popover);
   --color-card-foreground: var(--card-foreground);
   --color-card: var(--card);
+  --color-brand-foreground: var(--brand-foreground);
+  --color-brand: var(--brand);
   --radius-sm: calc(var(--radius) * 0.6);
   --radius-md: calc(var(--radius) * 0.8);
   --radius-lg: var(--radius);
@@ -59,8 +61,16 @@
  * --chart-1..5 no tienen consumidor todavía (no hay ningún gráfico en el sistema — ver Fase 7
  * del plan de rediseño, docs/architecture/00-analysis.md si aplica): quedan definidos y
  * calibrados a propósito para cuando se agregue uno, en vez de inventarse en ese momento.
- * Se eliminaron los tokens de sidebar (--sidebar-*) que el preset de shadcn trae por defecto:
- * no hay ningún sidebar planeado — la navegación es horizontal a propósito (ver app-nav.tsx).
+ * Se eliminaron los tokens de sidebar (--sidebar-*) que el preset de shadcn trae por defecto: el
+ * sidebar real (app-nav.tsx) es a medida y se pinta con los tokens normales (--card/--border),
+ * no necesita su propia paleta paralela.
+ *
+ * --brand es el cian (#28B4D2) tratado como acento de marca, no como color de interacción: su
+ * luminancia media no da suficiente contraste para texto/íconos pequeños sobre fondo claro u
+ * oscuro (ver cálculo WCAG descartado en el rediseño), así que se reserva a usos decorativos
+ * respaldados por otra señal redundante (el relleno del logomark ya lleva --primary/blanco
+ * detrás; el riel de navegación activa ya lleva --accent + negrita) — nunca como único portador
+ * de información.
  */
 :root {
   --background: #f7f9fb;
@@ -90,6 +100,8 @@
   --chart-3: #7ca6db;
   --chart-4: #63676c;
   --chart-5: #171b1f;
+  --brand: #28b4d2;
+  --brand-foreground: #ffffff;
   --radius: 0.5rem;
 }
 
@@ -121,6 +133,8 @@
   --chart-3: #9aa0a8;
   --chart-4: #63676c;
   --chart-5: #e7e9ec;
+  --brand: #28b4d2;
+  --brand-foreground: #0b1220;
 }
 
 @layer base {

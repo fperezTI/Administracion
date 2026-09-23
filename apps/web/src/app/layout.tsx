@@ -19,7 +19,7 @@ const plexMono = IBM_Plex_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Gestión de Activos de TI e Infraestructura",
+  title: "AssetHub — Gestión de Activos de TI e Infraestructura",
   description: "Administración operativa de activos de TI e infraestructura multiempresa.",
 };
 
