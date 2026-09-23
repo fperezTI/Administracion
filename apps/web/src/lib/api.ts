@@ -796,6 +796,8 @@ export type CreateLoanResult = { loanId: string; movementId: string; movementFol
 
 export type RelocateAssetResult = { movementId: string; movementFolio: string };
 
+export type AssignmentSortField = "assignedAtUtc" | "assetFolio" | "assignedToDisplayName" | "status";
+
 export function getAssignments(
   accessToken: string,
   params: {
@@ -804,6 +806,8 @@ export function getAssignments(
     pageSize?: number;
     status?: AssignmentStatus;
     assetId?: string;
+    sortBy?: AssignmentSortField;
+    sortDescending?: boolean;
   },
 ): Promise<PagedResult<AssignmentSummary>> {
   const query = new URLSearchParams({ companyId: params.companyId });
@@ -811,6 +815,8 @@ export function getAssignments(
   if (params.pageSize) query.set("pageSize", String(params.pageSize));
   if (params.status) query.set("status", params.status);
   if (params.assetId) query.set("assetId", params.assetId);
+  if (params.sortBy) query.set("sortBy", params.sortBy);
+  if (params.sortDescending) query.set("sortDescending", "true");
   return apiFetch<PagedResult<AssignmentSummary>>(accessToken, `/api/v1/assignments?${query.toString()}`);
 }
 
@@ -889,14 +895,25 @@ export function reassignAsset(
   });
 }
 
+export type LoanSortField = "loanedAtUtc" | "assetFolio" | "borrowerDisplayName" | "expectedReturnDate" | "status";
+
 export function getLoans(
   accessToken: string,
-  params: { companyId: string; pageNumber?: number; pageSize?: number; status?: LoanStatus },
+  params: {
+    companyId: string;
+    pageNumber?: number;
+    pageSize?: number;
+    status?: LoanStatus;
+    sortBy?: LoanSortField;
+    sortDescending?: boolean;
+  },
 ): Promise<PagedResult<LoanSummary>> {
   const query = new URLSearchParams({ companyId: params.companyId });
   if (params.pageNumber) query.set("pageNumber", String(params.pageNumber));
   if (params.pageSize) query.set("pageSize", String(params.pageSize));
   if (params.status) query.set("status", params.status);
+  if (params.sortBy) query.set("sortBy", params.sortBy);
+  if (params.sortDescending) query.set("sortDescending", "true");
   return apiFetch<PagedResult<LoanSummary>>(accessToken, `/api/v1/loans?${query.toString()}`);
 }
 
@@ -1149,14 +1166,25 @@ export type TransferDetail = {
   completedAtUtc: string | null;
 };
 
+export type TransferSortField = "requestedAtUtc" | "assetFolio" | "fromCompanyName" | "toCompanyName" | "status";
+
 export function getTransfers(
   accessToken: string,
-  params: { companyId: string; pageNumber?: number; pageSize?: number; status?: TransferStatus },
+  params: {
+    companyId: string;
+    pageNumber?: number;
+    pageSize?: number;
+    status?: TransferStatus;
+    sortBy?: TransferSortField;
+    sortDescending?: boolean;
+  },
 ): Promise<PagedResult<TransferSummary>> {
   const query = new URLSearchParams({ companyId: params.companyId });
   if (params.pageNumber) query.set("pageNumber", String(params.pageNumber));
   if (params.pageSize) query.set("pageSize", String(params.pageSize));
   if (params.status) query.set("status", params.status);
+  if (params.sortBy) query.set("sortBy", params.sortBy);
+  if (params.sortDescending) query.set("sortDescending", "true");
   return apiFetch<PagedResult<TransferSummary>>(accessToken, `/api/v1/transfers?${query.toString()}`);
 }
 
@@ -1228,15 +1256,27 @@ export type MaintenanceOrderDetail = {
   resultNotes: string | null;
 };
 
+export type MaintenanceOrderSortField = "openedAtUtc" | "folio" | "assetFolio" | "type" | "status";
+
 export function getMaintenanceOrders(
   accessToken: string,
-  params: { companyId: string; pageNumber?: number; pageSize?: number; assetId?: string; status?: MaintenanceOrderStatus },
+  params: {
+    companyId: string;
+    pageNumber?: number;
+    pageSize?: number;
+    assetId?: string;
+    status?: MaintenanceOrderStatus;
+    sortBy?: MaintenanceOrderSortField;
+    sortDescending?: boolean;
+  },
 ): Promise<PagedResult<MaintenanceOrderSummary>> {
   const query = new URLSearchParams({ companyId: params.companyId });
   if (params.pageNumber) query.set("pageNumber", String(params.pageNumber));
   if (params.pageSize) query.set("pageSize", String(params.pageSize));
   if (params.assetId) query.set("assetId", params.assetId);
   if (params.status) query.set("status", params.status);
+  if (params.sortBy) query.set("sortBy", params.sortBy);
+  if (params.sortDescending) query.set("sortDescending", "true");
   return apiFetch<PagedResult<MaintenanceOrderSummary>>(accessToken, `/api/v1/maintenance-orders?${query.toString()}`);
 }
 
@@ -1547,14 +1587,25 @@ export type InternalRequestDetail = {
   decidedAtUtc: string | null;
 };
 
+export type InternalRequestSortField = "requestedAtUtc" | "assetFolio" | "type" | "requestedByDisplayName" | "status";
+
 export function getInternalRequests(
   accessToken: string,
-  params: { companyId: string; pageNumber?: number; pageSize?: number; status?: InternalRequestStatus },
+  params: {
+    companyId: string;
+    pageNumber?: number;
+    pageSize?: number;
+    status?: InternalRequestStatus;
+    sortBy?: InternalRequestSortField;
+    sortDescending?: boolean;
+  },
 ): Promise<PagedResult<InternalRequestSummary>> {
   const query = new URLSearchParams({ companyId: params.companyId });
   if (params.pageNumber) query.set("pageNumber", String(params.pageNumber));
   if (params.pageSize) query.set("pageSize", String(params.pageSize));
   if (params.status) query.set("status", params.status);
+  if (params.sortBy) query.set("sortBy", params.sortBy);
+  if (params.sortDescending) query.set("sortDescending", "true");
   return apiFetch<PagedResult<InternalRequestSummary>>(accessToken, `/api/v1/requests?${query.toString()}`);
 }
 

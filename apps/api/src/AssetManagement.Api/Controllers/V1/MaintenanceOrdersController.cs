@@ -23,10 +23,13 @@ public sealed class MaintenanceOrdersController(ISender mediator) : ControllerBa
         [FromQuery] int pageSize = 50,
         [FromQuery] Guid? assetId = null,
         [FromQuery] MaintenanceOrderStatus? status = null,
+        [FromQuery] string? sortBy = null,
+        [FromQuery] bool sortDescending = false,
         CancellationToken cancellationToken = default)
     {
         var result = await mediator.Send(
-            new GetMaintenanceOrdersQuery(companyId, pageNumber, pageSize, assetId, status), cancellationToken);
+            new GetMaintenanceOrdersQuery(companyId, pageNumber, pageSize, assetId, status, sortBy, sortDescending),
+            cancellationToken);
         return Ok(result);
     }
 

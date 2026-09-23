@@ -21,9 +21,13 @@ public sealed class InternalRequestsController(ISender mediator) : ControllerBas
         [FromQuery] int pageNumber = 1,
         [FromQuery] int pageSize = 50,
         [FromQuery] InternalRequestStatus? status = null,
+        [FromQuery] string? sortBy = null,
+        [FromQuery] bool sortDescending = false,
         CancellationToken cancellationToken = default)
     {
-        var result = await mediator.Send(new GetInternalRequestsQuery(companyId, pageNumber, pageSize, status), cancellationToken);
+        var result = await mediator.Send(
+            new GetInternalRequestsQuery(companyId, pageNumber, pageSize, status, sortBy, sortDescending),
+            cancellationToken);
         return Ok(result);
     }
 

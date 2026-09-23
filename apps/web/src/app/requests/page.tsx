@@ -1,17 +1,22 @@
 import Link from "next/link";
 import { Plus } from "lucide-react";
 import { requireAccessToken } from "@/lib/require-session";
-import { ApiError, getInternalRequests, getMe } from "@/lib/api";
+import { ApiError, getInternalRequests, getMe, type InternalRequestSortField } from "@/lib/api";
 import { AppHeader } from "@/components/app-header";
 import { CompanySwitcher } from "@/components/company-switcher";
 import { EmptyCompanyState } from "@/components/empty-company-state";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Table, TableBody, TableCell, TableHeader, TableRow } from "@/components/ui/table";
 import { formatDate, resolveTimeZone } from "@/lib/format-date";
 import { INTERNAL_REQUEST_STATUS_LABELS, INTERNAL_REQUEST_TYPE_LABELS, internalRequestStatusBadgeVariant } from "@/lib/request-labels";
+import { TablePagination, type SearchParams } from "@/components/layout/table-pagination";
+import { SortableTableHead } from "@/components/layout/sortable-table-head";
 
-export default async function InternalRequestsPage({ searchParams }: { searchParams: Promise<{ companyId?: string }> }) {
+const PAGE_SIZE = 50;
+const DEFAULT_SORT: InternalRequestSortField = "requestedAtUtc";
+
+export default async function InternalRequestsPage({ searchParams }: { searchParams: Promise<SearchParams> }) {
   const accessToken = await requireAccessToken();
   const params = await searchParams;
   const me = await getMe(accessToken);
@@ -24,20 +29,47 @@ export default async function InternalRequestsPage({ searchParams }: { searchPar
     ? params.companyId
     : me.companies[0].companyId;
   const timeZone = resolveTimeZone(me.companies, companyId);
+  const pageNumber = params.pageNumber ? Math.max(1, Number(params.pageNumber)) : 1;
+  const sortBy = (params.sortBy as InternalRequestSortField | undefined) ?? DEFAULT_SORT;
+  const sortDescending = params.sortBy === undefined ? true : params.sortDescending === "true";
 
   let content: React.ReactNode;
   try {
-    const requests = await getInternalRequests(accessToken, { companyId, pageSize: 100 });
+    const requests = await getInternalRequests(accessToken, {
+      companyId,
+      pageNumber,
+      pageSize: PAGE_SIZE,
+      sortBy,
+      sortDescending,
+    });
+    const totalPages = Math.max(1, Math.ceil(requests.totalCount / PAGE_SIZE));
 
     content = (
+      <>
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Activo</TableHead>
-              <TableHead>Tipo</TableHead>
-              <TableHead className="hidden sm:table-cell">Solicitante</TableHead>
-              <TableHead>Estado</TableHead>
-              <TableHead className="hidden sm:table-cell">Fecha</TableHead>
+              {[
+                { key: "assetFolio", label: "Activo", className: undefined },
+                { key: "type", label: "Tipo", className: undefined },
+                { key: "requestedByDisplayName", label: "Solicitante", className: "hidden sm:table-cell" },
+                { key: "status", label: "Estado", className: undefined },
+                { key: "requestedAtUtc", label: "Fecha", className: "hidden sm:table-cell" },
+              ].map((column) => (
+                <SortableTableHead
+                  key={column.key}
+                  basePath="/requests"
+                  params={params}
+                  companyId={companyId}
+                  sortKey={column.key}
+                  defaultSortKey={DEFAULT_SORT}
+                  currentSortBy={params.sortBy}
+                  currentSortDescending={sortDescending}
+                  className={column.className}
+                >
+                  {column.label}
+                </SortableTableHead>
+              ))}
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -66,6 +98,17 @@ export default async function InternalRequestsPage({ searchParams }: { searchPar
             )}
           </TableBody>
         </Table>
+        <TablePagination
+          basePath="/requests"
+          params={params}
+          companyId={companyId}
+          pageNumber={pageNumber}
+          totalPages={totalPages}
+          totalCount={requests.totalCount}
+          itemLabel="solicitud"
+          itemLabelPlural="solicitudes"
+        />
+      </>
     );
   } catch (error) {
     const status = error instanceof ApiError ? error.status : undefined;

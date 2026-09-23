@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Plus, X } from "lucide-react";
 import { requireAccessToken } from "@/lib/require-session";
-import { ApiError, getAssignments, getMe } from "@/lib/api";
+import { ApiError, getAssignments, getMe, type AssignmentSortField } from "@/lib/api";
 import { AppHeader } from "@/components/app-header";
 import { CompanySwitcher } from "@/components/company-switcher";
 import { EmptyCompanyState } from "@/components/empty-company-state";
@@ -11,8 +11,13 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { formatDate, resolveTimeZone } from "@/lib/format-date";
 import { ASSIGNMENT_STATUS_LABELS, assignmentStatusBadgeVariant } from "@/lib/inventory-labels";
 import { cancelAssignmentAction } from "./[id]/actions";
+import { TablePagination, type SearchParams } from "@/components/layout/table-pagination";
+import { SortableTableHead } from "@/components/layout/sortable-table-head";
 
-export default async function AssignmentsPage({ searchParams }: { searchParams: Promise<{ companyId?: string }> }) {
+const PAGE_SIZE = 50;
+const DEFAULT_SORT: AssignmentSortField = "assignedAtUtc";
+
+export default async function AssignmentsPage({ searchParams }: { searchParams: Promise<SearchParams> }) {
   const accessToken = await requireAccessToken();
   const params = await searchParams;
   const me = await getMe(accessToken);
@@ -25,19 +30,46 @@ export default async function AssignmentsPage({ searchParams }: { searchParams: 
     ? params.companyId
     : me.companies[0].companyId;
   const timeZone = resolveTimeZone(me.companies, companyId);
+  const pageNumber = params.pageNumber ? Math.max(1, Number(params.pageNumber)) : 1;
+  const sortBy = (params.sortBy as AssignmentSortField | undefined) ?? DEFAULT_SORT;
+  const sortDescending = params.sortBy === undefined ? true : params.sortDescending === "true";
 
   let content: React.ReactNode;
   try {
-    const assignments = await getAssignments(accessToken, { companyId, pageSize: 100 });
+    const assignments = await getAssignments(accessToken, {
+      companyId,
+      pageNumber,
+      pageSize: PAGE_SIZE,
+      sortBy,
+      sortDescending,
+    });
+    const totalPages = Math.max(1, Math.ceil(assignments.totalCount / PAGE_SIZE));
 
     content = (
+      <>
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Folio</TableHead>
-              <TableHead>Asignado a</TableHead>
-              <TableHead>Estado</TableHead>
-              <TableHead className="hidden sm:table-cell">Fecha</TableHead>
+              {[
+                { key: "assetFolio", label: "Folio", className: undefined },
+                { key: "assignedToDisplayName", label: "Asignado a", className: undefined },
+                { key: "status", label: "Estado", className: undefined },
+                { key: "assignedAtUtc", label: "Fecha", className: "hidden sm:table-cell" },
+              ].map((column) => (
+                <SortableTableHead
+                  key={column.key}
+                  basePath="/assignments"
+                  params={params}
+                  companyId={companyId}
+                  sortKey={column.key}
+                  defaultSortKey={DEFAULT_SORT}
+                  currentSortBy={params.sortBy}
+                  currentSortDescending={sortDescending}
+                  className={column.className}
+                >
+                  {column.label}
+                </SortableTableHead>
+              ))}
               <TableHead className="text-right">Acciones</TableHead>
             </TableRow>
           </TableHeader>
@@ -81,6 +113,17 @@ export default async function AssignmentsPage({ searchParams }: { searchParams: 
             )}
           </TableBody>
         </Table>
+        <TablePagination
+          basePath="/assignments"
+          params={params}
+          companyId={companyId}
+          pageNumber={pageNumber}
+          totalPages={totalPages}
+          totalCount={assignments.totalCount}
+          itemLabel="asignación"
+          itemLabelPlural="asignaciones"
+        />
+      </>
     );
   } catch (error) {
     const status = error instanceof ApiError ? error.status : undefined;

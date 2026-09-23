@@ -1,17 +1,22 @@
 import Link from "next/link";
 import { Plus } from "lucide-react";
 import { requireAccessToken } from "@/lib/require-session";
-import { ApiError, getMe, getTransfers } from "@/lib/api";
+import { ApiError, getMe, getTransfers, type TransferSortField } from "@/lib/api";
 import { AppHeader } from "@/components/app-header";
 import { CompanySwitcher } from "@/components/company-switcher";
 import { EmptyCompanyState } from "@/components/empty-company-state";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Table, TableBody, TableCell, TableHeader, TableRow } from "@/components/ui/table";
 import { formatDate, resolveTimeZone } from "@/lib/format-date";
 import { TRANSFER_STATUS_LABELS, transferStatusBadgeVariant } from "@/lib/transfer-labels";
+import { TablePagination, type SearchParams } from "@/components/layout/table-pagination";
+import { SortableTableHead } from "@/components/layout/sortable-table-head";
 
-export default async function TransfersPage({ searchParams }: { searchParams: Promise<{ companyId?: string }> }) {
+const PAGE_SIZE = 50;
+const DEFAULT_SORT: TransferSortField = "requestedAtUtc";
+
+export default async function TransfersPage({ searchParams }: { searchParams: Promise<SearchParams> }) {
   const accessToken = await requireAccessToken();
   const params = await searchParams;
   const me = await getMe(accessToken);
@@ -23,20 +28,42 @@ export default async function TransfersPage({ searchParams }: { searchParams: Pr
   const companyId = params.companyId && me.companies.some((c) => c.companyId === params.companyId)
     ? params.companyId
     : me.companies[0].companyId;
+  const pageNumber = params.pageNumber ? Math.max(1, Number(params.pageNumber)) : 1;
+  // Sin sortBy en la URL, el default histórico del backend es requestedAtUtc descendente.
+  const sortBy = (params.sortBy as TransferSortField | undefined) ?? DEFAULT_SORT;
+  const sortDescending = params.sortBy === undefined ? true : params.sortDescending === "true";
 
   let content: React.ReactNode;
   try {
-    const transfers = await getTransfers(accessToken, { companyId, pageSize: 100 });
+    const transfers = await getTransfers(accessToken, { companyId, pageNumber, pageSize: PAGE_SIZE, sortBy, sortDescending });
+    const totalPages = Math.max(1, Math.ceil(transfers.totalCount / PAGE_SIZE));
 
     content = (
+      <>
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Folio</TableHead>
-              <TableHead className="hidden sm:table-cell">Origen</TableHead>
-              <TableHead>Destino</TableHead>
-              <TableHead>Estado</TableHead>
-              <TableHead className="hidden sm:table-cell">Fecha</TableHead>
+              {[
+                { key: "assetFolio", label: "Folio", className: undefined },
+                { key: "fromCompanyName", label: "Origen", className: "hidden sm:table-cell" },
+                { key: "toCompanyName", label: "Destino", className: undefined },
+                { key: "status", label: "Estado", className: undefined },
+                { key: "requestedAtUtc", label: "Fecha", className: "hidden sm:table-cell" },
+              ].map((column) => (
+                <SortableTableHead
+                  key={column.key}
+                  basePath="/transfers"
+                  params={params}
+                  companyId={companyId}
+                  sortKey={column.key}
+                  defaultSortKey={DEFAULT_SORT}
+                  currentSortBy={params.sortBy}
+                  currentSortDescending={sortDescending}
+                  className={column.className}
+                >
+                  {column.label}
+                </SortableTableHead>
+              ))}
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -67,6 +94,17 @@ export default async function TransfersPage({ searchParams }: { searchParams: Pr
             )}
           </TableBody>
         </Table>
+        <TablePagination
+          basePath="/transfers"
+          params={params}
+          companyId={companyId}
+          pageNumber={pageNumber}
+          totalPages={totalPages}
+          totalCount={transfers.totalCount}
+          itemLabel="transferencia"
+          itemLabelPlural="transferencias"
+        />
+      </>
     );
   } catch (error) {
     const status = error instanceof ApiError ? error.status : undefined;

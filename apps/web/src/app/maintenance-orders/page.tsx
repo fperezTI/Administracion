@@ -1,21 +1,26 @@
 import Link from "next/link";
 import { Plus } from "lucide-react";
 import { requireAccessToken } from "@/lib/require-session";
-import { ApiError, getMaintenanceOrders, getMe } from "@/lib/api";
+import { ApiError, getMaintenanceOrders, getMe, type MaintenanceOrderSortField } from "@/lib/api";
 import { AppHeader } from "@/components/app-header";
 import { CompanySwitcher } from "@/components/company-switcher";
 import { EmptyCompanyState } from "@/components/empty-company-state";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Table, TableBody, TableCell, TableHeader, TableRow } from "@/components/ui/table";
 import { formatDate, resolveTimeZone } from "@/lib/format-date";
 import {
   MAINTENANCE_ORDER_STATUS_LABELS,
   MAINTENANCE_ORDER_TYPE_LABELS,
   maintenanceOrderStatusBadgeVariant,
 } from "@/lib/maintenance-labels";
+import { TablePagination, type SearchParams } from "@/components/layout/table-pagination";
+import { SortableTableHead } from "@/components/layout/sortable-table-head";
 
-export default async function MaintenanceOrdersPage({ searchParams }: { searchParams: Promise<{ companyId?: string }> }) {
+const PAGE_SIZE = 50;
+const DEFAULT_SORT: MaintenanceOrderSortField = "openedAtUtc";
+
+export default async function MaintenanceOrdersPage({ searchParams }: { searchParams: Promise<SearchParams> }) {
   const accessToken = await requireAccessToken();
   const params = await searchParams;
   const me = await getMe(accessToken);
@@ -28,20 +33,47 @@ export default async function MaintenanceOrdersPage({ searchParams }: { searchPa
     ? params.companyId
     : me.companies[0].companyId;
   const timeZone = resolveTimeZone(me.companies, companyId);
+  const pageNumber = params.pageNumber ? Math.max(1, Number(params.pageNumber)) : 1;
+  const sortBy = (params.sortBy as MaintenanceOrderSortField | undefined) ?? DEFAULT_SORT;
+  const sortDescending = params.sortBy === undefined ? true : params.sortDescending === "true";
 
   let content: React.ReactNode;
   try {
-    const orders = await getMaintenanceOrders(accessToken, { companyId, pageSize: 100 });
+    const orders = await getMaintenanceOrders(accessToken, {
+      companyId,
+      pageNumber,
+      pageSize: PAGE_SIZE,
+      sortBy,
+      sortDescending,
+    });
+    const totalPages = Math.max(1, Math.ceil(orders.totalCount / PAGE_SIZE));
 
     content = (
+      <>
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Folio</TableHead>
-              <TableHead>Activo</TableHead>
-              <TableHead className="hidden sm:table-cell">Tipo</TableHead>
-              <TableHead>Estado</TableHead>
-              <TableHead className="hidden sm:table-cell">Abierta</TableHead>
+              {[
+                { key: "folio", label: "Folio", className: undefined },
+                { key: "assetFolio", label: "Activo", className: undefined },
+                { key: "type", label: "Tipo", className: "hidden sm:table-cell" },
+                { key: "status", label: "Estado", className: undefined },
+                { key: "openedAtUtc", label: "Abierta", className: "hidden sm:table-cell" },
+              ].map((column) => (
+                <SortableTableHead
+                  key={column.key}
+                  basePath="/maintenance-orders"
+                  params={params}
+                  companyId={companyId}
+                  sortKey={column.key}
+                  defaultSortKey={DEFAULT_SORT}
+                  currentSortBy={params.sortBy}
+                  currentSortDescending={sortDescending}
+                  className={column.className}
+                >
+                  {column.label}
+                </SortableTableHead>
+              ))}
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -70,6 +102,17 @@ export default async function MaintenanceOrdersPage({ searchParams }: { searchPa
             )}
           </TableBody>
         </Table>
+        <TablePagination
+          basePath="/maintenance-orders"
+          params={params}
+          companyId={companyId}
+          pageNumber={pageNumber}
+          totalPages={totalPages}
+          totalCount={orders.totalCount}
+          itemLabel="orden"
+          itemLabelPlural="órdenes"
+        />
+      </>
     );
   } catch (error) {
     const status = error instanceof ApiError ? error.status : undefined;

@@ -21,9 +21,12 @@ public sealed class LoansController(ISender mediator) : ControllerBase
         [FromQuery] int pageNumber = 1,
         [FromQuery] int pageSize = 50,
         [FromQuery] LoanStatus? status = null,
+        [FromQuery] string? sortBy = null,
+        [FromQuery] bool sortDescending = false,
         CancellationToken cancellationToken = default)
     {
-        var result = await mediator.Send(new GetLoansQuery(companyId, pageNumber, pageSize, status), cancellationToken);
+        var result = await mediator.Send(
+            new GetLoansQuery(companyId, pageNumber, pageSize, status, sortBy, sortDescending), cancellationToken);
         return Ok(result);
     }
 
