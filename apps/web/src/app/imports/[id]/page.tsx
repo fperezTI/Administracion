@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { ArrowLeft, X } from "lucide-react";
 import { requireAccessToken } from "@/lib/require-session";
 import { ApiError, getImportBatchById, getMe } from "@/lib/api";
 import { AppHeader } from "@/components/app-header";
@@ -38,7 +39,8 @@ export default async function ImportBatchDetailPage({ params }: { params: Promis
     <div className="mx-auto flex max-w-3xl flex-col gap-4 px-8 pb-8">
       <div className="mb-2 flex justify-end">
         <Button variant="outline" render={<Link href={`/imports?companyId=${batch.companyId}`} />}>
-          ← Volver
+          <ArrowLeft data-icon="inline-start" />
+          Volver
         </Button>
       </div>
 
@@ -108,6 +110,7 @@ export default async function ImportBatchDetailPage({ params }: { params: Promis
       {PRE_COMMIT_STATUSES.includes(batch.status) && (
         <form action={cancelImportBatchAction.bind(null, batch.id)}>
           <Button type="submit" variant="outline">
+            <X data-icon="inline-start" />
             Cancelar lote
           </Button>
         </form>

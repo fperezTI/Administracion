@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ArrowLeft } from "lucide-react";
 import { requireAccessToken } from "@/lib/require-session";
 import { AppHeader } from "@/components/app-header";
 import { Button } from "@/components/ui/button";
@@ -13,7 +14,8 @@ export default async function NewCompanyPage() {
     <div className="mx-auto max-w-xl px-8 pb-8">
       <div className="mb-4 flex justify-end">
         <Button variant="outline" render={<Link href="/companies" />}>
-          ← Volver
+          <ArrowLeft data-icon="inline-start" />
+          Volver
         </Button>
       </div>
       <CreateCompanyForm />

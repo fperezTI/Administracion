@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { ArrowLeft } from "lucide-react";
 import { requireAccessToken } from "@/lib/require-session";
 import { ApiError, getMaintenanceOrderById, getMe } from "@/lib/api";
 import { ASSET_STATUS_LABELS } from "@/lib/asset-labels";
@@ -35,7 +36,8 @@ export default async function MaintenanceOrderDetailPage({ params }: { params: P
     <div className="mx-auto flex max-w-3xl flex-col gap-4 px-8 pb-8">
       <div className="mb-2 flex justify-end">
         <Button variant="outline" render={<Link href={`/maintenance-orders?companyId=${order.companyId}`} />}>
-          ← Volver
+          <ArrowLeft data-icon="inline-start" />
+          Volver
         </Button>
       </div>
 

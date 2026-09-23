@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Plus } from "lucide-react";
 import { requireAccessToken } from "@/lib/require-session";
 import { ApiError, getAssetCategories } from "@/lib/api";
 import { AppHeader } from "@/components/app-header";
@@ -61,7 +62,10 @@ export default async function AssetCategoriesPage() {
       <AppHeader title="Categorías de activos" subtitle="Catálogo configurable — define los campos técnicos por categoría." />
     <div className="mx-auto max-w-6xl px-8 pb-8">
       <div className="mb-4 flex justify-end">
-        <Button render={<Link href="/asset-categories/new" />}>Nueva categoría</Button>
+        <Button render={<Link href="/asset-categories/new" />}>
+          <Plus data-icon="inline-start" />
+          Nueva categoría
+        </Button>
       </div>
       {content}
     </div>

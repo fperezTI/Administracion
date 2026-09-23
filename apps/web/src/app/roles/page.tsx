@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Plus } from "lucide-react";
 import { requireAccessToken } from "@/lib/require-session";
 import { ApiError, getRoles } from "@/lib/api";
 import { AppHeader } from "@/components/app-header";
@@ -62,7 +63,10 @@ export default async function RolesPage() {
       <AppHeader title="Roles" subtitle="Los permisos son globales — la empresa no acota qué puede hacer un rol." />
     <div className="mx-auto max-w-6xl px-8 pb-8">
       <div className="mb-4 flex justify-end">
-        <Button render={<Link href="/roles/new" />}>Nuevo rol</Button>
+        <Button render={<Link href="/roles/new" />}>
+          <Plus data-icon="inline-start" />
+          Nuevo rol
+        </Button>
       </div>
       {content}
     </div>

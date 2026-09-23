@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { ArrowLeft } from "lucide-react";
 import { requireAccessToken } from "@/lib/require-session";
 import { ApiError, getInternalRequestById, getMe } from "@/lib/api";
 import { AppHeader } from "@/components/app-header";
@@ -32,7 +33,8 @@ export default async function InternalRequestDetailPage({ params }: { params: Pr
     <div className="mx-auto flex max-w-3xl flex-col gap-4 px-8 pb-8">
       <div className="mb-2 flex justify-end">
         <Button variant="outline" render={<Link href="/requests" />}>
-          ← Volver
+          <ArrowLeft data-icon="inline-start" />
+          Volver
         </Button>
       </div>
 

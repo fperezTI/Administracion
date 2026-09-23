@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { ArrowLeft } from "lucide-react";
 import { requireAccessToken } from "@/lib/require-session";
 import { getConsumables, getConsumableStockMovements, getMe, getOrgUnitTree } from "@/lib/api";
 import { AppHeader } from "@/components/app-header";
@@ -51,7 +52,8 @@ export default async function ConsumableDetailPage({
     <div className="mx-auto flex max-w-3xl flex-col gap-4 px-8 pb-8">
       <div className="mb-2 flex justify-end">
         <Button variant="outline" render={<Link href={`/consumables?companyId=${companyId}`} />}>
-          ← Volver
+          <ArrowLeft data-icon="inline-start" />
+          Volver
         </Button>
       </div>
 

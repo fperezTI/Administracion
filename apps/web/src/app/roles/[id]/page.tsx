@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { ArrowLeft } from "lucide-react";
 import { requireAccessToken } from "@/lib/require-session";
 import { ApiError, getPermissions, getRoleById } from "@/lib/api";
 import { AppHeader } from "@/components/app-header";
@@ -45,7 +46,8 @@ export default async function RoleDetailPage({ params }: { params: Promise<{ id:
       <PermissionMatrixForm roleId={id} groups={groups} assignedPermissionIds={role.permissionIds} />
 
       <Button variant="outline" render={<Link href="/roles" />} className="self-start">
-        ← Volver
+        <ArrowLeft data-icon="inline-start" />
+        Volver
       </Button>
     </div>
     </>

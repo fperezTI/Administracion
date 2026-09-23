@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Plus } from "lucide-react";
 import { requireAccessToken } from "@/lib/require-session";
 import { ApiError, getMe, getUsers } from "@/lib/api";
 import { AppHeader } from "@/components/app-header";
@@ -72,7 +73,10 @@ export default async function UsersPage() {
       />
     <div className="mx-auto max-w-6xl px-8 pb-8">
       <div className="mb-4 flex justify-end">
-        <Button render={<Link href="/users/new" />}>+ Agregar desde el directorio</Button>
+        <Button render={<Link href="/users/new" />}>
+          <Plus data-icon="inline-start" />
+          Agregar desde el directorio
+        </Button>
       </div>
       {content}
     </div>

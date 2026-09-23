@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { ArrowLeft, X } from "lucide-react";
 import { requireAccessToken } from "@/lib/require-session";
 import { ApiError, getMe, getMyAssignmentById } from "@/lib/api";
 import { AppHeader } from "@/components/app-header";
@@ -79,6 +80,7 @@ export default async function MyAssignmentDetailPage({ params }: { params: Promi
             <SignAssignmentForm assignmentId={assignment.id} />
             <form action={rejectAssignmentAction.bind(null, assignment.id)}>
               <Button type="submit" variant="outline" size="sm">
+                <X data-icon="inline-start" />
                 Rechazar
               </Button>
             </form>
@@ -103,7 +105,8 @@ export default async function MyAssignmentDetailPage({ params }: { params: Promi
       )}
 
       <Button variant="outline" render={<Link href="/my-assignments" />} className="self-start">
-        ← Volver a mis asignaciones
+        <ArrowLeft data-icon="inline-start" />
+        Volver a mis asignaciones
       </Button>
     </div>
     </>

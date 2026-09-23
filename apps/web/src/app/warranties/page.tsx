@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Plus } from "lucide-react";
 import { requireAccessToken } from "@/lib/require-session";
 import { ApiError, getWarranties, getMe } from "@/lib/api";
 import { AppHeader } from "@/components/app-header";
@@ -82,7 +83,10 @@ export default async function WarrantiesPage({ searchParams }: { searchParams: P
       />
     <div className="mx-auto max-w-6xl px-8 pb-8">
       <div className="mb-4 flex justify-end">
-        <Button render={<Link href={`/warranties/new?companyId=${companyId}`} />}>Nueva garantía</Button>
+        <Button render={<Link href={`/warranties/new?companyId=${companyId}`} />}>
+          <Plus data-icon="inline-start" />
+          Nueva garantía
+        </Button>
       </div>
       {content}
     </div>

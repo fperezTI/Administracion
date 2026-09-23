@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { revalidatePath } from "next/cache";
+import { ArrowLeft, Printer } from "lucide-react";
 import QRCode from "qrcode";
 import { requireAccessToken } from "@/lib/require-session";
 import { ApiError, getAssetById, getAssetCategoryById, getCompanyById, reprintAssetTag } from "@/lib/api";
@@ -48,11 +49,13 @@ export default async function AssetLabelPage({ params }: { params: Promise<{ id:
     <div className="mx-auto flex max-w-md flex-col gap-4 p-8 print:p-0">
       <div className="flex items-center justify-between print:hidden">
         <Button variant="outline" render={<Link href={`/assets/${id}`} />}>
-          ← Volver al activo
+          <ArrowLeft data-icon="inline-start" />
+          Volver al activo
         </Button>
         <div className="flex gap-2">
           <form action={reprintTag}>
             <Button type="submit" variant="outline">
+              <Printer data-icon="inline-start" />
               Reimprimir (+1)
             </Button>
           </form>

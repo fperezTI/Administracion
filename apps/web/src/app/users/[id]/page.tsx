@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { ArrowLeft } from "lucide-react";
 import { requireAccessToken } from "@/lib/require-session";
 import { ApiError, getCompanies, getRoles, getUserById } from "@/lib/api";
 import { AppHeader } from "@/components/app-header";
@@ -136,7 +137,8 @@ export default async function UserDetailPage({ params }: { params: Promise<{ id:
       </section>
 
       <Button variant="outline" render={<Link href="/users" />} className="self-start">
-        ← Volver
+        <ArrowLeft data-icon="inline-start" />
+        Volver
       </Button>
     </div>
     </>

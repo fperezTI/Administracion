@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Plus } from "lucide-react";
 import { requireAccessToken } from "@/lib/require-session";
 import { ApiError, getConsumables, getMe } from "@/lib/api";
 import { AppHeader } from "@/components/app-header";
@@ -87,7 +88,10 @@ export default async function ConsumablesPage({ searchParams }: { searchParams: 
       />
     <div className="mx-auto max-w-6xl px-8 pb-8">
       <div className="mb-4 flex justify-end">
-        <Button render={<Link href={`/consumables/new?companyId=${companyId}`} />}>Nuevo consumible</Button>
+        <Button render={<Link href={`/consumables/new?companyId=${companyId}`} />}>
+          <Plus data-icon="inline-start" />
+          Nuevo consumible
+        </Button>
       </div>
       {content}
     </div>

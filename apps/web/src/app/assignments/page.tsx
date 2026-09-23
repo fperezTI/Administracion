@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Plus, X } from "lucide-react";
 import { requireAccessToken } from "@/lib/require-session";
 import { ApiError, getAssignments, getMe } from "@/lib/api";
 import { AppHeader } from "@/components/app-header";
@@ -69,6 +70,7 @@ export default async function AssignmentsPage({ searchParams }: { searchParams: 
                     {a.status === "PendingSignature" && (
                       <form action={cancelAssignmentAction.bind(null, a.id)}>
                         <Button type="submit" variant="outline" size="sm">
+                          <X data-icon="inline-start" />
                           Cancelar
                         </Button>
                       </form>
@@ -98,7 +100,10 @@ export default async function AssignmentsPage({ searchParams }: { searchParams: 
       />
     <div className="mx-auto max-w-6xl px-8 pb-8">
       <div className="mb-4 flex justify-end">
-        <Button render={<Link href={`/assignments/new?companyId=${companyId}`} />}>Nueva asignación</Button>
+        <Button render={<Link href={`/assignments/new?companyId=${companyId}`} />}>
+          <Plus data-icon="inline-start" />
+          Nueva asignación
+        </Button>
       </div>
       {content}
     </div>

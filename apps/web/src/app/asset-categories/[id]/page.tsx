@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { ArrowLeft } from "lucide-react";
 import { requireAccessToken } from "@/lib/require-session";
 import { ApiError, getAssetCategoryById } from "@/lib/api";
 import { AppHeader } from "@/components/app-header";
@@ -84,7 +85,8 @@ export default async function AssetCategoryDetailPage({ params }: { params: Prom
       <AddFieldForm categoryId={id} />
 
       <Button variant="outline" render={<Link href="/asset-categories" />} className="self-start">
-        ← Volver
+        <ArrowLeft data-icon="inline-start" />
+        Volver
       </Button>
     </div>
     </>

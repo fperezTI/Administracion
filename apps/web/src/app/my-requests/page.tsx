@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Plus, X } from "lucide-react";
 import { requireAccessToken } from "@/lib/require-session";
 import { ApiError, getMyInternalRequests } from "@/lib/api";
 import { AppHeader } from "@/components/app-header";
@@ -39,6 +40,7 @@ export default async function MyRequestsPage() {
                 {r.status === "PendingApproval" && (
                   <form action={cancelMyRequestAction.bind(null, r.id)} className="flex justify-end">
                     <Button type="submit" size="sm" variant="outline">
+                      <X data-icon="inline-start" />
                       Cancelar
                     </Button>
                   </form>
@@ -62,7 +64,10 @@ export default async function MyRequestsPage() {
       <AppHeader title="Mis solicitudes" subtitle="Solicitudes internas que has hecho — asignación, préstamo o mantenimiento." />
     <div className="mx-auto max-w-3xl px-8 pb-8">
       <div className="mb-4 flex justify-end">
-        <Button render={<Link href="/requests/new" />}>Nueva solicitud</Button>
+        <Button render={<Link href="/requests/new" />}>
+          <Plus data-icon="inline-start" />
+          Nueva solicitud
+        </Button>
       </div>
       {content}
     </div>

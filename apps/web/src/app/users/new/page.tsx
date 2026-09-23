@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ArrowLeft } from "lucide-react";
 import { requireAccessToken } from "@/lib/require-session";
 import { ApiError, getCompanies, getRoles, searchDirectoryUsers } from "@/lib/api";
 import { AppHeader } from "@/components/app-header";
@@ -42,7 +43,8 @@ export default async function NewUserFromDirectoryPage({
           companies={companies.items}
         />
         <Button variant="outline" render={<Link href="/users/new" />} className="self-start">
-          ← Buscar a alguien más
+          <ArrowLeft data-icon="inline-start" />
+          Buscar a alguien más
         </Button>
       </div>
     );
@@ -116,7 +118,8 @@ export default async function NewUserFromDirectoryPage({
     <div className="mx-auto max-w-xl px-8 pb-8">
       <div className="mb-4 flex justify-end">
         <Button variant="outline" render={<Link href="/users" />}>
-          ← Volver
+          <ArrowLeft data-icon="inline-start" />
+          Volver
         </Button>
       </div>
       {content}

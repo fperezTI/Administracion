@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { ArrowLeft } from "lucide-react";
 import { requireAccessToken } from "@/lib/require-session";
 import { ApiError, getAssignmentById, getCompanyById } from "@/lib/api";
 import { Button } from "@/components/ui/button";
@@ -27,7 +28,8 @@ export default async function AssignmentReceiptPage({ params }: { params: Promis
     <div className="mx-auto flex max-w-2xl flex-col gap-6 p-8 print:p-0">
       <div className="flex items-center justify-between print:hidden">
         <Button variant="outline" render={<Link href={`/assignments/${id}`} />}>
-          ← Volver a la asignación
+          <ArrowLeft data-icon="inline-start" />
+          Volver a la asignación
         </Button>
         <PrintButton />
       </div>

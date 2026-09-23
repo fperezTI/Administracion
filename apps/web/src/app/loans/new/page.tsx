@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ArrowLeft } from "lucide-react";
 import { requireAccessToken } from "@/lib/require-session";
 import { getAssets, getMe, getUsers } from "@/lib/api";
 import { AppHeader } from "@/components/app-header";
@@ -30,7 +31,8 @@ export default async function NewLoanPage({ searchParams }: { searchParams: Prom
     <div className="mx-auto max-w-xl px-8 pb-8">
       <div className="mb-4 flex justify-end">
         <Button variant="outline" render={<Link href={`/loans?companyId=${companyId}`} />}>
-          ← Volver
+          <ArrowLeft data-icon="inline-start" />
+          Volver
         </Button>
       </div>
       <CreateLoanForm assets={assets.items} users={users.items} />

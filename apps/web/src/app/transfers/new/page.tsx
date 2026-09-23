@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ArrowLeft } from "lucide-react";
 import { requireAccessToken } from "@/lib/require-session";
 import { ApiError, getAssets, getCompanies, getMe } from "@/lib/api";
 import { AppHeader } from "@/components/app-header";
@@ -54,7 +55,8 @@ export default async function NewTransferPage({
     <div className="mx-auto max-w-xl px-8 pb-8">
       <div className="mb-4 flex justify-end">
         <Button variant="outline" render={<Link href={`/transfers?companyId=${companyId}`} />}>
-          ← Volver
+          <ArrowLeft data-icon="inline-start" />
+          Volver
         </Button>
       </div>
       {content}

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { X } from "lucide-react";
 import { requireAccessToken } from "@/lib/require-session";
 import { ApiError, getMyAssignments, type MyAssignmentSummary } from "@/lib/api";
 import { AppHeader } from "@/components/app-header";
@@ -70,6 +71,7 @@ export default async function MyAssignmentsPage() {
                       <SignAssignmentForm assignmentId={first.id} />
                       <form action={rejectAssignmentAction.bind(null, first.id)}>
                         <Button type="submit" variant="outline" size="sm">
+                          <X data-icon="inline-start" />
                           Rechazar
                         </Button>
                       </form>

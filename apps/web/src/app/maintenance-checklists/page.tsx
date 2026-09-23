@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Plus } from "lucide-react";
 import { requireAccessToken } from "@/lib/require-session";
 import { ApiError, getMaintenanceChecklists } from "@/lib/api";
 import { AppHeader } from "@/components/app-header";
@@ -66,7 +67,10 @@ export default async function MaintenanceChecklistsPage() {
       />
     <div className="mx-auto max-w-6xl px-8 pb-8">
       <div className="mb-4 flex justify-end">
-        <Button render={<Link href="/maintenance-checklists/new" />}>Nuevo checklist</Button>
+        <Button render={<Link href="/maintenance-checklists/new" />}>
+          <Plus data-icon="inline-start" />
+          Nuevo checklist
+        </Button>
       </div>
       {content}
     </div>

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { ArrowLeft } from "lucide-react";
 import { requireAccessToken } from "@/lib/require-session";
 import { ApiError, getAssetById, getOrgUnitTree } from "@/lib/api";
 import { AppHeader } from "@/components/app-header";
@@ -28,7 +29,8 @@ export default async function RelocateAssetPage({ params }: { params: Promise<{ 
     <div className="mx-auto max-w-xl px-8 pb-8">
       <div className="mb-4 flex justify-end">
         <Button variant="outline" render={<Link href={`/assets/${id}`} />}>
-          ← Volver
+          <ArrowLeft data-icon="inline-start" />
+          Volver
         </Button>
       </div>
       <RelocateAssetForm assetId={id} orgUnits={orgUnits} currentOrgUnitId={asset.currentOrgUnitId} />

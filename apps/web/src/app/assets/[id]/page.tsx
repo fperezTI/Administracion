@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { revalidatePath } from "next/cache";
+import { Plus } from "lucide-react";
 import { requireAccessToken } from "@/lib/require-session";
 import { ApiError, getAssetById, getAssetCategoryById, getAssignments, getMe, getMovements, unlinkAssetAccessory } from "@/lib/api";
 import { AppHeader } from "@/components/app-header";
@@ -86,7 +87,8 @@ export default async function AssetDetailPage({ params }: { params: Promise<{ id
           </Button>
           {asset.accessoryOfAssetId === null && (
             <Button variant="outline" render={<Link href={`/assets/${id}/link-accessory`} />}>
-              + Vincular accesorio
+              <Plus data-icon="inline-start" />
+              Vincular accesorio
             </Button>
           )}
           {asset.status === "InWarehouse" && (
