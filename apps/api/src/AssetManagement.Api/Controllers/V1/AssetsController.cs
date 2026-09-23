@@ -24,9 +24,12 @@ public sealed class AssetsController(ISender mediator) : ControllerBase
         [FromQuery] Guid? assetCategoryId = null,
         [FromQuery] AssetStatus? status = null,
         [FromQuery] string? search = null,
+        [FromQuery] string? sortBy = null,
+        [FromQuery] bool sortDescending = false,
         CancellationToken cancellationToken = default)
     {
-        var query = new GetAssetsQuery(companyId, pageNumber, pageSize, assetCategoryId, status, search);
+        var query = new GetAssetsQuery(
+            companyId, pageNumber, pageSize, assetCategoryId, status, search, sortBy, sortDescending);
         var result = await mediator.Send(query, cancellationToken);
         return Ok(result);
     }

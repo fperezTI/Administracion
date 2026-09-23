@@ -14,7 +14,10 @@ public sealed record GetAssetsQuery(
     int PageSize = 50,
     Guid? AssetCategoryId = null,
     AssetStatus? Status = null,
-    string? Search = null)
+    string? Search = null,
+    /// <summary>internalFolio (default) | description | category | brand | serialNumber | physicalCondition | status</summary>
+    string? SortBy = null,
+    bool SortDescending = false)
     : IRequest<PagedResult<AssetSummary>>, IRequiresPermission
 {
     public string PermissionCode => PermissionCatalog.Assets.Read;
@@ -64,9 +67,43 @@ public sealed class GetAssetsQueryHandler(IApplicationDbContext db, ICurrentComp
                 (a.SerialNumber != null && a.SerialNumber.Contains(term)));
         }
 
-        var projected = query.OrderBy(a => a.InternalFolio).Select(a => new AssetSummary(
-            a.Id, a.InternalFolio, a.Description, a.AssetCategoryId, a.Brand, a.Model, a.SerialNumber, a.Status,
-            a.PhysicalCondition, a.AccessoryOfAssetId));
+        var joined =
+            from a in query
+            join c in db.AssetCategories.AsNoTracking() on a.AssetCategoryId equals c.Id
+            select new { Asset = a, CategoryName = c.Name };
+
+        // Description/SerialNumber son nullable: sin el OrderBy(...== null) inicial, SQL Server pone los
+        // NULL primero en ASC — así quedan siempre al final, sin importar la dirección.
+        var descending = request.SortDescending;
+        var ordered = request.SortBy switch
+        {
+            "description" => descending
+                ? joined.OrderBy(x => x.Asset.Description == null).ThenByDescending(x => x.Asset.Description)
+                : joined.OrderBy(x => x.Asset.Description == null).ThenBy(x => x.Asset.Description),
+            "category" => descending
+                ? joined.OrderByDescending(x => x.CategoryName)
+                : joined.OrderBy(x => x.CategoryName),
+            "brand" => descending
+                ? joined.OrderByDescending(x => x.Asset.Brand).ThenByDescending(x => x.Asset.Model)
+                : joined.OrderBy(x => x.Asset.Brand).ThenBy(x => x.Asset.Model),
+            "serialNumber" => descending
+                ? joined.OrderBy(x => x.Asset.SerialNumber == null).ThenByDescending(x => x.Asset.SerialNumber)
+                : joined.OrderBy(x => x.Asset.SerialNumber == null).ThenBy(x => x.Asset.SerialNumber),
+            "physicalCondition" => descending
+                ? joined.OrderByDescending(x => x.Asset.PhysicalCondition)
+                : joined.OrderBy(x => x.Asset.PhysicalCondition),
+            "status" => descending
+                ? joined.OrderByDescending(x => x.Asset.Status)
+                : joined.OrderBy(x => x.Asset.Status),
+            _ => descending
+                ? joined.OrderByDescending(x => x.Asset.InternalFolio)
+                : joined.OrderBy(x => x.Asset.InternalFolio),
+        };
+
+        var projected = ordered.Select(x => new AssetSummary(
+            x.Asset.Id, x.Asset.InternalFolio, x.Asset.Description, x.Asset.AssetCategoryId, x.Asset.Brand,
+            x.Asset.Model, x.Asset.SerialNumber, x.Asset.Status, x.Asset.PhysicalCondition,
+            x.Asset.AccessoryOfAssetId));
 
         return PagedResult<AssetSummary>.CreateAsync(projected, request.PageNumber, request.PageSize, cancellationToken);
     }

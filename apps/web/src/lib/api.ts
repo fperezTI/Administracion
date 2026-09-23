@@ -224,6 +224,8 @@ export function getMe(accessToken: string): Promise<MeResponse> {
   return apiFetch<MeResponse>(accessToken, "/api/v1/me");
 }
 
+export type AssetSortField = "internalFolio" | "description" | "category" | "brand" | "serialNumber" | "physicalCondition" | "status";
+
 export type GetAssetsParams = {
   companyId: string;
   pageNumber?: number;
@@ -231,6 +233,8 @@ export type GetAssetsParams = {
   assetCategoryId?: string;
   status?: AssetStatus;
   search?: string;
+  sortBy?: AssetSortField;
+  sortDescending?: boolean;
 };
 
 export function getAssets(accessToken: string, params: GetAssetsParams): Promise<PagedResult<AssetSummary>> {
@@ -240,6 +244,8 @@ export function getAssets(accessToken: string, params: GetAssetsParams): Promise
   if (params.assetCategoryId) query.set("assetCategoryId", params.assetCategoryId);
   if (params.status) query.set("status", params.status);
   if (params.search) query.set("search", params.search);
+  if (params.sortBy) query.set("sortBy", params.sortBy);
+  if (params.sortDescending) query.set("sortDescending", "true");
 
   return apiFetch<PagedResult<AssetSummary>>(accessToken, `/api/v1/assets?${query.toString()}`);
 }

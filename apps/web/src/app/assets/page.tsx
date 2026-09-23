@@ -1,18 +1,28 @@
 import Link from "next/link";
 import { FileSpreadsheet, FileText, Plus } from "lucide-react";
 import { requireAccessToken } from "@/lib/require-session";
-import { ApiError, getAssetCategories, getAssets, getAssetsExportUrl, getMe, type AssetStatus } from "@/lib/api";
+import {
+  ApiError,
+  getAssetCategories,
+  getAssets,
+  getAssetsExportUrl,
+  getMe,
+  type AssetSortField,
+  type AssetStatus,
+} from "@/lib/api";
 import { AppHeader } from "@/components/app-header";
 import { CompanySwitcher } from "@/components/company-switcher";
 import { EmptyCompanyState } from "@/components/empty-company-state";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Table, TableBody, TableCell, TableHeader, TableRow } from "@/components/ui/table";
 import { ASSET_STATUS_LABELS, PHYSICAL_CONDITION_LABELS, assetStatusBadgeVariant } from "@/lib/asset-labels";
 import { AssetFilterForm } from "./asset-filter-form";
 import { TablePagination, type SearchParams } from "@/components/layout/table-pagination";
+import { SortableTableHead } from "@/components/layout/sortable-table-head";
 
 const PAGE_SIZE = 20;
+const DEFAULT_SORT: AssetSortField = "internalFolio";
 
 export default async function AssetsPage({ searchParams }: { searchParams: Promise<SearchParams> }) {
   const accessToken = await requireAccessToken();
@@ -27,6 +37,8 @@ export default async function AssetsPage({ searchParams }: { searchParams: Promi
     ? params.companyId
     : me.companies[0].companyId;
   const pageNumber = params.pageNumber ? Math.max(1, Number(params.pageNumber)) : 1;
+  const sortBy = (params.sortBy as AssetSortField | undefined) ?? DEFAULT_SORT;
+  const sortDescending = params.sortDescending === "true";
 
   let content: React.ReactNode;
   try {
@@ -38,6 +50,8 @@ export default async function AssetsPage({ searchParams }: { searchParams: Promi
         assetCategoryId: params.assetCategoryId,
         status: params.status as AssetStatus | undefined,
         search: params.search,
+        sortBy,
+        sortDescending,
       }),
       getAssetCategories(accessToken, { pageSize: 200 }),
     ]);
@@ -58,13 +72,29 @@ export default async function AssetsPage({ searchParams }: { searchParams: Promi
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Folio</TableHead>
-                <TableHead className="hidden sm:table-cell">Descripción</TableHead>
-                <TableHead className="hidden sm:table-cell">Categoría</TableHead>
-                <TableHead>Marca / Modelo</TableHead>
-                <TableHead className="hidden sm:table-cell">Serie</TableHead>
-                <TableHead className="hidden sm:table-cell">Condición</TableHead>
-                <TableHead>Estado</TableHead>
+                {[
+                  { key: "internalFolio", label: "Folio", className: undefined },
+                  { key: "description", label: "Descripción", className: "hidden sm:table-cell" },
+                  { key: "category", label: "Categoría", className: "hidden sm:table-cell" },
+                  { key: "brand", label: "Marca / Modelo", className: undefined },
+                  { key: "serialNumber", label: "Serie", className: "hidden sm:table-cell" },
+                  { key: "physicalCondition", label: "Condición", className: "hidden sm:table-cell" },
+                  { key: "status", label: "Estado", className: undefined },
+                ].map((column) => (
+                  <SortableTableHead
+                    key={column.key}
+                    basePath="/assets"
+                    params={params}
+                    companyId={companyId}
+                    sortKey={column.key}
+                    defaultSortKey={DEFAULT_SORT}
+                    currentSortBy={params.sortBy}
+                    currentSortDescending={sortDescending}
+                    className={column.className}
+                  >
+                    {column.label}
+                  </SortableTableHead>
+                ))}
               </TableRow>
             </TableHeader>
             <TableBody>
