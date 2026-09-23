@@ -1,7 +1,20 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { revalidatePath } from "next/cache";
-import { Plus } from "lucide-react";
+import {
+  Archive,
+  ArrowLeftRight,
+  MapPin,
+  Pencil,
+  Plus,
+  Printer,
+  QrCode,
+  Repeat,
+  Trash2,
+  Unlink,
+  UserPlus,
+  Wrench,
+} from "lucide-react";
 import { requireAccessToken } from "@/lib/require-session";
 import { ApiError, getAssetById, getAssetCategoryById, getAssignments, getMe, getMovements, unlinkAssetAccessory } from "@/lib/api";
 import { AppHeader } from "@/components/app-header";
@@ -77,12 +90,15 @@ export default async function AssetDetailPage({ params }: { params: Promise<{ id
         <div className="flex items-center gap-2">
           <Badge variant={assetStatusBadgeVariant(asset.status)}>{ASSET_STATUS_LABELS[asset.status]}</Badge>
           <Button variant="outline" render={<Link href={`/assets/${id}/label`} />}>
+            <QrCode data-icon="inline-start" />
             Ver etiqueta
           </Button>
           <Button variant="outline" render={<Link href={`/assets/${id}/edit`} />}>
+            <Pencil data-icon="inline-start" />
             Editar
           </Button>
           <Button variant="outline" render={<Link href={`/assets/${id}/relocate`} />}>
+            <MapPin data-icon="inline-start" />
             Reubicar
           </Button>
           {asset.accessoryOfAssetId === null && (
@@ -96,24 +112,28 @@ export default async function AssetDetailPage({ params }: { params: Promise<{ id
               variant="outline"
               render={<Link href={`/assignments/new?companyId=${asset.companyId}&assetId=${id}`} />}
             >
+              <UserPlus data-icon="inline-start" />
               Asignar
             </Button>
           )}
           {activeAssignment && (
             <>
               <Button variant="outline" render={<Link href={`/assets/${id}/reassign`} />}>
+                <Repeat data-icon="inline-start" />
                 Reasignar
               </Button>
               <Button
                 variant="outline"
                 render={<Link href={`/assignments/${activeAssignment.id}/resguardo`} />}
               >
+                <Printer data-icon="inline-start" />
                 Imprimir resguardo
               </Button>
             </>
           )}
           {asset.status === "InWarehouse" && (
             <Button variant="outline" render={<Link href={`/transfers/new?companyId=${asset.companyId}`} />}>
+              <ArrowLeftRight data-icon="inline-start" />
               Solicitar transferencia
             </Button>
           )}
@@ -122,16 +142,19 @@ export default async function AssetDetailPage({ params }: { params: Promise<{ id
               variant="outline"
               render={<Link href={`/maintenance-orders/new?companyId=${asset.companyId}&assetId=${id}`} />}
             >
+              <Wrench data-icon="inline-start" />
               Abrir orden de mantenimiento
             </Button>
           )}
           {canRequestDecommission(asset.status) && (
             <Button variant="outline" render={<Link href={`/assets/${id}/decommission`} />}>
+              <Archive data-icon="inline-start" />
               Solicitar baja
             </Button>
           )}
           {asset.status === "Decommissioned" && (
             <Button variant="outline" render={<Link href={`/assets/${id}/dispose`} />}>
+              <Trash2 data-icon="inline-start" />
               Solicitar disposición
             </Button>
           )}
@@ -179,6 +202,7 @@ export default async function AssetDetailPage({ params }: { params: Promise<{ id
                 </div>
                 <form action={unlinkAccessory.bind(null, accessory.id)}>
                   <Button variant="outline" size="sm" type="submit">
+                    <Unlink data-icon="inline-start" />
                     Quitar
                   </Button>
                 </form>
@@ -200,6 +224,7 @@ export default async function AssetDetailPage({ params }: { params: Promise<{ id
               <Field label="Veces impresa" value={String(asset.tag.printCount)} />
             </div>
             <Button variant="outline" render={<Link href={`/assets/${id}/label`} />}>
+              <QrCode data-icon="inline-start" />
               Ver etiqueta
             </Button>
           </CardContent>
