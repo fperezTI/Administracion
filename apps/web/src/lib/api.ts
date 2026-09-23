@@ -874,15 +874,27 @@ export function returnLoan(accessToken: string, loanId: string, notes: string | 
   return apiFetch(accessToken, `/api/v1/loans/${loanId}/return`, { method: "POST", body: JSON.stringify({ notes }) });
 }
 
+export type MovementSortField = "effectiveAtUtc" | "folioNumber" | "assetFolio" | "type" | "notes";
+
 export function getMovements(
   accessToken: string,
-  params: { companyId: string; pageNumber?: number; pageSize?: number; assetId?: string; type?: MovementType },
+  params: {
+    companyId: string;
+    pageNumber?: number;
+    pageSize?: number;
+    assetId?: string;
+    type?: MovementType;
+    sortBy?: MovementSortField;
+    sortDescending?: boolean;
+  },
 ): Promise<PagedResult<MovementSummary>> {
   const query = new URLSearchParams({ companyId: params.companyId });
   if (params.pageNumber) query.set("pageNumber", String(params.pageNumber));
   if (params.pageSize) query.set("pageSize", String(params.pageSize));
   if (params.assetId) query.set("assetId", params.assetId);
   if (params.type) query.set("type", params.type);
+  if (params.sortBy) query.set("sortBy", params.sortBy);
+  if (params.sortDescending) query.set("sortDescending", "true");
   return apiFetch<PagedResult<MovementSummary>>(accessToken, `/api/v1/movements?${query.toString()}`);
 }
 
@@ -1609,6 +1621,8 @@ export type AuditEntrySummary = {
   occurredAtUtc: string;
 };
 
+export type AuditSortField = "occurredAtUtc" | "userDisplayName" | "commandName" | "module" | "succeeded";
+
 export function getAuditEntries(
   accessToken: string,
   params: {
@@ -1619,6 +1633,8 @@ export function getAuditEntries(
     commandName?: string;
     fromUtc?: string;
     toUtc?: string;
+    sortBy?: AuditSortField;
+    sortDescending?: boolean;
   },
 ): Promise<PagedResult<AuditEntrySummary>> {
   const query = new URLSearchParams();
@@ -1629,6 +1645,8 @@ export function getAuditEntries(
   if (params.commandName) query.set("commandName", params.commandName);
   if (params.fromUtc) query.set("fromUtc", params.fromUtc);
   if (params.toUtc) query.set("toUtc", params.toUtc);
+  if (params.sortBy) query.set("sortBy", params.sortBy);
+  if (params.sortDescending) query.set("sortDescending", "true");
   return apiFetch<PagedResult<AuditEntrySummary>>(accessToken, `/api/v1/audit-entries?${query.toString()}`);
 }
 

@@ -22,9 +22,13 @@ public sealed class MovementsController(ISender mediator) : ControllerBase
         [FromQuery] int pageSize = 50,
         [FromQuery] Guid? assetId = null,
         [FromQuery] MovementType? type = null,
+        [FromQuery] string? sortBy = null,
+        [FromQuery] bool sortDescending = false,
         CancellationToken cancellationToken = default)
     {
-        var result = await mediator.Send(new GetMovementsQuery(companyId, pageNumber, pageSize, assetId, type), cancellationToken);
+        var result = await mediator.Send(
+            new GetMovementsQuery(companyId, pageNumber, pageSize, assetId, type, sortBy, sortDescending),
+            cancellationToken);
         return Ok(result);
     }
 }

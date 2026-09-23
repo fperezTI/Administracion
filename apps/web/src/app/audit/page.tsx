@@ -1,19 +1,19 @@
 import { requireAccessToken } from "@/lib/require-session";
-import { ApiError, getAuditEntries, getCompanies, getMe } from "@/lib/api";
+import { ApiError, getAuditEntries, getCompanies, getMe, type AuditSortField } from "@/lib/api";
 import { AppHeader } from "@/components/app-header";
 import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Table, TableBody, TableCell, TableHeader, TableRow } from "@/components/ui/table";
 import { formatDateTime, resolveTimeZone } from "@/lib/format-date";
+import { AuditFilterForm } from "./audit-filter-form";
+import { TablePagination, type SearchParams } from "@/components/layout/table-pagination";
+import { SortableTableHead } from "@/components/layout/sortable-table-head";
+
+const PAGE_SIZE = 50;
+const DEFAULT_SORT: AuditSortField = "occurredAtUtc";
 
 /** No CompanySwitcher — Audit.Read is a tenant-wide admin permission with no per-company membership
  * filter, same treatment as /companies (see the F8 plan and AppDbContext's remarks on AuditEntry). */
-export default async function AuditPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ commandName?: string; fromUtc?: string; toUtc?: string }>;
-}) {
+export default async function AuditPage({ searchParams }: { searchParams: Promise<SearchParams> }) {
   const accessToken = await requireAccessToken();
   const params = await searchParams;
   const me = await getMe(accessToken);
@@ -23,24 +23,50 @@ export default async function AuditPage({
   const allCompanies = await getCompanies(accessToken, { pageSize: 200 }).catch(() => null);
   const companiesForTimeZone = allCompanies?.items.map((c) => ({ companyId: c.id, timeZone: c.timeZone })) ?? me.companies;
 
+  const pageNumber = params.pageNumber ? Math.max(1, Number(params.pageNumber)) : 1;
+  // Sin sortBy en la URL, el default histórico del backend es occurredAtUtc descendente (más
+  // reciente primero) sin importar sortDescending — reflejarlo aquí para que la flecha del
+  // encabezado "Fecha" aparezca activa y apuntando hacia abajo desde la primera carga.
+  const sortBy = (params.sortBy as AuditSortField | undefined) ?? DEFAULT_SORT;
+  const sortDescending = params.sortBy === undefined ? true : params.sortDescending === "true";
+
   let content: React.ReactNode;
   try {
     const entries = await getAuditEntries(accessToken, {
-      pageSize: 100,
+      pageNumber,
+      pageSize: PAGE_SIZE,
       commandName: params.commandName,
       fromUtc: params.fromUtc ? new Date(params.fromUtc).toISOString() : undefined,
       toUtc: params.toUtc ? new Date(params.toUtc).toISOString() : undefined,
+      sortBy,
+      sortDescending,
     });
+    const totalPages = Math.max(1, Math.ceil(entries.totalCount / PAGE_SIZE));
 
     content = (
+      <>
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Fecha</TableHead>
-              <TableHead>Usuario</TableHead>
-              <TableHead>Comando</TableHead>
-              <TableHead>Módulo.Acción</TableHead>
-              <TableHead>Resultado</TableHead>
+              {[
+                { key: "occurredAtUtc", label: "Fecha" },
+                { key: "userDisplayName", label: "Usuario" },
+                { key: "commandName", label: "Comando" },
+                { key: "module", label: "Módulo.Acción" },
+                { key: "succeeded", label: "Resultado" },
+              ].map((column) => (
+                <SortableTableHead
+                  key={column.key}
+                  basePath="/audit"
+                  params={params}
+                  sortKey={column.key}
+                  defaultSortKey={DEFAULT_SORT}
+                  currentSortBy={params.sortBy}
+                  currentSortDescending={sortDescending}
+                >
+                  {column.label}
+                </SortableTableHead>
+              ))}
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -68,6 +94,16 @@ export default async function AuditPage({
             )}
           </TableBody>
         </Table>
+        <TablePagination
+          basePath="/audit"
+          params={params}
+          pageNumber={pageNumber}
+          totalPages={totalPages}
+          totalCount={entries.totalCount}
+          itemLabel="entrada"
+          itemLabelPlural="entradas"
+        />
+      </>
     );
   } catch (error) {
     const status = error instanceof ApiError ? error.status : undefined;
@@ -82,23 +118,11 @@ export default async function AuditPage({
     <>
       <AppHeader title="Auditoría" subtitle="Registro de acciones sensibles ejecutadas en el sistema, éxito o fracaso." />
     <div className="mx-auto max-w-6xl px-8 pb-8">
-      <form method="GET" className="mb-4 flex flex-wrap items-end gap-3">
-        <div className="flex flex-col gap-1">
-          <Label htmlFor="commandName">Comando</Label>
-          <Input id="commandName" name="commandName" defaultValue={params.commandName} placeholder="CreateAssetCommand" className="h-8 w-56" />
-        </div>
-        <div className="flex flex-col gap-1">
-          <Label htmlFor="fromUtc">Desde</Label>
-          <Input id="fromUtc" name="fromUtc" type="date" defaultValue={params.fromUtc} className="h-8" />
-        </div>
-        <div className="flex flex-col gap-1">
-          <Label htmlFor="toUtc">Hasta</Label>
-          <Input id="toUtc" name="toUtc" type="date" defaultValue={params.toUtc} className="h-8" />
-        </div>
-        <button type="submit" className="border-input bg-secondary text-secondary-foreground h-8 rounded-md border px-3 text-sm">
-          Filtrar
-        </button>
-      </form>
+      <AuditFilterForm
+        defaultCommandName={params.commandName}
+        defaultFromUtc={params.fromUtc}
+        defaultToUtc={params.toUtc}
+      />
       {content}
     </div>
     </>

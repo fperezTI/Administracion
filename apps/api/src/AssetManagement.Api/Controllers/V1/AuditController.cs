@@ -23,10 +23,14 @@ public sealed class AuditController(ISender mediator) : ControllerBase
         [FromQuery] string? commandName = null,
         [FromQuery] DateTimeOffset? fromUtc = null,
         [FromQuery] DateTimeOffset? toUtc = null,
+        [FromQuery] string? sortBy = null,
+        [FromQuery] bool sortDescending = false,
         CancellationToken cancellationToken = default)
     {
         var result = await mediator.Send(
-            new GetAuditEntriesQuery(companyId, pageNumber, pageSize, userId, commandName, fromUtc, toUtc), cancellationToken);
+            new GetAuditEntriesQuery(
+                companyId, pageNumber, pageSize, userId, commandName, fromUtc, toUtc, sortBy, sortDescending),
+            cancellationToken);
         return Ok(result);
     }
 }

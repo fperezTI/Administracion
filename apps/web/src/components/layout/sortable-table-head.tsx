@@ -7,20 +7,21 @@ import type { SearchParams } from "./table-pagination";
 function buildSortHref(
   basePath: string,
   params: SearchParams,
-  companyId: string,
+  companyId: string | undefined,
   sortKey: string,
   nextDescending: boolean
 ) {
   const query = new URLSearchParams({
     ...(Object.fromEntries(Object.entries(params).filter(([, v]) => v !== undefined)) as Record<string, string>),
-    companyId,
     pageNumber: "1",
     sortBy: sortKey,
+    // Siempre explícito (nunca se omite): a diferencia de Activos (default ascendente), pantallas
+    // como Movimientos/Auditoría por default ordenan descendente — omitir el valor cuando es "false"
+    // sería ambiguo con "todavía no se eligió, usa el default de esta columna".
+    sortDescending: String(nextDescending),
   });
-  if (nextDescending) {
-    query.set("sortDescending", "true");
-  } else {
-    query.delete("sortDescending");
+  if (companyId) {
+    query.set("companyId", companyId);
   }
   return `${basePath}?${query.toString()}`;
 }
@@ -42,7 +43,8 @@ export function SortableTableHead({
 }: {
   basePath: string;
   params: SearchParams;
-  companyId: string;
+  /** Omitido en pantallas sin selector de empresa (p. ej. Auditoría). */
+  companyId?: string;
   sortKey: string;
   defaultSortKey: string;
   currentSortBy: string | undefined;

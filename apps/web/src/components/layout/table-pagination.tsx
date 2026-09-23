@@ -2,12 +2,14 @@ import Link from "next/link";
 
 export type SearchParams = Record<string, string | undefined>;
 
-function buildPageHref(basePath: string, params: SearchParams, companyId: string, pageNumber: number) {
+function buildPageHref(basePath: string, params: SearchParams, companyId: string | undefined, pageNumber: number) {
   const query = new URLSearchParams({
     ...(Object.fromEntries(Object.entries(params).filter(([, v]) => v !== undefined)) as Record<string, string>),
-    companyId,
     pageNumber: String(pageNumber),
   });
+  if (companyId) {
+    query.set("companyId", companyId);
+  }
   return `${basePath}?${query.toString()}`;
 }
 
@@ -36,8 +38,8 @@ function PageLink({
 }
 
 /** Paginación server-driven compartida por las páginas de listado que exponen "página siguiente"
- * (hoy Activos y Movimientos) — navega vía query string, sin estado de cliente, igual que el
- * filtrado GET del resto de la página. */
+ * (hoy Activos, Movimientos y Auditoría) — navega vía query string, sin estado de cliente, igual
+ * que el filtrado GET del resto de la página. */
 export function TablePagination({
   basePath,
   params,
@@ -50,7 +52,8 @@ export function TablePagination({
 }: {
   basePath: string;
   params: SearchParams;
-  companyId: string;
+  /** Omitido en pantallas sin selector de empresa (p. ej. Auditoría). */
+  companyId?: string;
   pageNumber: number;
   totalPages: number;
   totalCount: number;

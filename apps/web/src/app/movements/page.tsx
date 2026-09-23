@@ -1,16 +1,18 @@
 import Link from "next/link";
 import { requireAccessToken } from "@/lib/require-session";
-import { ApiError, getMe, getMovements, type MovementType } from "@/lib/api";
+import { ApiError, getMe, getMovements, type MovementSortField, type MovementType } from "@/lib/api";
 import { AppHeader } from "@/components/app-header";
 import { CompanySwitcher } from "@/components/company-switcher";
 import { EmptyCompanyState } from "@/components/empty-company-state";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Table, TableBody, TableCell, TableHeader, TableRow } from "@/components/ui/table";
 import { formatDateTime, resolveTimeZone } from "@/lib/format-date";
 import { MOVEMENT_TYPE_LABELS } from "@/lib/inventory-labels";
-import { MovementTypeFilterField } from "./movement-type-filter-field";
+import { MovementFilterForm } from "./movement-filter-form";
 import { TablePagination, type SearchParams } from "@/components/layout/table-pagination";
+import { SortableTableHead } from "@/components/layout/sortable-table-head";
 
 const PAGE_SIZE = 30;
+const DEFAULT_SORT: MovementSortField = "effectiveAtUtc";
 
 export default async function MovementsPage({ searchParams }: { searchParams: Promise<SearchParams> }) {
   const accessToken = await requireAccessToken();
@@ -26,6 +28,11 @@ export default async function MovementsPage({ searchParams }: { searchParams: Pr
     : me.companies[0].companyId;
   const timeZone = resolveTimeZone(me.companies, companyId);
   const pageNumber = params.pageNumber ? Math.max(1, Number(params.pageNumber)) : 1;
+  // Sin sortBy en la URL, el default histórico del backend es effectiveAtUtc descendente (más
+  // reciente primero) sin importar sortDescending — reflejarlo aquí para que la flecha del
+  // encabezado "Fecha" aparezca activa y apuntando hacia abajo desde la primera carga.
+  const sortBy = (params.sortBy as MovementSortField | undefined) ?? DEFAULT_SORT;
+  const sortDescending = params.sortBy === undefined ? true : params.sortDescending === "true";
 
   let content: React.ReactNode;
   try {
@@ -34,6 +41,8 @@ export default async function MovementsPage({ searchParams }: { searchParams: Pr
       pageNumber,
       pageSize: PAGE_SIZE,
       type: params.type as MovementType | undefined,
+      sortBy,
+      sortDescending,
     });
     const totalPages = Math.max(1, Math.ceil(movements.totalCount / PAGE_SIZE));
 
@@ -42,11 +51,27 @@ export default async function MovementsPage({ searchParams }: { searchParams: Pr
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Folio</TableHead>
-                <TableHead>Activo</TableHead>
-                <TableHead>Tipo</TableHead>
-                <TableHead className="hidden sm:table-cell">Fecha</TableHead>
-                <TableHead className="hidden sm:table-cell">Notas</TableHead>
+                {[
+                  { key: "folioNumber", label: "Folio", className: undefined },
+                  { key: "assetFolio", label: "Activo", className: undefined },
+                  { key: "type", label: "Tipo", className: undefined },
+                  { key: "effectiveAtUtc", label: "Fecha", className: "hidden sm:table-cell" },
+                  { key: "notes", label: "Notas", className: "hidden sm:table-cell" },
+                ].map((column) => (
+                  <SortableTableHead
+                    key={column.key}
+                    basePath="/movements"
+                    params={params}
+                    companyId={companyId}
+                    sortKey={column.key}
+                    defaultSortKey={DEFAULT_SORT}
+                    currentSortBy={params.sortBy}
+                    currentSortDescending={sortDescending}
+                    className={column.className}
+                  >
+                    {column.label}
+                  </SortableTableHead>
+                ))}
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -102,10 +127,7 @@ export default async function MovementsPage({ searchParams }: { searchParams: Pr
         activeCompany={<CompanySwitcher companies={me.companies} currentCompanyId={companyId} />}
       />
     <div className="mx-auto max-w-6xl px-8 pb-8">
-      <form method="GET" className="mb-4 flex flex-wrap items-end gap-3">
-        <input type="hidden" name="companyId" value={companyId} />
-        <MovementTypeFilterField defaultType={params.type ?? ""} />
-      </form>
+      <MovementFilterForm companyId={companyId} defaultType={params.type ?? ""} />
       {content}
     </div>
     </>
