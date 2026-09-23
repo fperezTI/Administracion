@@ -37,6 +37,8 @@
   --color-card: var(--card);
   --color-brand-foreground: var(--brand-foreground);
   --color-brand: var(--brand);
+  --color-surface-brand-foreground: var(--surface-brand-foreground);
+  --color-surface-brand: var(--surface-brand);
   --radius-sm: calc(var(--radius) * 0.6);
   --radius-md: calc(var(--radius) * 0.8);
   --radius-lg: var(--radius);
@@ -71,6 +73,11 @@
  * respaldados por otra señal redundante (el relleno del logomark ya lleva --primary/blanco
  * detrás; el riel de navegación activa ya lleva --accent + negrita) — nunca como único portador
  * de información.
+ *
+ * --surface-brand es el navy fijo (#113456) para superficies decorativas de marca (el panel de
+ * héroe del login): a propósito NO varía entre :root/.dark como sí lo hace --primary (que en
+ * modo oscuro se aclara a #6C9BEA para seguir sirviendo de color interactivo contra un fondo
+ * oscuro) — un panel de marca siempre debe verse navy, sin importar el tema activo.
  */
 :root {
   --background: #f7f9fb;
@@ -102,6 +109,8 @@
   --chart-5: #171b1f;
   --brand: #28b4d2;
   --brand-foreground: #ffffff;
+  --surface-brand: #113456;
+  --surface-brand-foreground: #f7f9fc;
   --radius: 0.5rem;
 }
 
@@ -135,6 +144,8 @@
   --chart-5: #e7e9ec;
   --brand: #28b4d2;
   --brand-foreground: #0b1220;
+  --surface-brand: #113456;
+  --surface-brand-foreground: #f7f9fc;
 }
 
 @layer base {

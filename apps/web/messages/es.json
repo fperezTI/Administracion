@@ -4,8 +4,15 @@
     "shortName": "AssetHub"
   },
   "Home": {
-    "title": "Gestión de Activos de TI e Infraestructura",
-    "subtitle": "Registro, etiquetado y control de activos de TI e infraestructura en todas tus empresas.",
+    "heroHeadlinePlain": "Control total de tus",
+    "heroHeadlineAccent": "activos de TI",
+    "heroSubtitle": "Registro, etiquetado y control de activos de TI e infraestructura en todas tus empresas.",
+    "heroBullet1": "Multiempresa con control de acceso por rol",
+    "heroBullet2": "Trazabilidad completa de movimientos y asignaciones",
+    "heroBullet3": "Auditoría y aprobaciones en cada paso",
+    "welcomeHeading": "Bienvenido",
+    "welcomeSubtitle": "Inicia sesión con tu cuenta de Microsoft para continuar.",
+    "secureFooter": "Protegido por Microsoft Entra ID",
     "systemInfoHeading": "Estado del API",
     "systemInfoLoading": "Consultando el API...",
     "systemInfoError": "No fue posible contactar al API.",

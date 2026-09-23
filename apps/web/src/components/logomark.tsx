@@ -12,10 +12,14 @@ const MARK_SIZES = {
 export function Logomark({
   withWordmark = false,
   size = "sm",
+  inverse = false,
   className,
 }: {
   withWordmark?: boolean;
   size?: keyof typeof MARK_SIZES;
+  /** Para usar sobre --primary (p. ej. el panel de héroe del login): invierte los colores del
+   * cuadro del ícono para que no se funda con el fondo, y fuerza el wordmark a --primary-foreground. */
+  inverse?: boolean;
   className?: string;
 }) {
   const s = MARK_SIZES[size];
@@ -24,14 +28,25 @@ export function Logomark({
       <span
         aria-hidden
         className={cn(
-          "bg-primary text-primary-foreground flex shrink-0 items-center justify-center rounded-md",
+          "flex shrink-0 items-center justify-center rounded-md",
+          inverse
+            ? "bg-surface-brand-foreground text-surface-brand"
+            : "bg-primary text-primary-foreground",
           s.box
         )}
       >
         <Boxes className={cn(s.icon, "stroke-[1.5]")} />
       </span>
       {withWordmark && (
-        <span className={cn("font-heading font-semibold tracking-tight", s.text)}>AssetHub</span>
+        <span
+          className={cn(
+            "font-heading font-semibold tracking-tight",
+            s.text,
+            inverse && "text-surface-brand-foreground"
+          )}
+        >
+          AssetHub
+        </span>
       )}
     </span>
   );
