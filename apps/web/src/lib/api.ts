@@ -268,7 +268,13 @@ export function reprintAssetTag(
   return apiFetch(accessToken, `/api/v1/assets/${assetId}/tag/reprint`, { method: "POST" });
 }
 
-export type AccessoryCandidate = { id: string; internalFolio: string; brand: string; model: string };
+export type AccessoryCandidate = {
+  id: string;
+  internalFolio: string;
+  brand: string;
+  model: string;
+  serialNumber: string | null;
+};
 
 export function getEligibleAccessoryCandidates(
   accessToken: string,

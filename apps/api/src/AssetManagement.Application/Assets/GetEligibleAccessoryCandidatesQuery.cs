@@ -17,7 +17,7 @@ public sealed record GetEligibleAccessoryCandidatesQuery(Guid CompanyId, Guid Pr
     public string PermissionCode => PermissionCatalog.Assets.Read;
 }
 
-public sealed record AccessoryCandidate(Guid Id, string InternalFolio, string Brand, string Model);
+public sealed record AccessoryCandidate(Guid Id, string InternalFolio, string Brand, string Model, string? SerialNumber);
 
 public sealed class GetEligibleAccessoryCandidatesQueryHandler(IApplicationDbContext db, ICurrentCompanyContext currentCompany)
     : IRequestHandler<GetEligibleAccessoryCandidatesQuery, IReadOnlyList<AccessoryCandidate>>
@@ -37,7 +37,7 @@ public sealed class GetEligibleAccessoryCandidatesQueryHandler(IApplicationDbCon
                 && a.AccessoryOfAssetId == null
                 && !db.Assets.Any(other => other.AccessoryOfAssetId == a.Id)
             orderby a.InternalFolio
-            select new AccessoryCandidate(a.Id, a.InternalFolio, a.Brand, a.Model);
+            select new AccessoryCandidate(a.Id, a.InternalFolio, a.Brand, a.Model, a.SerialNumber);
 
         return await candidates.ToListAsync(cancellationToken);
     }
