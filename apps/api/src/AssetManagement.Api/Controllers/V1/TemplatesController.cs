@@ -1,4 +1,5 @@
 using Asp.Versioning;
+using AssetManagement.Application.Common.Models;
 using AssetManagement.Application.Templates;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
@@ -13,10 +14,15 @@ namespace AssetManagement.Api.Controllers.V1;
 public sealed class TemplatesController(ISender mediator) : ControllerBase
 {
     [HttpGet]
-    [ProducesResponseType(typeof(IReadOnlyList<TemplateSummary>), StatusCodes.Status200OK)]
-    public async Task<ActionResult<IReadOnlyList<TemplateSummary>>> GetTemplates(CancellationToken cancellationToken)
+    [ProducesResponseType(typeof(PagedResult<TemplateSummary>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<PagedResult<TemplateSummary>>> GetTemplates(
+        [FromQuery] int pageNumber = 1,
+        [FromQuery] int pageSize = 50,
+        [FromQuery] string? sortBy = null,
+        [FromQuery] bool sortDescending = false,
+        CancellationToken cancellationToken = default)
     {
-        var result = await mediator.Send(new GetTemplatesQuery(), cancellationToken);
+        var result = await mediator.Send(new GetTemplatesQuery(pageNumber, pageSize, sortBy, sortDescending), cancellationToken);
         return Ok(result);
     }
 

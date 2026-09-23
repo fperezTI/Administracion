@@ -3,6 +3,7 @@ using System.Net.Http.Json;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using AssetManagement.Application.Assets;
+using AssetManagement.Application.Common.Models;
 using AssetManagement.Application.Common.Organization;
 using AssetManagement.Application.SparePartsAndConsumables;
 using AssetManagement.Domain.Identity;
@@ -72,16 +73,16 @@ public class SparePartsAndConsumablesTests(ApiWebApplicationFactory factory) : I
             new { warehouseOrgUnitId = warehouseId, direction = "In", reason = "Purchase", quantity = 10, referenceMaintenanceOrderId = (Guid?)null, notes = "Compra inicial" });
         inResponse.StatusCode.Should().Be(HttpStatusCode.Created);
 
-        (await client.GetFromJsonAsync<List<ConsumableSummary>>($"/api/v1/consumables?companyId={companyId}", JsonOptions))!
-            .Single(c => c.Id == consumableId).CurrentStock.Should().Be(10);
+        (await client.GetFromJsonAsync<PagedResult<ConsumableSummary>>($"/api/v1/consumables?companyId={companyId}", JsonOptions))!
+            .Items.Single(c => c.Id == consumableId).CurrentStock.Should().Be(10);
 
         var outResponse = await client.PostAsJsonAsync(
             $"/api/v1/consumables/{consumableId}/movements",
             new { warehouseOrgUnitId = warehouseId, direction = "Out", reason = "Consumption", quantity = 3, referenceMaintenanceOrderId = (Guid?)null, notes = (string?)null });
         outResponse.StatusCode.Should().Be(HttpStatusCode.Created);
 
-        (await client.GetFromJsonAsync<List<ConsumableSummary>>($"/api/v1/consumables?companyId={companyId}", JsonOptions))!
-            .Single(c => c.Id == consumableId).CurrentStock.Should().Be(7);
+        (await client.GetFromJsonAsync<PagedResult<ConsumableSummary>>($"/api/v1/consumables?companyId={companyId}", JsonOptions))!
+            .Items.Single(c => c.Id == consumableId).CurrentStock.Should().Be(7);
 
         var movements = await client.GetFromJsonAsync<List<ConsumableStockMovementSummary>>($"/api/v1/consumables/{consumableId}/movements", JsonOptions);
         movements.Should().HaveCount(2);
@@ -106,8 +107,8 @@ public class SparePartsAndConsumablesTests(ApiWebApplicationFactory factory) : I
 
         overDrawResponse.StatusCode.Should().Be(HttpStatusCode.UnprocessableEntity);
 
-        (await client.GetFromJsonAsync<List<ConsumableSummary>>($"/api/v1/consumables?companyId={companyId}", JsonOptions))!
-            .Single(c => c.Id == consumableId).CurrentStock.Should().Be(2);
+        (await client.GetFromJsonAsync<PagedResult<ConsumableSummary>>($"/api/v1/consumables?companyId={companyId}", JsonOptions))!
+            .Items.Single(c => c.Id == consumableId).CurrentStock.Should().Be(2);
     }
 
     private async Task<Guid> CreateAssetAsync(HttpClient client, Guid companyId)

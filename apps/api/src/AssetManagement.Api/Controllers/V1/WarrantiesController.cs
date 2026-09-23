@@ -1,4 +1,5 @@
 using Asp.Versioning;
+using AssetManagement.Application.Common.Models;
 using AssetManagement.Application.Maintenance;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
@@ -13,11 +14,18 @@ namespace AssetManagement.Api.Controllers.V1;
 public sealed class WarrantiesController(ISender mediator) : ControllerBase
 {
     [HttpGet]
-    [ProducesResponseType(typeof(IReadOnlyList<WarrantySummary>), StatusCodes.Status200OK)]
-    public async Task<ActionResult<IReadOnlyList<WarrantySummary>>> GetWarranties(
-        [FromQuery] Guid companyId, [FromQuery] Guid? assetId, CancellationToken cancellationToken)
+    [ProducesResponseType(typeof(PagedResult<WarrantySummary>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<PagedResult<WarrantySummary>>> GetWarranties(
+        [FromQuery] Guid companyId,
+        [FromQuery] Guid? assetId,
+        [FromQuery] int pageNumber = 1,
+        [FromQuery] int pageSize = 50,
+        [FromQuery] string? sortBy = null,
+        [FromQuery] bool sortDescending = false,
+        CancellationToken cancellationToken = default)
     {
-        var result = await mediator.Send(new GetWarrantiesQuery(companyId, assetId), cancellationToken);
+        var result = await mediator.Send(
+            new GetWarrantiesQuery(companyId, assetId, pageNumber, pageSize, sortBy, sortDescending), cancellationToken);
         return Ok(result);
     }
 

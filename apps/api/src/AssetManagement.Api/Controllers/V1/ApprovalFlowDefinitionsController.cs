@@ -1,5 +1,6 @@
 using Asp.Versioning;
 using AssetManagement.Application.Approvals;
+using AssetManagement.Application.Common.Models;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -13,10 +14,16 @@ namespace AssetManagement.Api.Controllers.V1;
 public sealed class ApprovalFlowDefinitionsController(ISender mediator) : ControllerBase
 {
     [HttpGet]
-    [ProducesResponseType(typeof(IReadOnlyList<ApprovalFlowDefinitionSummary>), StatusCodes.Status200OK)]
-    public async Task<ActionResult<IReadOnlyList<ApprovalFlowDefinitionSummary>>> GetFlows(CancellationToken cancellationToken)
+    [ProducesResponseType(typeof(PagedResult<ApprovalFlowDefinitionSummary>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<PagedResult<ApprovalFlowDefinitionSummary>>> GetFlows(
+        [FromQuery] int pageNumber = 1,
+        [FromQuery] int pageSize = 50,
+        [FromQuery] string? sortBy = null,
+        [FromQuery] bool sortDescending = false,
+        CancellationToken cancellationToken = default)
     {
-        var result = await mediator.Send(new GetApprovalFlowDefinitionsQuery(), cancellationToken);
+        var result = await mediator.Send(
+            new GetApprovalFlowDefinitionsQuery(pageNumber, pageSize, sortBy, sortDescending), cancellationToken);
         return Ok(result);
     }
 

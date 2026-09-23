@@ -1,4 +1,5 @@
 using Asp.Versioning;
+using AssetManagement.Application.Common.Models;
 using AssetManagement.Application.SparePartsAndConsumables;
 using AssetManagement.Domain.SparePartsAndConsumables;
 using MediatR;
@@ -14,11 +15,18 @@ namespace AssetManagement.Api.Controllers.V1;
 public sealed class SparePartsController(ISender mediator) : ControllerBase
 {
     [HttpGet]
-    [ProducesResponseType(typeof(IReadOnlyList<SparePartSummary>), StatusCodes.Status200OK)]
-    public async Task<ActionResult<IReadOnlyList<SparePartSummary>>> GetSpareParts(
-        [FromQuery] Guid companyId, [FromQuery] SparePartStatus? status, CancellationToken cancellationToken)
+    [ProducesResponseType(typeof(PagedResult<SparePartSummary>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<PagedResult<SparePartSummary>>> GetSpareParts(
+        [FromQuery] Guid companyId,
+        [FromQuery] SparePartStatus? status,
+        [FromQuery] int pageNumber = 1,
+        [FromQuery] int pageSize = 50,
+        [FromQuery] string? sortBy = null,
+        [FromQuery] bool sortDescending = false,
+        CancellationToken cancellationToken = default)
     {
-        var result = await mediator.Send(new GetSparePartsQuery(companyId, status), cancellationToken);
+        var result = await mediator.Send(
+            new GetSparePartsQuery(companyId, status, pageNumber, pageSize, sortBy, sortDescending), cancellationToken);
         return Ok(result);
     }
 

@@ -1041,8 +1041,18 @@ export type MyPendingApprovalSummary = {
   createdAtUtc: string;
 };
 
-export function getApprovalFlows(accessToken: string): Promise<ApprovalFlowDefinitionSummary[]> {
-  return apiFetch<ApprovalFlowDefinitionSummary[]>(accessToken, "/api/v1/approval-flows");
+export type ApprovalFlowSortField = "key" | "companyId" | "mode" | "requiredApprovals" | "isActive";
+
+export function getApprovalFlows(
+  accessToken: string,
+  params?: { pageNumber?: number; pageSize?: number; sortBy?: ApprovalFlowSortField; sortDescending?: boolean },
+): Promise<PagedResult<ApprovalFlowDefinitionSummary>> {
+  const query = new URLSearchParams();
+  query.set("pageNumber", String(params?.pageNumber ?? 1));
+  query.set("pageSize", String(params?.pageSize ?? 50));
+  if (params?.sortBy) query.set("sortBy", params.sortBy);
+  if (params?.sortDescending) query.set("sortDescending", "true");
+  return apiFetch<PagedResult<ApprovalFlowDefinitionSummary>>(accessToken, `/api/v1/approval-flows?${query.toString()}`);
 }
 
 export function createApprovalFlow(
@@ -1107,8 +1117,18 @@ export type TemplateVersionInfo = { versionNumber: number; content: string; crea
 
 export type TemplateDetail = { id: string; key: string; name: string; isActive: boolean; versions: TemplateVersionInfo[] };
 
-export function getTemplates(accessToken: string): Promise<TemplateSummary[]> {
-  return apiFetch<TemplateSummary[]>(accessToken, "/api/v1/templates");
+export type TemplateSortField = "name" | "key" | "latestVersionNumber" | "isActive";
+
+export function getTemplates(
+  accessToken: string,
+  params?: { pageNumber?: number; pageSize?: number; sortBy?: TemplateSortField; sortDescending?: boolean },
+): Promise<PagedResult<TemplateSummary>> {
+  const query = new URLSearchParams();
+  query.set("pageNumber", String(params?.pageNumber ?? 1));
+  query.set("pageSize", String(params?.pageSize ?? 50));
+  if (params?.sortBy) query.set("sortBy", params.sortBy);
+  if (params?.sortDescending) query.set("sortDescending", "true");
+  return apiFetch<PagedResult<TemplateSummary>>(accessToken, `/api/v1/templates?${query.toString()}`);
 }
 
 export function getTemplateById(accessToken: string, templateId: string): Promise<TemplateDetail> {
@@ -1330,8 +1350,21 @@ export type MaintenanceChecklistDefinitionDetail = {
   versions: MaintenanceChecklistVersionInfo[];
 };
 
-export function getMaintenanceChecklists(accessToken: string): Promise<MaintenanceChecklistDefinitionSummary[]> {
-  return apiFetch<MaintenanceChecklistDefinitionSummary[]>(accessToken, "/api/v1/maintenance-checklists");
+export type MaintenanceChecklistSortField = "name" | "key" | "latestVersionNumber" | "isActive";
+
+export function getMaintenanceChecklists(
+  accessToken: string,
+  params?: { pageNumber?: number; pageSize?: number; sortBy?: MaintenanceChecklistSortField; sortDescending?: boolean },
+): Promise<PagedResult<MaintenanceChecklistDefinitionSummary>> {
+  const query = new URLSearchParams();
+  query.set("pageNumber", String(params?.pageNumber ?? 1));
+  query.set("pageSize", String(params?.pageSize ?? 50));
+  if (params?.sortBy) query.set("sortBy", params.sortBy);
+  if (params?.sortDescending) query.set("sortDescending", "true");
+  return apiFetch<PagedResult<MaintenanceChecklistDefinitionSummary>>(
+    accessToken,
+    `/api/v1/maintenance-checklists?${query.toString()}`,
+  );
 }
 
 export function getMaintenanceChecklistById(
@@ -1383,10 +1416,26 @@ export type WarrantySummary = {
   terms: string | null;
 };
 
-export function getWarranties(accessToken: string, params: { companyId: string; assetId?: string }): Promise<WarrantySummary[]> {
+export type WarrantySortField = "endDate" | "assetFolio" | "type" | "provider";
+
+export function getWarranties(
+  accessToken: string,
+  params: {
+    companyId: string;
+    assetId?: string;
+    pageNumber?: number;
+    pageSize?: number;
+    sortBy?: WarrantySortField;
+    sortDescending?: boolean;
+  },
+): Promise<PagedResult<WarrantySummary>> {
   const query = new URLSearchParams({ companyId: params.companyId });
   if (params.assetId) query.set("assetId", params.assetId);
-  return apiFetch<WarrantySummary[]>(accessToken, `/api/v1/warranties?${query.toString()}`);
+  query.set("pageNumber", String(params.pageNumber ?? 1));
+  query.set("pageSize", String(params.pageSize ?? 50));
+  if (params.sortBy) query.set("sortBy", params.sortBy);
+  if (params.sortDescending) query.set("sortDescending", "true");
+  return apiFetch<PagedResult<WarrantySummary>>(accessToken, `/api/v1/warranties?${query.toString()}`);
 }
 
 export function createWarranty(
@@ -1438,13 +1487,26 @@ export type SparePartDetail = {
   installations: SparePartInstallationInfo[];
 };
 
+export type SparePartSortField = "name" | "serialNumber" | "status";
+
 export function getSpareParts(
   accessToken: string,
-  params: { companyId: string; status?: SparePartStatus },
-): Promise<SparePartSummary[]> {
+  params: {
+    companyId: string;
+    status?: SparePartStatus;
+    pageNumber?: number;
+    pageSize?: number;
+    sortBy?: SparePartSortField;
+    sortDescending?: boolean;
+  },
+): Promise<PagedResult<SparePartSummary>> {
   const query = new URLSearchParams({ companyId: params.companyId });
   if (params.status) query.set("status", params.status);
-  return apiFetch<SparePartSummary[]>(accessToken, `/api/v1/spare-parts?${query.toString()}`);
+  query.set("pageNumber", String(params.pageNumber ?? 1));
+  query.set("pageSize", String(params.pageSize ?? 50));
+  if (params.sortBy) query.set("sortBy", params.sortBy);
+  if (params.sortDescending) query.set("sortDescending", "true");
+  return apiFetch<PagedResult<SparePartSummary>>(accessToken, `/api/v1/spare-parts?${query.toString()}`);
 }
 
 export function getSparePartById(accessToken: string, sparePartId: string): Promise<SparePartDetail> {
@@ -1502,8 +1564,19 @@ export type ConsumableStockMovementSummary = {
   occurredAtUtc: string;
 };
 
-export function getConsumables(accessToken: string, companyId: string): Promise<ConsumableSummary[]> {
-  return apiFetch<ConsumableSummary[]>(accessToken, `/api/v1/consumables?companyId=${companyId}`);
+export type ConsumableSortField = "name" | "sku" | "currentStock" | "minimumStock";
+
+export function getConsumables(
+  accessToken: string,
+  companyId: string,
+  params?: { pageNumber?: number; pageSize?: number; sortBy?: ConsumableSortField; sortDescending?: boolean },
+): Promise<PagedResult<ConsumableSummary>> {
+  const query = new URLSearchParams({ companyId });
+  query.set("pageNumber", String(params?.pageNumber ?? 1));
+  query.set("pageSize", String(params?.pageSize ?? 50));
+  if (params?.sortBy) query.set("sortBy", params.sortBy);
+  if (params?.sortDescending) query.set("sortDescending", "true");
+  return apiFetch<PagedResult<ConsumableSummary>>(accessToken, `/api/v1/consumables?${query.toString()}`);
 }
 
 export function getConsumableStockMovements(accessToken: string, consumableId: string): Promise<ConsumableStockMovementSummary[]> {

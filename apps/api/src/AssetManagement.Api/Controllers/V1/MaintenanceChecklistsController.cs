@@ -1,4 +1,5 @@
 using Asp.Versioning;
+using AssetManagement.Application.Common.Models;
 using AssetManagement.Application.Maintenance;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
@@ -13,10 +14,16 @@ namespace AssetManagement.Api.Controllers.V1;
 public sealed class MaintenanceChecklistsController(ISender mediator) : ControllerBase
 {
     [HttpGet]
-    [ProducesResponseType(typeof(IReadOnlyList<MaintenanceChecklistDefinitionSummary>), StatusCodes.Status200OK)]
-    public async Task<ActionResult<IReadOnlyList<MaintenanceChecklistDefinitionSummary>>> GetChecklists(CancellationToken cancellationToken)
+    [ProducesResponseType(typeof(PagedResult<MaintenanceChecklistDefinitionSummary>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<PagedResult<MaintenanceChecklistDefinitionSummary>>> GetChecklists(
+        [FromQuery] int pageNumber = 1,
+        [FromQuery] int pageSize = 50,
+        [FromQuery] string? sortBy = null,
+        [FromQuery] bool sortDescending = false,
+        CancellationToken cancellationToken = default)
     {
-        var result = await mediator.Send(new GetMaintenanceChecklistDefinitionsQuery(), cancellationToken);
+        var result = await mediator.Send(
+            new GetMaintenanceChecklistDefinitionsQuery(pageNumber, pageSize, sortBy, sortDescending), cancellationToken);
         return Ok(result);
     }
 

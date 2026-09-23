@@ -35,11 +35,11 @@ export default async function ConsumableDetailPage({
   const timeZone = resolveTimeZone(me.companies, companyId);
 
   const [consumables, movements, orgUnits] = await Promise.all([
-    getConsumables(accessToken, companyId),
+    getConsumables(accessToken, companyId, { pageSize: 200 }),
     getConsumableStockMovements(accessToken, id),
     getOrgUnitTree(accessToken, companyId),
   ]);
-  const consumable = consumables.find((c) => c.id === id);
+  const consumable = consumables.items.find((c) => c.id === id);
   if (!consumable) {
     notFound();
   }

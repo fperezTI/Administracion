@@ -28,8 +28,8 @@ export default async function WarrantyDetailPage({
     ? searchParamsValue.companyId
     : me.companies[0].companyId;
 
-  const warranties = await getWarranties(accessToken, { companyId });
-  const warranty = warranties.find((w) => w.id === id);
+  const warranties = await getWarranties(accessToken, { companyId, pageSize: 200 });
+  const warranty = warranties.items.find((w) => w.id === id);
   if (!warranty) {
     notFound();
   }

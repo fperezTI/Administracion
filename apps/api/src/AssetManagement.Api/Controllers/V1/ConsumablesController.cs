@@ -1,4 +1,5 @@
 using Asp.Versioning;
+using AssetManagement.Application.Common.Models;
 using AssetManagement.Application.SparePartsAndConsumables;
 using AssetManagement.Domain.SparePartsAndConsumables;
 using MediatR;
@@ -14,11 +15,17 @@ namespace AssetManagement.Api.Controllers.V1;
 public sealed class ConsumablesController(ISender mediator) : ControllerBase
 {
     [HttpGet]
-    [ProducesResponseType(typeof(IReadOnlyList<ConsumableSummary>), StatusCodes.Status200OK)]
-    public async Task<ActionResult<IReadOnlyList<ConsumableSummary>>> GetConsumables(
-        [FromQuery] Guid companyId, CancellationToken cancellationToken)
+    [ProducesResponseType(typeof(PagedResult<ConsumableSummary>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<PagedResult<ConsumableSummary>>> GetConsumables(
+        [FromQuery] Guid companyId,
+        [FromQuery] int pageNumber = 1,
+        [FromQuery] int pageSize = 50,
+        [FromQuery] string? sortBy = null,
+        [FromQuery] bool sortDescending = false,
+        CancellationToken cancellationToken = default)
     {
-        var result = await mediator.Send(new GetConsumablesQuery(companyId), cancellationToken);
+        var result = await mediator.Send(
+            new GetConsumablesQuery(companyId, pageNumber, pageSize, sortBy, sortDescending), cancellationToken);
         return Ok(result);
     }
 

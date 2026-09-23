@@ -30,11 +30,11 @@ export default async function NewMaintenanceOrderPage({
     const [inWarehouse, assigned, checklists] = await Promise.all([
       getAssets(accessToken, { companyId, status: "InWarehouse", pageSize: 200 }),
       getAssets(accessToken, { companyId, status: "Assigned", pageSize: 200 }),
-      getMaintenanceChecklists(accessToken),
+      getMaintenanceChecklists(accessToken, { pageSize: 200 }),
     ]);
 
     const eligibleAssets = [...inWarehouse.items, ...assigned.items];
-    const activeChecklists = checklists.filter((c) => c.isActive);
+    const activeChecklists = checklists.items.filter((c) => c.isActive);
 
     content = (
       <OpenMaintenanceOrderForm assets={eligibleAssets} checklists={activeChecklists} defaultAssetId={params.assetId ?? null} />

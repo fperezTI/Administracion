@@ -1,5 +1,6 @@
 using AssetManagement.Application.Common.Exceptions;
 using AssetManagement.Application.Common.Interfaces;
+using AssetManagement.Application.Common.Models;
 using AssetManagement.Application.Common.Security;
 using AssetManagement.Domain.SparePartsAndConsumables;
 using MediatR;
@@ -7,8 +8,15 @@ using Microsoft.EntityFrameworkCore;
 
 namespace AssetManagement.Application.SparePartsAndConsumables;
 
-public sealed record GetSparePartsQuery(Guid CompanyId, SparePartStatus? Status = null)
-    : IRequest<IReadOnlyList<SparePartSummary>>, IRequiresPermission
+public sealed record GetSparePartsQuery(
+    Guid CompanyId,
+    SparePartStatus? Status = null,
+    int PageNumber = 1,
+    int PageSize = 50,
+    /// <summary>name (default) | serialNumber | status</summary>
+    string? SortBy = null,
+    bool SortDescending = false)
+    : IRequest<PagedResult<SparePartSummary>>, IRequiresPermission
 {
     public string PermissionCode => PermissionCatalog.SpareParts.Read;
 }
@@ -18,9 +26,9 @@ public sealed record SparePartSummary(
     Guid? CurrentWarehouseOrgUnitId);
 
 public sealed class GetSparePartsQueryHandler(IApplicationDbContext db, ICurrentCompanyContext currentCompany)
-    : IRequestHandler<GetSparePartsQuery, IReadOnlyList<SparePartSummary>>
+    : IRequestHandler<GetSparePartsQuery, PagedResult<SparePartSummary>>
 {
-    public async Task<IReadOnlyList<SparePartSummary>> Handle(GetSparePartsQuery request, CancellationToken cancellationToken)
+    public Task<PagedResult<SparePartSummary>> Handle(GetSparePartsQuery request, CancellationToken cancellationToken)
     {
         if (!currentCompany.AccessibleCompanyIds.Contains(request.CompanyId))
         {
@@ -34,8 +42,18 @@ public sealed class GetSparePartsQueryHandler(IApplicationDbContext db, ICurrent
             query = query.Where(p => p.Status == status);
         }
 
-        return await query.OrderBy(p => p.Name)
-            .Select(p => new SparePartSummary(p.Id, p.Name, p.PartNumber, p.SerialNumber, p.Status, p.CurrentAssetId, p.CurrentWarehouseOrgUnitId))
-            .ToListAsync(cancellationToken);
+        var descending = request.SortDescending;
+        var ordered = request.SortBy switch
+        {
+            "serialNumber" => descending ? query.OrderByDescending(p => p.SerialNumber) : query.OrderBy(p => p.SerialNumber),
+            "status" => descending ? query.OrderByDescending(p => p.Status) : query.OrderBy(p => p.Status),
+            "name" => descending ? query.OrderByDescending(p => p.Name) : query.OrderBy(p => p.Name),
+            _ => query.OrderBy(p => p.Name),
+        };
+
+        var projected = ordered.Select(p => new SparePartSummary(
+            p.Id, p.Name, p.PartNumber, p.SerialNumber, p.Status, p.CurrentAssetId, p.CurrentWarehouseOrgUnitId));
+
+        return PagedResult<SparePartSummary>.CreateAsync(projected, request.PageNumber, request.PageSize, cancellationToken);
     }
 }
