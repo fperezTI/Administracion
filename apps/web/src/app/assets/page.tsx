@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { FileSpreadsheet, FileText, Plus } from "lucide-react";
 import { requireAccessToken } from "@/lib/require-session";
 import { ApiError, getAssetCategories, getAssets, getAssetsExportUrl, getMe, type AssetStatus } from "@/lib/api";
 import { AppHeader } from "@/components/app-header";
@@ -149,6 +150,7 @@ export default async function AssetsPage({ searchParams }: { searchParams: Promi
             />
           }
         >
+          <FileSpreadsheet data-icon="inline-start" />
           Exportar Excel
         </Button>
         <Button
@@ -165,9 +167,13 @@ export default async function AssetsPage({ searchParams }: { searchParams: Promi
             />
           }
         >
+          <FileText data-icon="inline-start" />
           Exportar PDF
         </Button>
-        <Button render={<Link href="/assets/new" />}>Nuevo activo</Button>
+        <Button render={<Link href="/assets/new" />}>
+          <Plus data-icon="inline-start" />
+          Nuevo activo
+        </Button>
       </div>
       {content}
     </div>
