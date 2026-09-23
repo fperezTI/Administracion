@@ -80,6 +80,7 @@ export type AssetCategoryDetail = {
 export type AssetSummary = {
   id: string;
   internalFolio: string;
+  description: string | null;
   assetCategoryId: string;
   brand: string;
   model: string;

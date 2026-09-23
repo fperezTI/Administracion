@@ -23,6 +23,7 @@ public sealed record GetAssetsQuery(
 public sealed record AssetSummary(
     Guid Id,
     string InternalFolio,
+    string? Description,
     Guid AssetCategoryId,
     string Brand,
     string Model,
@@ -64,8 +65,8 @@ public sealed class GetAssetsQueryHandler(IApplicationDbContext db, ICurrentComp
         }
 
         var projected = query.OrderBy(a => a.InternalFolio).Select(a => new AssetSummary(
-            a.Id, a.InternalFolio, a.AssetCategoryId, a.Brand, a.Model, a.SerialNumber, a.Status, a.PhysicalCondition,
-            a.AccessoryOfAssetId));
+            a.Id, a.InternalFolio, a.Description, a.AssetCategoryId, a.Brand, a.Model, a.SerialNumber, a.Status,
+            a.PhysicalCondition, a.AccessoryOfAssetId));
 
         return PagedResult<AssetSummary>.CreateAsync(projected, request.PageNumber, request.PageSize, cancellationToken);
     }

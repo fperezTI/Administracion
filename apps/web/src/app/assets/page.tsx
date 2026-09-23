@@ -7,11 +7,9 @@ import { CompanySwitcher } from "@/components/company-switcher";
 import { EmptyCompanyState } from "@/components/empty-company-state";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ASSET_STATUS_LABELS, PHYSICAL_CONDITION_LABELS, assetStatusBadgeVariant } from "@/lib/asset-labels";
-import { AssetFilterFields } from "./asset-filter-fields";
+import { AssetFilterForm } from "./asset-filter-form";
 import { TablePagination, type SearchParams } from "@/components/layout/table-pagination";
 
 const PAGE_SIZE = 20;
@@ -49,37 +47,30 @@ export default async function AssetsPage({ searchParams }: { searchParams: Promi
 
     content = (
       <>
-        <form method="GET" className="mb-4 flex flex-wrap items-end gap-3">
-          <input type="hidden" name="companyId" value={companyId} />
-          <AssetFilterFields
-            categories={categories.items}
-            defaultCategoryId={params.assetCategoryId ?? ""}
-            defaultStatus={params.status ?? ""}
-          />
-          <div className="flex flex-col gap-1">
-            <Label htmlFor="search">Buscar</Label>
-            <Input id="search" name="search" defaultValue={params.search ?? ""} placeholder="Folio, marca, modelo, serie" />
-          </div>
-          <Button type="submit" variant="outline">
-            Filtrar
-          </Button>
-        </form>
+        <AssetFilterForm
+          companyId={companyId}
+          categories={categories.items}
+          defaultCategoryId={params.assetCategoryId ?? ""}
+          defaultStatus={params.status ?? ""}
+          defaultSearch={params.search ?? ""}
+        />
 
           <Table>
             <TableHeader>
               <TableRow>
                 <TableHead>Folio</TableHead>
+                <TableHead className="hidden sm:table-cell">Descripción</TableHead>
                 <TableHead className="hidden sm:table-cell">Categoría</TableHead>
                 <TableHead>Marca / Modelo</TableHead>
                 <TableHead className="hidden sm:table-cell">Serie</TableHead>
-                <TableHead>Estado</TableHead>
                 <TableHead className="hidden sm:table-cell">Condición</TableHead>
+                <TableHead>Estado</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {assetsResult.items.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-muted-foreground py-8 text-center">
+                  <TableCell colSpan={7} className="text-muted-foreground py-8 text-center">
                     No se encontraron activos con estos filtros.
                   </TableCell>
                 </TableRow>
@@ -91,15 +82,16 @@ export default async function AssetsPage({ searchParams }: { searchParams: Promi
                         {asset.internalFolio}
                       </Link>
                     </TableCell>
+                    <TableCell className="hidden max-w-64 truncate sm:table-cell">{asset.description ?? "—"}</TableCell>
                     <TableCell className="hidden sm:table-cell">{categoryNameById.get(asset.assetCategoryId) ?? "—"}</TableCell>
                     <TableCell>
                       {asset.brand} {asset.model}
                     </TableCell>
                     <TableCell className="hidden sm:table-cell">{asset.serialNumber ?? "—"}</TableCell>
+                    <TableCell className="hidden sm:table-cell">{PHYSICAL_CONDITION_LABELS[asset.physicalCondition]}</TableCell>
                     <TableCell>
                       <Badge variant={assetStatusBadgeVariant(asset.status)}>{ASSET_STATUS_LABELS[asset.status]}</Badge>
                     </TableCell>
-                    <TableCell className="hidden sm:table-cell">{PHYSICAL_CONDITION_LABELS[asset.physicalCondition]}</TableCell>
                   </TableRow>
                 ))
               )}
