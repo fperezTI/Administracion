@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import {
   Archive,
   ArrowLeftRight,
+  ChevronDown,
   MapPin,
   Pencil,
   Plus,
@@ -21,8 +22,17 @@ import { AppHeader } from "@/components/app-header";
 import { Breadcrumbs } from "@/components/layout/breadcrumbs";
 import { DocumentsPanel } from "@/components/documents-panel";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import {
   ASSET_STATUS_LABELS,
@@ -75,6 +85,21 @@ export default async function AssetDetailPage({ params }: { params: Promise<{ id
     revalidatePath(`/assets/${id}`);
   }
 
+  // Antes eran ~11 botones sueltos en una sola fila que se desbordaban en pantallas angostas (el
+  // contenedor de esta página es max-w-3xl). Se agrupan por categoría en un menú "Acciones" —
+  // "Editar" queda como botón directo por ser la acción más frecuente. Cada grupo solo se muestra
+  // si al menos una de sus acciones aplica al estado actual del activo.
+  const canLinkAccessory = asset.accessoryOfAssetId === null;
+  const canAssign = asset.status === "InWarehouse";
+  const hasActiveAssignment = activeAssignment !== null;
+  const canTransfer = asset.status === "InWarehouse";
+  const canOpenMaintenance = asset.status === "InWarehouse" || asset.status === "Assigned";
+  const canDecommission = canRequestDecommission(asset.status);
+  const canDispose = asset.status === "Decommissioned";
+  const showAssignmentGroup = canAssign || hasActiveAssignment;
+  const showMovementGroup = canTransfer || canOpenMaintenance;
+  const showDecommissionGroup = canDecommission || canDispose;
+
   return (
     <>
       <AppHeader title="Activos" />
@@ -89,75 +114,106 @@ export default async function AssetDetailPage({ params }: { params: Promise<{ id
         </div>
         <div className="flex items-center gap-2">
           <Badge variant={assetStatusBadgeVariant(asset.status)}>{ASSET_STATUS_LABELS[asset.status]}</Badge>
-          <Button variant="outline" render={<Link href={`/assets/${id}/label`} />}>
-            <QrCode data-icon="inline-start" />
-            Ver etiqueta
-          </Button>
           <Button variant="outline" render={<Link href={`/assets/${id}/edit`} />}>
             <Pencil data-icon="inline-start" />
             Editar
           </Button>
-          <Button variant="outline" render={<Link href={`/assets/${id}/relocate`} />}>
-            <MapPin data-icon="inline-start" />
-            Reubicar
-          </Button>
-          {asset.accessoryOfAssetId === null && (
-            <Button variant="outline" render={<Link href={`/assets/${id}/link-accessory`} />}>
-              <Plus data-icon="inline-start" />
-              Vincular accesorio
-            </Button>
-          )}
-          {asset.status === "InWarehouse" && (
-            <Button
-              variant="outline"
-              render={<Link href={`/assignments/new?companyId=${asset.companyId}&assetId=${id}`} />}
-            >
-              <UserPlus data-icon="inline-start" />
-              Asignar
-            </Button>
-          )}
-          {activeAssignment && (
-            <>
-              <Button variant="outline" render={<Link href={`/assets/${id}/reassign`} />}>
-                <Repeat data-icon="inline-start" />
-                Reasignar
-              </Button>
-              <Button
-                variant="outline"
-                render={<Link href={`/assignments/${activeAssignment.id}/resguardo`} />}
-              >
-                <Printer data-icon="inline-start" />
-                Imprimir resguardo
-              </Button>
-            </>
-          )}
-          {asset.status === "InWarehouse" && (
-            <Button variant="outline" render={<Link href={`/transfers/new?companyId=${asset.companyId}`} />}>
-              <ArrowLeftRight data-icon="inline-start" />
-              Solicitar transferencia
-            </Button>
-          )}
-          {(asset.status === "InWarehouse" || asset.status === "Assigned") && (
-            <Button
-              variant="outline"
-              render={<Link href={`/maintenance-orders/new?companyId=${asset.companyId}&assetId=${id}`} />}
-            >
-              <Wrench data-icon="inline-start" />
-              Abrir orden de mantenimiento
-            </Button>
-          )}
-          {canRequestDecommission(asset.status) && (
-            <Button variant="outline" render={<Link href={`/assets/${id}/decommission`} />}>
-              <Archive data-icon="inline-start" />
-              Solicitar baja
-            </Button>
-          )}
-          {asset.status === "Decommissioned" && (
-            <Button variant="outline" render={<Link href={`/assets/${id}/dispose`} />}>
-              <Trash2 data-icon="inline-start" />
-              Solicitar disposición
-            </Button>
-          )}
+          <DropdownMenu>
+            <DropdownMenuTrigger className={buttonVariants({ variant: "outline" })}>
+              Acciones
+              <ChevronDown className="size-4 stroke-[1.5]" />
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-64">
+              <DropdownMenuItem render={<Link href={`/assets/${id}/label`} />}>
+                <QrCode />
+                Ver etiqueta
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuGroup>
+                <DropdownMenuLabel>Ubicación y accesorios</DropdownMenuLabel>
+                <DropdownMenuItem render={<Link href={`/assets/${id}/relocate`} />}>
+                  <MapPin />
+                  Reubicar
+                </DropdownMenuItem>
+                {canLinkAccessory && (
+                  <DropdownMenuItem render={<Link href={`/assets/${id}/link-accessory`} />}>
+                    <Plus />
+                    Vincular accesorio
+                  </DropdownMenuItem>
+                )}
+              </DropdownMenuGroup>
+              {showAssignmentGroup && (
+                <>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuGroup>
+                    <DropdownMenuLabel>Asignación</DropdownMenuLabel>
+                    {canAssign && (
+                      <DropdownMenuItem
+                        render={<Link href={`/assignments/new?companyId=${asset.companyId}&assetId=${id}`} />}
+                      >
+                        <UserPlus />
+                        Asignar
+                      </DropdownMenuItem>
+                    )}
+                    {hasActiveAssignment && (
+                      <>
+                        <DropdownMenuItem render={<Link href={`/assets/${id}/reassign`} />}>
+                          <Repeat />
+                          Reasignar
+                        </DropdownMenuItem>
+                        <DropdownMenuItem render={<Link href={`/assignments/${activeAssignment.id}/resguardo`} />}>
+                          <Printer />
+                          Imprimir resguardo
+                        </DropdownMenuItem>
+                      </>
+                    )}
+                  </DropdownMenuGroup>
+                </>
+              )}
+              {showMovementGroup && (
+                <>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuGroup>
+                    <DropdownMenuLabel>Movimientos y mantenimiento</DropdownMenuLabel>
+                    {canTransfer && (
+                      <DropdownMenuItem render={<Link href={`/transfers/new?companyId=${asset.companyId}`} />}>
+                        <ArrowLeftRight />
+                        Solicitar transferencia
+                      </DropdownMenuItem>
+                    )}
+                    {canOpenMaintenance && (
+                      <DropdownMenuItem
+                        render={<Link href={`/maintenance-orders/new?companyId=${asset.companyId}&assetId=${id}`} />}
+                      >
+                        <Wrench />
+                        Abrir orden de mantenimiento
+                      </DropdownMenuItem>
+                    )}
+                  </DropdownMenuGroup>
+                </>
+              )}
+              {showDecommissionGroup && (
+                <>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuGroup>
+                    <DropdownMenuLabel>Baja</DropdownMenuLabel>
+                    {canDecommission && (
+                      <DropdownMenuItem variant="destructive" render={<Link href={`/assets/${id}/decommission`} />}>
+                        <Archive />
+                        Solicitar baja
+                      </DropdownMenuItem>
+                    )}
+                    {canDispose && (
+                      <DropdownMenuItem variant="destructive" render={<Link href={`/assets/${id}/dispose`} />}>
+                        <Trash2 />
+                        Solicitar disposición
+                      </DropdownMenuItem>
+                    )}
+                  </DropdownMenuGroup>
+                </>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
 
