@@ -14,8 +14,30 @@ namespace AssetManagement.IntegrationTests;
 /// end. Covers two of the mandatory E2E scenarios from the pedido (§35): "validación de permisos" and
 /// the authentication half of the audit trail's identity — auditing itself lands with the Audit context.
 /// </summary>
-public class AuthenticationAndRbacTests(ApiWebApplicationFactory factory) : IClassFixture<ApiWebApplicationFactory>
+public class AuthenticationAndRbacTests(ApiWebApplicationFactory factory)
+    : IClassFixture<ApiWebApplicationFactory>, IAsyncLifetime
 {
+    // El primer usuario que se autentica en la vida del sistema recibe automáticamente todos los
+    // permisos (bootstrap de Super Admin — ver ProvisionOrUpdateUserCommand.BootstrapSuperAdminAsync,
+    // necesario porque sin cuentas locales/contraseñas alguien tiene que poder entrar a Roles/Usuarios
+    // la primera vez). Las pruebas de esta clase comparten una sola base de datos vía
+    // IClassFixture<ApiWebApplicationFactory>, y xUnit no garantiza el orden de ejecución de los
+    // [Fact] dentro de la clase — sin este centinela, cualquier prueba que autentique un usuario nuevo
+    // y espere CERO permisos podría, por azar de orden, ser ella misma ese "primer usuario" y recibir
+    // todos los permisos en cambio (así falló Authenticated_request_without_the_required_permission_is_forbidden
+    // de forma intermitente). InitializeAsync corre antes de cada [Fact] pero solo el primero realmente
+    // crea el usuario — los siguientes son no-op porque ya existe al menos un usuario.
+    private static readonly Guid BootstrapSentinelOid = Guid.Parse("00000000-0000-0000-0000-0000000000ff");
+
+    public async Task InitializeAsync()
+    {
+        var client = factory.CreateClient();
+        client.DefaultRequestHeaders.Add("Test-Oid", BootstrapSentinelOid.ToString());
+        await client.GetAsync("/api/v1/me");
+    }
+
+    public Task DisposeAsync() => Task.CompletedTask;
+
     [Fact]
     public async Task Anonymous_request_to_a_protected_endpoint_is_rejected()
     {
