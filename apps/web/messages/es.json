@@ -36,5 +36,18 @@
     "dark": "Oscuro",
     "system": "Sistema",
     "toggle": "Cambiar tema"
+  },
+  "Layout": {
+    "openMenu": "Abrir menú",
+    "navigationTitle": "Navegación",
+    "mainNavigation": "Navegación principal",
+    "goToDashboard": "Ir a mi dashboard",
+    "collapseSidebar": "Contraer menú",
+    "expandSidebar": "Expandir menú",
+    "searchPlaceholder": "Buscar…",
+    "notifications": "Notificaciones",
+    "userMenu": "Menú de usuario",
+    "userNameFallback": "Usuario",
+    "signOut": "Cerrar sesión"
   }
 }

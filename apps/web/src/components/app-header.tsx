@@ -1,23 +1,9 @@
-import { signOut } from "@/auth";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { ThemeToggle } from "@/components/theme-toggle";
-import { AppNav } from "@/components/layout/app-nav";
-import { Logomark } from "@/components/logomark";
-
-/** Clears the local session and also ends the session at Entra ID (federated logout) — without this,
- * "cerrar sesión" only forgets the app's cookie; the browser would still be signed in to Microsoft. */
-async function federatedSignOut() {
-  "use server";
-  await signOut({ redirect: false });
-  const baseUrl = process.env.AUTH_URL ?? "http://localhost:3000";
-  const tenantId = process.env.ENTRA_TENANT_ID;
-  const { redirect } = await import("next/navigation");
-  redirect(
-    `https://login.microsoftonline.com/${tenantId}/oauth2/v2.0/logout?post_logout_redirect_uri=${encodeURIComponent(baseUrl)}`,
-  );
-}
-
+/** Encabezado de contenido de página: título, subtítulo y controles específicos de esa página
+ * (p. ej. el selector de empresa). El chrome global de la aplicación (buscador, tema,
+ * notificaciones, menú de usuario, logout, navegación) ya no vive aquí — se centralizó una sola
+ * vez en el App Shell (ver components/layout/app-shell.tsx y topbar.tsx), montado desde el root
+ * layout para todas las rutas que lo necesitan. Las páginas siguen invocando este componente sin
+ * cambios en sus props. */
 export function AppHeader({
   title,
   subtitle,
@@ -31,32 +17,12 @@ export function AppHeader({
   activeCompany?: React.ReactNode;
 }) {
   return (
-    <header className="mb-6 flex flex-col gap-3 border-b px-8 pt-8 pb-3">
-      {/* Ya no vive dentro del contenedor "mx-auto max-w-*" de cada página (Fase de consistencia
-       * de header): siempre ocupa todo el ancho disponible junto al sidebar, sin importar que el
-       * contenido de abajo use una columna angosta (formularios) o ancha (listas). */}
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-3">
-          <Logomark className="lg:hidden" />
-          <div>
-            <h1 className="text-lg leading-tight font-semibold tracking-tight">{title}</h1>
-            {subtitle && <p className="text-muted-foreground text-sm">{subtitle}</p>}
-          </div>
-        </div>
-        <div className="flex flex-wrap items-center justify-end gap-3">
-          <form method="GET" action="/search" className="flex items-center">
-            <Input name="term" placeholder="Buscar…" className="h-8 w-40 sm:w-120" />
-          </form>
-          {activeCompany}
-          <ThemeToggle />
-          <form action={federatedSignOut}>
-            <Button variant="outline" type="submit">
-              Cerrar sesión
-            </Button>
-          </form>
-        </div>
+    <div className="mb-6 flex flex-wrap items-center justify-between gap-3 border-b px-8 pt-8 pb-3">
+      <div>
+        <h1 className="text-lg leading-tight font-semibold tracking-tight">{title}</h1>
+        {subtitle && <p className="text-muted-foreground text-sm">{subtitle}</p>}
       </div>
-      <AppNav />
-    </header>
+      {activeCompany}
+    </div>
   );
 }
