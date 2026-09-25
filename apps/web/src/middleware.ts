@@ -46,7 +46,15 @@ export default auth((req) => {
   // A failed silent token refresh (see src/auth.ts) is treated the same as no session — see
   // src/lib/require-session.ts for why.
   if (isProtectedPath(pathname) && (!req.auth || req.auth.error === "RefreshAccessTokenError")) {
-    return NextResponse.redirect(new URL("/", req.nextUrl.origin));
+    // req.nextUrl.origin can't be trusted here: NextAuth's auth() wrapper rewrites it to AUTH_URL
+    // instead of the request's real host, which produces a redirect to the wrong origin (blocked
+    // by the CSP connect-src directive on background Link prefetches — see AppNav's self-service
+    // links, which every page now renders). The Host/X-Forwarded-Host headers are the actual
+    // incoming request, unaffected by that rewrite.
+    const host = req.headers.get("x-forwarded-host") ?? req.headers.get("host");
+    const protocol = req.headers.get("x-forwarded-proto") ?? req.nextUrl.protocol.replace(":", "");
+    const origin = host ? `${protocol}://${host}` : req.nextUrl.origin;
+    return NextResponse.redirect(new URL("/", origin));
   }
 
   const requestHeaders = new Headers(req.headers);
