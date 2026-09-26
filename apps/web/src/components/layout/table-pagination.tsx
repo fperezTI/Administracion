@@ -1,5 +1,3 @@
-import Link from "next/link";
-
 export type SearchParams = Record<string, string | undefined>;
 
 function buildPageHref(basePath: string, params: SearchParams, companyId: string | undefined, pageNumber: number) {
@@ -30,10 +28,15 @@ function PageLink({
     );
   }
 
+  // Plain <a>, not next/link's <Link>: Next.js's client-side "refetch" navigation (same route,
+  // only search params change) gets stuck in this app — the click registers but the router never
+  // applies the update, and it can leave every other Link on the page unresponsive too (matches
+  // https://github.com/vercel/next.js/issues/75566). A full page reload sidesteps it entirely and
+  // measured just as fast (~300ms) as the soft navigation was supposed to be.
   return (
-    <Link href={href} className="rounded-lg border px-3 py-1 hover:bg-muted">
+    <a href={href} className="rounded-lg border px-3 py-1 hover:bg-muted">
       {children}
-    </Link>
+    </a>
   );
 }
 

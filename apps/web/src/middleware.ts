@@ -1,10 +1,6 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 
-// Misma lista de rutas protegidas que antes (sin cambios de comportamiento de seguridad) — el
-// matcher de abajo ahora es más amplio porque también necesitamos correr en TODAS las rutas
-// (incluida "/") para poder anotar el pathname actual vía un header y que el root layout
-// (app/layout.tsx) decida ahí si monta el App Shell o no. Ver AppShell/isChromelessRoute.
 const PROTECTED_PREFIXES = [
   "/dashboard",
   "/assets",
@@ -48,20 +44,44 @@ export default auth((req) => {
   if (isProtectedPath(pathname) && (!req.auth || req.auth.error === "RefreshAccessTokenError")) {
     // req.nextUrl.origin can't be trusted here: NextAuth's auth() wrapper rewrites it to AUTH_URL
     // instead of the request's real host, which produces a redirect to the wrong origin (blocked
-    // by the CSP connect-src directive on background Link prefetches — see AppNav's self-service
-    // links, which every page now renders). The Host/X-Forwarded-Host headers are the actual
-    // incoming request, unaffected by that rewrite.
+    // by the CSP connect-src directive on background Link prefetches). The Host/X-Forwarded-Host
+    // headers reflect the actual incoming request, unaffected by that rewrite.
     const host = req.headers.get("x-forwarded-host") ?? req.headers.get("host");
     const protocol = req.headers.get("x-forwarded-proto") ?? req.nextUrl.protocol.replace(":", "");
     const origin = host ? `${protocol}://${host}` : req.nextUrl.origin;
     return NextResponse.redirect(new URL("/", origin));
   }
-
-  const requestHeaders = new Headers(req.headers);
-  requestHeaders.set("x-pathname", pathname);
-  return NextResponse.next({ request: { headers: requestHeaders } });
 });
 
 export const config = {
-  matcher: ["/((?!api|_next/static|_next/image|favicon.ico|sw.js|icons|manifest.webmanifest).*)"],
+  matcher: [
+    "/dashboard/:path*",
+    "/assets/:path*",
+    "/asset-categories/:path*",
+    "/assignments/:path*",
+    "/my-assignments/:path*",
+    "/loans/:path*",
+    "/movements/:path*",
+    "/transfers/:path*",
+    "/approval-flows/:path*",
+    "/approvals/:path*",
+    "/my-approvals/:path*",
+    "/templates/:path*",
+    "/maintenance-orders/:path*",
+    "/maintenance-checklists/:path*",
+    "/warranties/:path*",
+    "/spare-parts/:path*",
+    "/consumables/:path*",
+    "/requests/:path*",
+    "/my-requests/:path*",
+    "/imports/:path*",
+    "/reports/:path*",
+    "/search/:path*",
+    "/notifications/:path*",
+    "/audit/:path*",
+    "/companies/:path*",
+    "/org-units/:path*",
+    "/roles/:path*",
+    "/users/:path*",
+  ],
 };

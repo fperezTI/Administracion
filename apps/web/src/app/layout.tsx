@@ -1,5 +1,4 @@
 import type { Metadata, Viewport } from "next";
-import { headers } from "next/headers";
 import { IBM_Plex_Sans, IBM_Plex_Mono } from "next/font/google";
 import { NextIntlClientProvider } from "next-intl";
 import { getMessages } from "next-intl/server";
@@ -7,16 +6,7 @@ import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
 import { ServiceWorkerRegistration } from "@/components/service-worker-registration";
 import { AppShell } from "@/components/layout/app-shell";
-
-// Rutas que existen fuera del App Shell: el login público ("/") y las dos vistas pensadas para
-// imprimirse a pantalla completa (protegidas por su cuenta vía requireAccessToken(), pero sin
-// sidebar/topbar). El pathname llega vía el header que src/middleware.ts anota en cada request —
-// es la forma documentada de leer la ruta actual desde un layout de servidor en el App Router.
-const CHROMELESS_ROUTE_PATTERNS = [/^\/assets\/[^/]+\/label$/, /^\/assignments\/[^/]+\/resguardo$/];
-
-function isChromelessRoute(pathname: string) {
-  return pathname === "/" || CHROMELESS_ROUTE_PATTERNS.some((pattern) => pattern.test(pathname));
-}
+import { Topbar } from "@/components/layout/topbar";
 
 const plexSans = IBM_Plex_Sans({
   variable: "--font-plex-sans",
@@ -45,9 +35,6 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   const messages = await getMessages();
-  const headersList = await headers();
-  const pathname = headersList.get("x-pathname") ?? "";
-  const showShell = !isChromelessRoute(pathname);
 
   return (
     <html lang="es" suppressHydrationWarning>
@@ -56,7 +43,11 @@ export default async function RootLayout({
       >
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
           <NextIntlClientProvider messages={messages}>
-            {showShell ? <AppShell>{children}</AppShell> : <main>{children}</main>}
+            {/* AppShell decides on the client (usePathname, no Dynamic API) whether to show the
+             * Sidebar/Topbar — a root layout that reads headers()/cookies() makes every route fully
+             * dynamic and breaks Next.js's same-page "refetch" fast path (pagination/sorting via
+             * search params on the same route), which is why that decision doesn't live here. */}
+            <AppShell topbar={<Topbar />}>{children}</AppShell>
             <ServiceWorkerRegistration />
           </NextIntlClientProvider>
         </ThemeProvider>

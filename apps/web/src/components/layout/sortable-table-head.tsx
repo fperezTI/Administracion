@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { ArrowDown, ArrowUp, ArrowUpDown } from "lucide-react";
 import { TableHead } from "@/components/ui/table";
 import { cn } from "cn";
@@ -57,7 +56,9 @@ export function SortableTableHead({
 
   return (
     <TableHead className={className}>
-      <Link
+      {/* Plain <a>, not next/link's <Link> — see the comment in table-pagination.tsx's PageLink
+       * for why: same-route search-param navigation gets stuck with Next.js's client router here. */}
+      <a
         href={buildSortHref(basePath, params, companyId, sortKey, nextDescending)}
         className={cn(
           "inline-flex items-center gap-1 hover:text-foreground",
@@ -74,7 +75,7 @@ export function SortableTableHead({
         ) : (
           <ArrowUpDown className="text-muted-foreground/50 size-3.5 stroke-[1.5]" aria-hidden />
         )}
-      </Link>
+      </a>
     </TableHead>
   );
 }
