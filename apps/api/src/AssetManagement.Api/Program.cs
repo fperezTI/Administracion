@@ -7,6 +7,7 @@ using AssetManagement.Infrastructure.Security;
 using Asp.Versioning;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.RateLimiting;
+using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.Identity.Web;
 using Serilog;
 
@@ -40,6 +41,16 @@ builder.Services
 
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 builder.Services.AddProblemDetails();
+
+// This API is a pure JSON endpoint behind Bearer auth (no cookies, no reflected user input mixed
+// into a response alongside a secret), so the classic BREACH concern that makes ASP.NET Core
+// default EnableForHttps to false doesn't apply here — worth it for paginated list payloads.
+builder.Services.AddResponseCompression(options =>
+{
+    options.EnableForHttps = true;
+    options.Providers.Add<BrotliCompressionProvider>();
+    options.Providers.Add<GzipCompressionProvider>();
+});
 
 var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? [];
 builder.Services.AddCors(options => options.AddPolicy("Default", policy =>
@@ -111,6 +122,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseExceptionHandler();
+app.UseResponseCompression();
 app.UseMiddleware<SecurityHeadersMiddleware>();
 if (!app.Environment.IsDevelopment())
 {

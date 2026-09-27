@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { auth } from "@/auth";
+import { getSession } from "@/auth";
 
 /**
  * middleware.ts already redirects unauthenticated requests away from every route that calls this —
@@ -12,7 +12,7 @@ import { auth } from "@/auth";
  * just surface as a confusing 401 deep in a page instead of a clean re-login prompt.
  */
 export async function requireAccessToken(): Promise<string> {
-  const session = await auth();
+  const session = await getSession();
   if (!session?.accessToken || session.error === "RefreshAccessTokenError") {
     redirect("/");
   }

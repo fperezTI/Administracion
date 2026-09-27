@@ -10,4 +10,5 @@ internal static class RequestContextKeys
     public const string Email = "AssetManagement.Email";
     public const string ActiveCompanyId = "AssetManagement.ActiveCompanyId";
     public const string AccessibleCompanyIds = "AssetManagement.AccessibleCompanyIds";
+    public const string PermissionCodes = "AssetManagement.PermissionCodes";
 }

@@ -15,6 +15,10 @@ public sealed class HttpContextCurrentUserContext(IHttpContextAccessor httpConte
 
     public string? Email => httpContextAccessor.HttpContext?.Items[RequestContextKeys.Email] as string;
 
+    public IReadOnlyCollection<string> PermissionCodes =>
+        httpContextAccessor.HttpContext?.Items[RequestContextKeys.PermissionCodes] as IReadOnlyCollection<string>
+        ?? [];
+
     public string? IpAddress => httpContextAccessor.HttpContext?.Connection.RemoteIpAddress?.ToString();
 
     public string? UserAgent => httpContextAccessor.HttpContext?.Request.Headers.UserAgent.ToString();

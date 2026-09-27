@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Bell } from "lucide-react";
 import { getTranslations } from "next-intl/server";
-import { auth } from "@/auth";
+import { getSession } from "@/auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ThemeToggle } from "@/components/theme-toggle";
@@ -14,7 +14,7 @@ import { UserMenu } from "@/components/layout/user-menu";
  * en el AppHeader que cada página ya invoca — ver components/app-header.tsx. */
 export async function Topbar() {
   const t = await getTranslations("Layout");
-  const session = await auth();
+  const session = await getSession();
   const user = {
     name: session?.user?.name ?? null,
     email: session?.user?.email ?? null,

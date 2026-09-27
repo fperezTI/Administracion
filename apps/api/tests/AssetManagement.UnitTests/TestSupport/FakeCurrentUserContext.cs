@@ -14,6 +14,8 @@ internal sealed class FakeCurrentUserContext : ICurrentUserContext
 
     public string? Email { get; set; } = "test@example.com";
 
+    public IReadOnlyCollection<string> PermissionCodes { get; set; } = [];
+
     public string? IpAddress { get; set; } = "127.0.0.1";
 
     public string? UserAgent { get; set; } = "TestAgent/1.0";

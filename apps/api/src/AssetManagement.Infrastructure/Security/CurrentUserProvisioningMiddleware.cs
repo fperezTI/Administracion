@@ -50,6 +50,7 @@ public sealed class CurrentUserProvisioningMiddleware(RequestDelegate next)
                 context.Items[RequestContextKeys.DisplayName] = snapshot.DisplayName;
                 context.Items[RequestContextKeys.Email] = snapshot.Email;
                 context.Items[RequestContextKeys.AccessibleCompanyIds] = (IReadOnlyCollection<Guid>)snapshot.CompanyIds;
+                context.Items[RequestContextKeys.PermissionCodes] = (IReadOnlyCollection<string>)snapshot.PermissionCodes;
 
                 var requestedCompany = context.Request.Headers[ActiveCompanyHeader].FirstOrDefault();
                 if (Guid.TryParse(requestedCompany, out var requestedCompanyId)

@@ -1,3 +1,4 @@
+import { cache } from "react";
 import NextAuth from "next-auth";
 import MicrosoftEntraID from "next-auth/providers/microsoft-entra-id";
 
@@ -10,7 +11,7 @@ import MicrosoftEntraID from "next-auth/providers/microsoft-entra-id";
  */
 const apiScope = `api://${process.env.ENTRA_API_CLIENT_ID}/access_as_user`;
 
-export const { handlers, auth, signIn, signOut } = NextAuth({
+const nextAuth = NextAuth({
   trustHost: true,
   // debug:true was used only to diagnose the initial setup (see docs/security/authentication.md) — it
   // dumps full provider config, including the client secret, and decoded token claims to stdout. Never
@@ -55,6 +56,14 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     },
   },
 });
+
+export const { handlers, auth, signIn, signOut } = nextAuth;
+
+/** Same session read as `auth()`, memoized per request (React.cache) — every shelled page now
+ * reads the session at least twice (Topbar + the page's own requireAccessToken()), and each read
+ * otherwise independently decrypts/verifies the session JWT and, if the access token is near
+ * expiry, calls refreshAccessToken() — duplicating a real network round-trip to Entra ID. */
+export const getSession = cache(async () => nextAuth.auth());
 
 async function refreshAccessToken(token: Record<string, unknown>) {
   try {

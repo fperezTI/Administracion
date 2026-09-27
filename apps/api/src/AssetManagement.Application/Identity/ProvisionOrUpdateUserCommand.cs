@@ -47,7 +47,15 @@ public sealed class ProvisionOrUpdateUserCommandHandler(IApplicationDbContext db
             user.UpdateProfile(request.DisplayName, request.Email);
         }
 
-        user.RecordLogin(now);
+        // This handler runs on every single authenticated API call (see the provisioning
+        // middleware), not just page loads — without this throttle, an active session (filtering,
+        // paginating, sorting) forces a write on every request just to bump a timestamp nobody
+        // reads at that resolution. Five minutes keeps "last seen" meaningful while skipping the
+        // write (and the SaveChangesAsync round-trip) for the overwhelming majority of requests.
+        if (user.LastLoginAtUtc is null || now - user.LastLoginAtUtc > TimeSpan.FromMinutes(5))
+        {
+            user.RecordLogin(now);
+        }
 
         if (isFirstUserEver)
         {

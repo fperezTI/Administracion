@@ -16,6 +16,11 @@ public interface ICurrentUserContext
 
     public string? Email { get; }
 
+    /// <summary>Every permission code the caller currently holds, resolved once per request by
+    /// CurrentUserProvisioningMiddleware — the single source of truth AuthorizationBehavior/
+    /// IPermissionChecker and GetMeQuery read from instead of re-querying the same join.</summary>
+    public IReadOnlyCollection<string> PermissionCodes { get; }
+
     /// <summary>Caller's IP address, for e-signature metadata (pedido C6/§18) — never used for access
     /// control, only recorded alongside a <see cref="Domain.Signature.SignatureRecord"/>.</summary>
     public string? IpAddress { get; }

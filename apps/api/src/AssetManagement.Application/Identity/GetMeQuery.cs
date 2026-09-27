@@ -33,7 +33,9 @@ public sealed class GetMeQueryHandler(IApplicationDbContext db, ICurrentUserCont
         var user = await db.Users.AsNoTracking().FirstOrDefaultAsync(u => u.Id == userId, cancellationToken)
             ?? throw new NotFoundException(nameof(Domain.Identity.User), userId);
 
-        var permissionCodes = await UserPermissionLookup.GetPermissionCodesAsync(db, userId, cancellationToken);
+        // Already resolved once for this request by CurrentUserProvisioningMiddleware — no need to
+        // re-run the same permission join here.
+        var permissionCodes = currentUser.PermissionCodes;
 
         var companies = await (
             from userCompany in db.UserCompanies
