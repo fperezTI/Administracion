@@ -42,4 +42,32 @@ public class CompanyTests
         company.Activate();
         company.IsActive.Should().BeTrue();
     }
+
+    [Fact]
+    public void New_company_defaults_to_a_safe_fallback_theme()
+    {
+        var company = Company.Create("Acme S.A.", "Acme", "TAX-1", "MXN", "America/Mexico_City", Now);
+
+        company.DefaultThemeCode.Should().Be("light");
+    }
+
+    [Fact]
+    public void SetDefaultTheme_accepts_a_known_code()
+    {
+        var company = Company.Create("Acme S.A.", "Acme", "TAX-1", "MXN", "America/Mexico_City", Now);
+
+        company.SetDefaultTheme("corporate-blue");
+
+        company.DefaultThemeCode.Should().Be("corporate-blue");
+    }
+
+    [Fact]
+    public void SetDefaultTheme_rejects_an_unknown_code()
+    {
+        var company = Company.Create("Acme S.A.", "Acme", "TAX-1", "MXN", "America/Mexico_City", Now);
+
+        var act = () => company.SetDefaultTheme("neon-pink");
+
+        act.Should().Throw<DomainException>();
+    }
 }

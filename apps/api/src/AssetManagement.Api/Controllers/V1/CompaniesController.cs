@@ -48,4 +48,18 @@ public sealed class CompaniesController(ISender mediator) : ControllerBase
         await mediator.Send(new SetCompanyActiveCommand(companyId, isActive), cancellationToken);
         return NoContent();
     }
+
+    /// <summary>Changes this company's default theme — Companies.Update-gated, same as every other
+    /// edit here. See <see cref="SetCompanyDefaultThemeCommand"/> for why no separate "SuperAdmin" check
+    /// exists.</summary>
+    [HttpPut("{companyId:guid}/preferences/theme")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    public async Task<IActionResult> SetDefaultTheme(
+        Guid companyId, [FromBody] SetCompanyThemeRequest request, CancellationToken cancellationToken)
+    {
+        await mediator.Send(new SetCompanyDefaultThemeCommand(companyId, request.ThemeCode), cancellationToken);
+        return NoContent();
+    }
 }
+
+public sealed record SetCompanyThemeRequest(string ThemeCode);

@@ -4,10 +4,10 @@ import { getTranslations } from "next-intl/server";
 import { getSession } from "@/auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ThemeToggle } from "@/components/theme-toggle";
 import { Logomark } from "@/components/logomark";
 import { MobileNav } from "@/components/layout/app-nav";
 import { UserMenu } from "@/components/layout/user-menu";
+import { resolveThemeCode } from "@/lib/theme-catalog";
 
 /** Chrome global de la aplicación: se monta una sola vez (en AppShell), no por página. Todo lo
  * específico de cada página (título, subtítulo, breadcrumbs, selector de empresa) sigue viviendo
@@ -20,6 +20,8 @@ export async function Topbar() {
     email: session?.user?.email ?? null,
     image: session?.user?.image ?? null,
   };
+  const effectiveTheme = resolveThemeCode(session?.effectiveTheme);
+  const themePreference = session?.themePreference ?? null;
 
   return (
     <header className="bg-background sticky top-0 z-30 flex items-center gap-3 border-b px-4 py-2.5 lg:px-6">
@@ -47,8 +49,13 @@ export async function Topbar() {
         >
           <Bell className="size-4 stroke-[1.5]" />
         </Button>
-        <ThemeToggle />
-        <UserMenu name={user.name} email={user.email} image={user.image} />
+        <UserMenu
+          name={user.name}
+          email={user.email}
+          image={user.image}
+          effectiveTheme={effectiveTheme}
+          themePreference={themePreference}
+        />
       </div>
     </header>
   );

@@ -8,6 +8,7 @@ export type MeCompany = {
   companyId: string;
   tradeName: string;
   timeZone: string;
+  defaultThemeCode: string;
 };
 
 export type MeResponse = {
@@ -17,6 +18,10 @@ export type MeResponse = {
   permissionCodes: string[];
   companies: MeCompany[];
   activeCompanyId: string | null;
+  /** Null means "usar tema de la empresa" — see effectiveTheme for what actually applies. */
+  themePreference: string | null;
+  /** Always a concrete, valid theme code. Never null. */
+  effectiveTheme: string;
 };
 
 export type PagedResult<T> = {
@@ -224,6 +229,14 @@ export function getMe(accessToken: string): Promise<MeResponse> {
   return apiFetch<MeResponse>(accessToken, "/api/v1/me");
 }
 
+/** themeCode null restores "usar tema de la empresa". */
+export function setMyThemePreference(accessToken: string, themeCode: string | null): Promise<void> {
+  return apiFetch(accessToken, "/api/v1/me/preferences/theme", {
+    method: "PUT",
+    body: JSON.stringify({ themeCode }),
+  });
+}
+
 export type AssetSortField = "internalFolio" | "description" | "category" | "brand" | "serialNumber" | "physicalCondition" | "status";
 
 export type GetAssetsParams = {
@@ -408,6 +421,7 @@ export type CompanySummary = {
   baseCurrency: string;
   timeZone: string;
   isActive: boolean;
+  defaultThemeCode: string;
 };
 
 export type CompanySortField = "tradeName" | "legalName" | "taxId" | "baseCurrency" | "timeZone" | "isActive";
@@ -446,6 +460,13 @@ export function setCompanyActive(accessToken: string, companyId: string, isActiv
   return apiFetch(accessToken, `/api/v1/companies/${companyId}/active`, {
     method: "PATCH",
     body: JSON.stringify(isActive),
+  });
+}
+
+export function setCompanyDefaultTheme(accessToken: string, companyId: string, themeCode: string): Promise<void> {
+  return apiFetch(accessToken, `/api/v1/companies/${companyId}/preferences/theme`, {
+    method: "PUT",
+    body: JSON.stringify({ themeCode }),
   });
 }
 

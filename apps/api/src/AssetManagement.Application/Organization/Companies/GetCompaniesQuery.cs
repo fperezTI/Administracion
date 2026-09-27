@@ -19,7 +19,8 @@ public sealed record GetCompaniesQuery(
 }
 
 public sealed record CompanySummary(
-    Guid Id, string LegalName, string TradeName, string TaxId, string BaseCurrency, string TimeZone, bool IsActive);
+    Guid Id, string LegalName, string TradeName, string TaxId, string BaseCurrency, string TimeZone, bool IsActive,
+    string DefaultThemeCode);
 
 public sealed class GetCompaniesQueryHandler(IApplicationDbContext db)
     : IRequestHandler<GetCompaniesQuery, PagedResult<CompanySummary>>
@@ -46,7 +47,7 @@ public sealed class GetCompaniesQueryHandler(IApplicationDbContext db)
         };
 
         var projected = ordered.Select(c => new CompanySummary(
-            c.Id, c.LegalName, c.TradeName, c.TaxId, c.BaseCurrency, c.TimeZone, c.IsActive));
+            c.Id, c.LegalName, c.TradeName, c.TaxId, c.BaseCurrency, c.TimeZone, c.IsActive, c.DefaultThemeCode));
 
         return PagedResult<CompanySummary>.CreateAsync(projected, request.PageNumber, request.PageSize, cancellationToken);
     }

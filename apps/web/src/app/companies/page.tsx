@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { toggleCompanyActiveAction } from "./actions";
+import { CompanyThemeSelect } from "./company-theme-select";
 import { TablePagination, type SearchParams } from "@/components/layout/table-pagination";
 import { SortableTableHead } from "@/components/layout/sortable-table-head";
 
@@ -49,13 +50,14 @@ export default async function CompaniesPage({ searchParams }: { searchParams: Pr
                   {column.label}
                 </SortableTableHead>
               ))}
+              <TableHead>Tema</TableHead>
               <TableHead />
             </TableRow>
           </TableHeader>
           <TableBody>
             {companies.items.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={7} className="text-muted-foreground py-8 text-center">
+                <TableCell colSpan={8} className="text-muted-foreground py-8 text-center">
                   Todavía no hay empresas registradas.
                 </TableCell>
               </TableRow>
@@ -71,6 +73,9 @@ export default async function CompaniesPage({ searchParams }: { searchParams: Pr
                     <Badge variant={company.isActive ? "success" : "outline"}>
                       {company.isActive ? "Activa" : "Inactiva"}
                     </Badge>
+                  </TableCell>
+                  <TableCell>
+                    <CompanyThemeSelect companyId={company.id} defaultThemeCode={company.defaultThemeCode} />
                   </TableCell>
                   <TableCell>
                     <form action={toggleCompanyActiveAction.bind(null, company.id, !company.isActive)}>

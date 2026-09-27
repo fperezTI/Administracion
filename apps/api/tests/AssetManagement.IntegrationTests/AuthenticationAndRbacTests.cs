@@ -174,6 +174,130 @@ public class AuthenticationAndRbacTests(ApiWebApplicationFactory factory)
         strangerBody!.ActiveCompanyId.Should().BeNull();
     }
 
+    [Fact]
+    public async Task User_without_a_preference_inherits_the_active_companys_theme_end_to_end()
+    {
+        var entraObjectId = Guid.NewGuid();
+        var client = factory.CreateClient();
+        client.DefaultRequestHeaders.Add("Test-Oid", entraObjectId.ToString());
+        client.DefaultRequestHeaders.Add("Test-Name", "Margaret Hamilton");
+        client.DefaultRequestHeaders.Add("Test-Email", "margaret@example.com");
+        (await client.GetAsync("/api/v1/me")).EnsureSuccessStatusCode();
+
+        Guid companyId;
+        await using (var scope = factory.Services.CreateAsyncScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            var user = await db.Users.SingleAsync(u => u.EntraObjectId == entraObjectId);
+            var company = Domain.Organization.Company.Create(
+                "Acme Margaret S.A.", "Acme Margaret", $"TAX-{entraObjectId}", "MXN", "America/Mexico_City",
+                DateTimeOffset.UtcNow);
+            company.SetDefaultTheme("corporate-blue");
+            db.Companies.Add(company);
+            await db.SaveChangesAsync();
+            companyId = company.Id;
+            user.GrantCompanyAccess(companyId, DateTimeOffset.UtcNow);
+            await db.SaveChangesAsync();
+        }
+
+        using var request = new HttpRequestMessage(HttpMethod.Get, "/api/v1/me");
+        request.Headers.Add("X-Active-Company-Id", companyId.ToString());
+        var body = await (await client.SendAsync(request)).Content.ReadFromJsonAsync<MeResponseDto>();
+
+        body!.ThemePreference.Should().BeNull();
+        body.EffectiveTheme.Should().Be("corporate-blue");
+    }
+
+    [Fact]
+    public async Task Setting_a_personal_theme_preference_overrides_the_companys_default()
+    {
+        var entraObjectId = Guid.NewGuid();
+        var client = factory.CreateClient();
+        client.DefaultRequestHeaders.Add("Test-Oid", entraObjectId.ToString());
+        client.DefaultRequestHeaders.Add("Test-Name", "Radia Perlman");
+        client.DefaultRequestHeaders.Add("Test-Email", "radia@example.com");
+        (await client.GetAsync("/api/v1/me")).EnsureSuccessStatusCode();
+
+        var putResponse = await client.PutAsJsonAsync("/api/v1/me/preferences/theme", new { themeCode = "dark" });
+        putResponse.StatusCode.Should().Be(HttpStatusCode.NoContent);
+
+        var body = await (await client.GetAsync("/api/v1/me")).Content.ReadFromJsonAsync<MeResponseDto>();
+        body!.ThemePreference.Should().Be("dark");
+        body.EffectiveTheme.Should().Be("dark");
+
+        // Restoring inheritance (null) clears it again.
+        (await client.PutAsJsonAsync("/api/v1/me/preferences/theme", new { themeCode = (string?)null }))
+            .StatusCode.Should().Be(HttpStatusCode.NoContent);
+        var restoredBody = await (await client.GetAsync("/api/v1/me")).Content.ReadFromJsonAsync<MeResponseDto>();
+        restoredBody!.ThemePreference.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task An_unknown_theme_code_is_rejected()
+    {
+        var client = factory.CreateClient();
+        client.DefaultRequestHeaders.Add("Test-Oid", Guid.NewGuid().ToString());
+
+        var response = await client.PutAsJsonAsync("/api/v1/me/preferences/theme", new { themeCode = "neon-pink" });
+
+        response.StatusCode.Should().Be(HttpStatusCode.UnprocessableEntity);
+    }
+
+    [Fact]
+    public async Task Only_a_caller_with_Companies_Update_can_change_a_companys_default_theme()
+    {
+        Guid companyId;
+        await using (var scope = factory.Services.CreateAsyncScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            var company = Domain.Organization.Company.Create(
+                "Acme ThemeAdmin S.A.", "Acme ThemeAdmin", $"TAX-{Guid.NewGuid()}", "MXN", "America/Mexico_City",
+                DateTimeOffset.UtcNow);
+            db.Companies.Add(company);
+            await db.SaveChangesAsync();
+            companyId = company.Id;
+        }
+
+        // No role granted yet: forbidden even though the request is otherwise well-formed.
+        var strangerClient = factory.CreateClient();
+        strangerClient.DefaultRequestHeaders.Add("Test-Oid", Guid.NewGuid().ToString());
+        var forbidden = await strangerClient.PutAsJsonAsync(
+            $"/api/v1/companies/{companyId}/preferences/theme", new { themeCode = "executive-gray" });
+        forbidden.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+
+        // Granting Companies.Update (the same permission that already gates editing a company —
+        // this system has no separate "SuperAdmin" permission, see SetCompanyDefaultThemeCommand)
+        // allows it.
+        var adminEntraObjectId = Guid.NewGuid();
+        var adminClient = factory.CreateClient();
+        adminClient.DefaultRequestHeaders.Add("Test-Oid", adminEntraObjectId.ToString());
+        (await adminClient.GetAsync("/api/v1/me")).EnsureSuccessStatusCode();
+        await using (var scope = factory.Services.CreateAsyncScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            var user = await db.Users.SingleAsync(u => u.EntraObjectId == adminEntraObjectId);
+            var updateCompaniesPermissionId = await db.Permissions
+                .Where(p => p.Module == "Companies" && p.Action == "Update")
+                .Select(p => p.Id)
+                .SingleAsync();
+            var role = Role.Create("Administrador de empresas", null, DateTimeOffset.UtcNow);
+            role.SetPermissions([updateCompaniesPermissionId]);
+            db.Roles.Add(role);
+            await db.SaveChangesAsync();
+            user.AssignRole(role.Id, assignedByUserId: null, DateTimeOffset.UtcNow);
+            await db.SaveChangesAsync();
+        }
+
+        var allowed = await adminClient.PutAsJsonAsync(
+            $"/api/v1/companies/{companyId}/preferences/theme", new { themeCode = "executive-gray" });
+        allowed.StatusCode.Should().Be(HttpStatusCode.NoContent);
+
+        await using var verifyScope = factory.Services.CreateAsyncScope();
+        var verifyDb = verifyScope.ServiceProvider.GetRequiredService<AppDbContext>();
+        (await verifyDb.Companies.SingleAsync(c => c.Id == companyId)).DefaultThemeCode.Should().Be("executive-gray");
+    }
+
     private sealed record MeResponseDto(
-        Guid UserId, string DisplayName, string Email, IReadOnlyCollection<string> PermissionCodes, Guid? ActiveCompanyId);
+        Guid UserId, string DisplayName, string Email, IReadOnlyCollection<string> PermissionCodes, Guid? ActiveCompanyId,
+        string? ThemePreference, string EffectiveTheme);
 }

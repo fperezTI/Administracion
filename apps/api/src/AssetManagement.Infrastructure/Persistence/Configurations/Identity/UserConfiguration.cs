@@ -20,6 +20,7 @@ public sealed class UserConfiguration : IEntityTypeConfiguration<User>
 
         builder.Property(u => u.IsActive).IsRequired();
         builder.Property(u => u.CreatedAtUtc).IsRequired();
+        builder.Property(u => u.ThemePreferenceCode).HasMaxLength(30);
 
         builder.HasMany(u => u.UserRoles).WithOne().HasForeignKey(ur => ur.UserId).OnDelete(DeleteBehavior.Cascade);
         builder.Navigation(u => u.UserRoles).UsePropertyAccessMode(PropertyAccessMode.Field);

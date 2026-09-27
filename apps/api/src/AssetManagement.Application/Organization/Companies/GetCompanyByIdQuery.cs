@@ -23,6 +23,6 @@ public sealed class GetCompanyByIdQueryHandler(IApplicationDbContext db)
 
         return new CompanySummary(
             company.Id, company.LegalName, company.TradeName, company.TaxId,
-            company.BaseCurrency, company.TimeZone, company.IsActive);
+            company.BaseCurrency, company.TimeZone, company.IsActive, company.DefaultThemeCode);
     }
 }

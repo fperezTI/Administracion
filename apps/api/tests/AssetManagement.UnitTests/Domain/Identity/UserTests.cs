@@ -103,4 +103,35 @@ public class UserTests
 
         act.Should().Throw<DomainException>();
     }
+
+    [Fact]
+    public void SetThemePreference_accepts_a_known_code()
+    {
+        var user = User.Provision(Guid.NewGuid(), "Ada Lovelace", "ada@example.com", Now);
+
+        user.SetThemePreference("dark");
+
+        user.ThemePreferenceCode.Should().Be("dark");
+    }
+
+    [Fact]
+    public void SetThemePreference_null_restores_inheritance_from_the_company()
+    {
+        var user = User.Provision(Guid.NewGuid(), "Ada Lovelace", "ada@example.com", Now);
+        user.SetThemePreference("dark");
+
+        user.SetThemePreference(null);
+
+        user.ThemePreferenceCode.Should().BeNull();
+    }
+
+    [Fact]
+    public void SetThemePreference_rejects_an_unknown_code()
+    {
+        var user = User.Provision(Guid.NewGuid(), "Ada Lovelace", "ada@example.com", Now);
+
+        var act = () => user.SetThemePreference("neon-pink");
+
+        act.Should().Throw<DomainException>();
+    }
 }

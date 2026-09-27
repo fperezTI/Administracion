@@ -8,7 +8,12 @@ const MARK_SIZES = {
 
 /** Marca de AssetHub: usada en el sidebar y el header móvil (compacta) y en la pantalla de login
  * (grande, como hero) — un solo componente para no repetir el mismo mark en varios archivos como
- * pasaba con el "AT". */
+ * pasaba con el "AT". No hay variantes de archivo por tema (pedido: sistema de temas visuales,
+ * "logotipo por tema") porque no existen — el logo siempre fue código, no una imagen — y no hacen
+ * falta: `bg-primary`/`text-primary-foreground` ya son tokens semánticos que los 5 temas redefinen
+ * (ver app/globals.css), así que este mark se ve correcto en cada uno sin cambios aquí. `inverse`
+ * sigue siendo necesario solo para el panel de héroe del login, cuyo fondo (`--surface-brand`) es
+ * navy fijo a propósito y NO varía por tema. */
 export function Logomark({
   withWordmark = false,
   size = "sm",

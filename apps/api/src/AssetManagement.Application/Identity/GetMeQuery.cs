@@ -1,5 +1,6 @@
 using AssetManagement.Application.Common.Exceptions;
 using AssetManagement.Application.Common.Interfaces;
+using AssetManagement.Domain.Theming;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 
@@ -16,9 +17,18 @@ public sealed record MeResponse(
     string Email,
     IReadOnlyCollection<string> PermissionCodes,
     IReadOnlyCollection<MeCompany> Companies,
-    Guid? ActiveCompanyId);
+    Guid? ActiveCompanyId,
+    /// <summary>Null means "usar tema de la empresa" — see <see cref="EffectiveTheme"/> for what
+    /// actually applies.</summary>
+    string? ThemePreference,
+    /// <summary>Always a concrete, valid theme code — resolved from <see cref="ThemePreference"/>,
+    /// falling back to the active company's default (or, when none is explicitly selected via
+    /// <c>X-Active-Company-Id</c> — the common case today, since no frontend caller sends it yet per
+    /// docs/multi-company.md — the user's first accessible company), falling back to
+    /// <see cref="ThemeCode.Fallback"/>. Never null.</summary>
+    string EffectiveTheme);
 
-public sealed record MeCompany(Guid CompanyId, string TradeName, string TimeZone);
+public sealed record MeCompany(Guid CompanyId, string TradeName, string TimeZone, string DefaultThemeCode);
 
 public sealed class GetMeQueryHandler(IApplicationDbContext db, ICurrentUserContext currentUser, ICurrentCompanyContext currentCompany)
     : IRequestHandler<GetMeQuery, MeResponse>
@@ -41,10 +51,17 @@ public sealed class GetMeQueryHandler(IApplicationDbContext db, ICurrentUserCont
             from userCompany in db.UserCompanies
             join company in db.Companies on userCompany.CompanyId equals company.Id
             where userCompany.UserId == userId
-            select new MeCompany(company.Id, company.TradeName, company.TimeZone))
+            select new MeCompany(company.Id, company.TradeName, company.TimeZone, company.DefaultThemeCode))
             .ToListAsync(cancellationToken);
 
+        var themePreference = ThemeCode.IsValid(user.ThemePreferenceCode) ? user.ThemePreferenceCode : null;
+        var activeCompany = companies.FirstOrDefault(c => c.CompanyId == currentCompany.CompanyId)
+            ?? companies.FirstOrDefault();
+        var effectiveTheme = themePreference
+            ?? (activeCompany is not null ? ThemeCode.OrFallback(activeCompany.DefaultThemeCode) : ThemeCode.Fallback);
+
         return new MeResponse(
-            user.Id, user.DisplayName, user.Email, permissionCodes, companies, currentCompany.CompanyId);
+            user.Id, user.DisplayName, user.Email, permissionCodes, companies, currentCompany.CompanyId,
+            themePreference, effectiveTheme);
     }
 }

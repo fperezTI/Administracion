@@ -1,4 +1,5 @@
 using AssetManagement.Domain.Organization;
+using AssetManagement.Domain.Theming;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -19,5 +20,8 @@ public sealed class CompanyConfiguration : IEntityTypeConfiguration<Company>
         builder.Property(c => c.TimeZone).IsRequired().HasMaxLength(100);
         builder.Property(c => c.IsActive).IsRequired();
         builder.Property(c => c.CreatedAtUtc).IsRequired();
+        // Explicit HasDefaultValue so the ADD COLUMN migration backfills existing companies with a
+        // valid code (not CLR's empty-string default) — see docs on ThemeCode.Fallback.
+        builder.Property(c => c.DefaultThemeCode).IsRequired().HasMaxLength(30).HasDefaultValue(ThemeCode.Fallback);
     }
 }

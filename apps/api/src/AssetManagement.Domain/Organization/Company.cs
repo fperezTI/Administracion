@@ -1,4 +1,5 @@
 using AssetManagement.Domain.SharedKernel;
+using AssetManagement.Domain.Theming;
 
 namespace AssetManagement.Domain.Organization;
 
@@ -15,6 +16,13 @@ public sealed class Company : AggregateRoot<Guid>
     public string TimeZone { get; private set; } = null!;
     public bool IsActive { get; private set; } = true;
     public DateTimeOffset CreatedAtUtc { get; private set; }
+
+    /// <summary>The theme every user of this company sees unless they set their own personal
+    /// preference (pedido: sistema de temas visuales). Only a Super Administrador may change this
+    /// (enforced via <see cref="Application.Common.Security.PermissionCatalog.Companies.Update"/>, the
+    /// same permission that already gates editing a company) — always a concrete, valid theme, never
+    /// null: <see cref="ThemeCode.Fallback"/> until explicitly set otherwise.</summary>
+    public string DefaultThemeCode { get; private set; } = ThemeCode.Fallback;
 
     private Company()
     {
@@ -73,6 +81,16 @@ public sealed class Company : AggregateRoot<Guid>
     public void Activate() => IsActive = true;
 
     public void Deactivate() => IsActive = false;
+
+    public void SetDefaultTheme(string themeCode)
+    {
+        if (!ThemeCode.IsValid(themeCode))
+        {
+            throw new DomainException($"'{themeCode}' no es un código de tema válido.");
+        }
+
+        DefaultThemeCode = themeCode;
+    }
 
     private static void Validate(string legalName, string tradeName, string taxId, string baseCurrency, string timeZone)
     {

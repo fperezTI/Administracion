@@ -3,7 +3,6 @@ import { getTranslations } from "next-intl/server";
 import { ShieldCheck } from "lucide-react";
 import { auth, signIn } from "@/auth";
 import { Button } from "@/components/ui/button";
-import { ThemeToggle } from "@/components/theme-toggle";
 import { Logomark } from "@/components/logomark";
 import { MicrosoftLogo } from "@/components/microsoft-logo";
 import { getSystemInfo } from "@/lib/api";
@@ -56,9 +55,6 @@ export default async function Home() {
 
       {/* Panel de acceso */}
       <div className="bg-background relative flex flex-col items-center justify-center gap-6 p-8">
-        <div className="absolute top-4 right-4">
-          <ThemeToggle />
-        </div>
         <div className="lg:hidden">
           <Logomark withWordmark size="lg" className="flex-col" />
         </div>

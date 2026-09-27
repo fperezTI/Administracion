@@ -1,4 +1,5 @@
 using AssetManagement.Domain.SharedKernel;
+using AssetManagement.Domain.Theming;
 
 namespace AssetManagement.Domain.Identity;
 
@@ -18,6 +19,11 @@ public sealed class User : AggregateRoot<Guid>
     public DateTimeOffset CreatedAtUtc { get; private set; }
     public DateTimeOffset? LastLoginAtUtc { get; private set; }
     public DateTimeOffset? AnonymizedAtUtc { get; private set; }
+
+    /// <summary>Personal theme preference — global across every company this user can access (pedido:
+    /// "no cambia al cambiar de empresa"). Null means "usar tema de la empresa": inherit the active
+    /// company's <see cref="Organization.Company.DefaultThemeCode"/> dynamically, never copied here.</summary>
+    public string? ThemePreferenceCode { get; private set; }
 
     public IReadOnlyCollection<UserRole> UserRoles => _userRoles.AsReadOnly();
     public IReadOnlyCollection<UserCompany> UserCompanies => _userCompanies.AsReadOnly();
@@ -119,4 +125,16 @@ public sealed class User : AggregateRoot<Guid>
     }
 
     public void RevokeCompanyAccess(Guid companyId) => _userCompanies.RemoveAll(uc => uc.CompanyId == companyId);
+
+    /// <summary>Sets the personal theme preference, or clears it (<paramref name="themeCode"/> null) to
+    /// restore inheritance from the active company's default — see <see cref="ThemePreferenceCode"/>.</summary>
+    public void SetThemePreference(string? themeCode)
+    {
+        if (themeCode is not null && !ThemeCode.IsValid(themeCode))
+        {
+            throw new DomainException($"'{themeCode}' no es un código de tema válido.");
+        }
+
+        ThemePreferenceCode = themeCode;
+    }
 }

@@ -37,6 +37,12 @@ Un único tenant de Microsoft Entra ID, una sola instancia de la aplicación, un
    `CompanyId` como parámetro explícito de cada request, no implícita) la leerán de aquí cuando se
    construyan.
 
+   **Primer consumidor real (sistema de temas, ver `docs/architecture/theming.md`)**: al implementarlo se
+   confirmó que ningún llamador del frontend envía `X-Active-Company-Id` todavía, por lo que
+   `ActiveCompanyId` es `null` en la práctica. La resolución del tema efectivo (`GetMeQueryHandler`) usa
+   como *fallback* la primera empresa accesible del usuario cuando no hay una empresa activa explícita —
+   ver ADR 0016. Sigue sin existir un selector de "empresa activa" persistente a nivel de sesión.
+
 Verificado por `AuthenticationAndRbacTests.Active_company_header_is_only_honored_when_the_caller_is_actually_a_member`.
 
 ### Otras reglas

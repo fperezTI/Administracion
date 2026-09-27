@@ -34,8 +34,18 @@
   "Theme": {
     "light": "Claro",
     "dark": "Oscuro",
-    "system": "Sistema",
-    "toggle": "Cambiar tema"
+    "corporate-blue": "Corporativo Azul",
+    "executive-gray": "Ejecutivo Gris",
+    "high-contrast": "Alto Contraste",
+    "company": "Usar tema de la empresa",
+    "currentlyApplied": "Aplicado actualmente",
+    "selectorTitle": "Tema visual",
+    "selectorDescription": "Elige un tema para ver una vista previa. Los cambios no se guardan hasta que confirmes.",
+    "previewCountdown": "Vista previa activa. Se restaurará el tema anterior en {seconds, plural, one {# segundo} other {# segundos}} si no confirmas.",
+    "keep": "Conservar",
+    "restore": "Restaurar",
+    "saving": "Guardando…",
+    "saveError": "No fue posible guardar tu preferencia de tema."
   },
   "Layout": {
     "openMenu": "Abrir menú",
@@ -48,6 +58,7 @@
     "notifications": "Notificaciones",
     "userMenu": "Menú de usuario",
     "userNameFallback": "Usuario",
+    "theme": "Tema",
     "signOut": "Cerrar sesión"
   }
 }

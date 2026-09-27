@@ -1,6 +1,7 @@
 import { cache } from "react";
 import NextAuth from "next-auth";
 import MicrosoftEntraID from "next-auth/providers/microsoft-entra-id";
+import { getMe } from "@/lib/api";
 
 /**
  * Server-side only. The API access token issued here never reaches client-side JavaScript: it lives
@@ -32,15 +33,23 @@ const nextAuth = NextAuth({
     }),
   ],
   callbacks: {
-    async jwt({ token, account }) {
+    async jwt({ token, account, trigger, session }) {
       if (account) {
-        // First sign-in: Entra ID just issued tokens for the requested scope.
-        return {
+        // First sign-in: Entra ID just issued tokens for the requested scope. Seed the effective
+        // theme too, so the very first authenticated page already renders it correctly.
+        return withEffectiveTheme({
           ...token,
           accessToken: account.access_token,
           refreshToken: account.refresh_token,
           accessTokenExpiresAt: (account.expires_at ?? 0) * 1000,
-        };
+        });
+      }
+
+      // Triggered by unstable_update() from the theme-preference Server Action — see
+      // lib/theme-actions.ts. Lets a confirmed theme change apply immediately instead of waiting
+      // for the next access-token refresh.
+      if (trigger === "update" && typeof session?.effectiveTheme === "string") {
+        return { ...token, effectiveTheme: session.effectiveTheme, themePreference: session.themePreference ?? null };
       }
 
       if (Date.now() < (token.accessTokenExpiresAt as number)) {
@@ -52,12 +61,14 @@ const nextAuth = NextAuth({
     async session({ session, token }) {
       session.accessToken = token.accessToken as string | undefined;
       session.error = token.error as string | undefined;
+      session.effectiveTheme = token.effectiveTheme as string | undefined;
+      session.themePreference = token.themePreference as string | null | undefined;
       return session;
     },
   },
 });
 
-export const { handlers, auth, signIn, signOut } = nextAuth;
+export const { handlers, auth, signIn, signOut, unstable_update } = nextAuth;
 
 /** Same session read as `auth()`, memoized per request (React.cache) — every shelled page now
  * reads the session at least twice (Topbar + the page's own requireAccessToken()), and each read
@@ -85,15 +96,30 @@ async function refreshAccessToken(token: Record<string, unknown>) {
       throw new Error(refreshed.error_description ?? "Failed to refresh the access token.");
     }
 
-    return {
+    return withEffectiveTheme({
       ...token,
       accessToken: refreshed.access_token,
       refreshToken: refreshed.refresh_token ?? token.refreshToken,
       accessTokenExpiresAt: Date.now() + refreshed.expires_in * 1000,
       error: undefined,
-    };
+    });
   } catch (error) {
     console.error("Failed to refresh Entra ID access token", error);
     return { ...token, error: "RefreshAccessTokenError" };
+  }
+}
+
+/** Refreshes the cached effective theme (personal preference, or the active company's default) as a
+ * side effect of sign-in and of each access-token refresh — this is what lets a Super Administrador
+ * changing a company's default theme reach users in "usar tema de la empresa" mode "en la siguiente
+ * carga" (pedido) without a dedicated cookie or an extra call on every navigation. Never throws: a
+ * failed lookup just leaves effectiveTheme as-is, and the root layout falls back safely either way. */
+async function withEffectiveTheme(token: Record<string, unknown>) {
+  try {
+    const me = await getMe(token.accessToken as string);
+    return { ...token, effectiveTheme: me.effectiveTheme, themePreference: me.themePreference };
+  } catch (error) {
+    console.error("Failed to resolve the effective theme", error);
+    return token;
   }
 }
