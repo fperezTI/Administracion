@@ -347,14 +347,20 @@ export default async function AssetDetailPage({ params }: { params: Promise<{ id
                 <TableRow>
                   <TableHead>Folio</TableHead>
                   <TableHead>Tipo</TableHead>
+                  <TableHead>Persona</TableHead>
                   <TableHead>Fecha</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {movements.items.map((m) => (
                   <TableRow key={m.id}>
-                    <TableCell className="font-mono">{m.folioNumber}</TableCell>
+                    <TableCell className="font-mono">
+                      <Link href={`/movements/${m.id}`} className="hover:text-primary hover:underline">
+                        {m.folioNumber}
+                      </Link>
+                    </TableCell>
                     <TableCell>{MOVEMENT_TYPE_LABELS[m.type]}</TableCell>
+                    <TableCell>{m.toUserDisplayName ?? m.fromUserDisplayName ?? "—"}</TableCell>
                     <TableCell>{formatDateTime(m.effectiveAtUtc, timeZone)}</TableCell>
                   </TableRow>
                 ))}

@@ -31,4 +31,13 @@ public sealed class MovementsController(ISender mediator) : ControllerBase
             cancellationToken);
         return Ok(result);
     }
+
+    [HttpGet("{id:guid}")]
+    [ProducesResponseType(typeof(MovementDetail), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<MovementDetail>> GetMovementById(Guid id, CancellationToken cancellationToken)
+    {
+        var result = await mediator.Send(new GetMovementByIdQuery(id), cancellationToken);
+        return Ok(result);
+    }
 }

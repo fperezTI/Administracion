@@ -813,6 +813,8 @@ export type MovementSummary = {
   toOrgUnitId: string | null;
   fromUserId: string | null;
   toUserId: string | null;
+  fromUserDisplayName: string | null;
+  toUserDisplayName: string | null;
   notes: string | null;
   effectiveAtUtc: string;
 };
@@ -981,6 +983,30 @@ export function getMovements(
   if (params.sortBy) query.set("sortBy", params.sortBy);
   if (params.sortDescending) query.set("sortDescending", "true");
   return apiFetch<PagedResult<MovementSummary>>(accessToken, `/api/v1/movements?${query.toString()}`);
+}
+
+export type MovementDetail = {
+  id: string;
+  companyId: string;
+  assetId: string;
+  assetFolio: string;
+  type: MovementType;
+  folioNumber: string;
+  status: MovementStatus;
+  fromOrgUnitId: string | null;
+  fromOrgUnitName: string | null;
+  toOrgUnitId: string | null;
+  toOrgUnitName: string | null;
+  fromUserId: string | null;
+  fromUserDisplayName: string | null;
+  toUserId: string | null;
+  toUserDisplayName: string | null;
+  notes: string | null;
+  effectiveAtUtc: string;
+};
+
+export function getMovementById(accessToken: string, movementId: string): Promise<MovementDetail> {
+  return apiFetch<MovementDetail>(accessToken, `/api/v1/movements/${movementId}`);
 }
 
 export function relocateAsset(

@@ -145,7 +145,14 @@ public class InventoryOperationsTests(ApiWebApplicationFactory factory) : IClass
 
         var movements = await adminClient.GetFromJsonAsync<PagedResultDto<MovementSummary>>(
             $"/api/v1/movements?companyId={companyId}&assetId={assetId}", JsonOptions);
-        movements!.Items.Should().ContainSingle(m => m.Type == MovementType.Relocation && m.Status == MovementStatus.Completed);
+        var relocationMovement = movements!.Items.Should()
+            .ContainSingle(m => m.Type == MovementType.Relocation && m.Status == MovementStatus.Completed).Subject;
+
+        var movementDetail = await adminClient.GetFromJsonAsync<MovementDetail>(
+            $"/api/v1/movements/{relocationMovement.Id}", JsonOptions);
+        movementDetail!.AssetId.Should().Be(assetId);
+        movementDetail.ToOrgUnitId.Should().Be(orgUnitId);
+        movementDetail.ToOrgUnitName.Should().Be("Almacén CDMX");
     }
 
     private async Task<Guid> CreateAssetAsync(HttpClient client, Guid companyId)

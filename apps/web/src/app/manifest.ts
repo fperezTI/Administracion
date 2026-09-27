@@ -1,7 +1,8 @@
 import type { MetadataRoute } from "next";
 
-// Placeholder branding (name, colors, icon) — swap once real company branding/logo is provided
-// (see docs/architecture/00-analysis.md §18, "Información externa realmente necesaria").
+// Icon matches the app's own logomark (components/logomark.tsx): Boxes en caja navy, el mismo diseño
+// que el favicon (app/icon.svg) — colores fijos (no siguen el tema activo, a diferencia del logomark en
+// la UI) porque el ícono del PWA/favicon no puede reaccionar a la preferencia de tema del usuario.
 export default function manifest(): MetadataRoute.Manifest {
   return {
     name: "Gestión de Activos de TI e Infraestructura",

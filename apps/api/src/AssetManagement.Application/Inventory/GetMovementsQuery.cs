@@ -33,6 +33,10 @@ public sealed record MovementSummary(
     Guid? ToOrgUnitId,
     Guid? FromUserId,
     Guid? ToUserId,
+    /// <summary>Who had it before this movement (e.g. the returner on an AssignmentReturn/LoanReturn).</summary>
+    string? FromUserDisplayName,
+    /// <summary>Who it goes to (e.g. the recipient on an Assignment/Loan).</summary>
+    string? ToUserDisplayName,
     string? Notes,
     DateTimeOffset EffectiveAtUtc);
 
@@ -61,7 +65,17 @@ public sealed class GetMovementsQueryHandler(IApplicationDbContext db, ICurrentC
         var joined =
             from m in query
             join asset in db.Assets.AsNoTracking() on m.AssetId equals asset.Id
-            select new { Movement = m, AssetFolio = asset.InternalFolio };
+            join fromUser in db.Users.AsNoTracking() on m.FromUserId equals (Guid?)fromUser.Id into fromUserJoin
+            from fromUser in fromUserJoin.DefaultIfEmpty()
+            join toUser in db.Users.AsNoTracking() on m.ToUserId equals (Guid?)toUser.Id into toUserJoin
+            from toUser in toUserJoin.DefaultIfEmpty()
+            select new
+            {
+                Movement = m,
+                AssetFolio = asset.InternalFolio,
+                FromUserDisplayName = fromUser != null ? fromUser.DisplayName : null,
+                ToUserDisplayName = toUser != null ? toUser.DisplayName : null,
+            };
 
         // Notes es nullable: se ordena siempre al final sin importar la dirección (mismo criterio que
         // Description/SerialNumber en GetAssetsQuery).
@@ -90,7 +104,8 @@ public sealed class GetMovementsQueryHandler(IApplicationDbContext db, ICurrentC
         var projected = ordered.Select(x => new MovementSummary(
             x.Movement.Id, x.Movement.AssetId, x.AssetFolio, x.Movement.Type, x.Movement.FolioNumber,
             x.Movement.Status, x.Movement.FromOrgUnitId, x.Movement.ToOrgUnitId, x.Movement.FromUserId,
-            x.Movement.ToUserId, x.Movement.Notes, x.Movement.EffectiveAtUtc));
+            x.Movement.ToUserId, x.FromUserDisplayName, x.ToUserDisplayName, x.Movement.Notes,
+            x.Movement.EffectiveAtUtc));
 
         return PagedResult<MovementSummary>.CreateAsync(projected, request.PageNumber, request.PageSize, cancellationToken);
     }

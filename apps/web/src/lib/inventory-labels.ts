@@ -1,4 +1,4 @@
-import type { AssignmentStatus, LoanStatus, MovementType } from "@/lib/api";
+import type { AssignmentStatus, LoanStatus, MovementStatus, MovementType } from "@/lib/api";
 
 export const ASSIGNMENT_STATUS_LABELS: Record<AssignmentStatus, string> = {
   PendingSignature: "Pendiente de firma",
@@ -33,4 +33,21 @@ export function assignmentStatusBadgeVariant(status: AssignmentStatus): "success
 
 export function loanStatusBadgeVariant(status: LoanStatus): "success" | "outline" {
   return status === "Active" ? "success" : "outline";
+}
+
+export const MOVEMENT_STATUS_LABELS: Record<MovementStatus, string> = {
+  Pending: "Pendiente",
+  Completed: "Completado",
+  Cancelled: "Cancelado",
+};
+
+export function movementStatusBadgeVariant(status: MovementStatus): "success" | "warning" | "outline" {
+  switch (status) {
+    case "Completed":
+      return "success";
+    case "Pending":
+      return "warning";
+    default:
+      return "outline";
+  }
 }
