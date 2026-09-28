@@ -14,8 +14,10 @@ import {
   updateContractualAction,
   updateFinancialAction,
   updateGeneralAction,
+  updateMaintenanceScheduleAction,
   type EditActionState,
 } from "./actions";
+import { useSectionDirtyTracking } from "./unsaved-changes";
 
 const editInitialState: EditActionState = { error: null, success: false };
 
@@ -41,6 +43,7 @@ export function GeneralInfoForm({
   category: AssetCategoryDetail | null;
 }) {
   const [state, formAction, pending] = useActionState(updateGeneralAction, editInitialState);
+  const markDirty = useSectionDirtyTracking("general", state.success);
   const valueByFieldId = new Map(asset.customFieldValues.map((v) => [v.customFieldDefinitionId, v.value]));
 
   return (
@@ -49,7 +52,7 @@ export function GeneralInfoForm({
         <CardTitle className="text-sm">General</CardTitle>
       </CardHeader>
       <CardContent>
-        <form action={formAction} className="flex flex-col gap-4">
+        <form action={formAction} onChange={markDirty} className="flex flex-col gap-4">
           <input type="hidden" name="assetId" value={asset.id} />
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -172,6 +175,7 @@ function CustomFieldInput({ field, defaultValue }: { field: CustomFieldDefinitio
 
 export function FinancialInfoForm({ asset }: { asset: AssetDetail }) {
   const [state, formAction, pending] = useActionState(updateFinancialAction, editInitialState);
+  const markDirty = useSectionDirtyTracking("financial", state.success);
 
   return (
     <Card>
@@ -179,7 +183,7 @@ export function FinancialInfoForm({ asset }: { asset: AssetDetail }) {
         <CardTitle className="text-sm">Información financiera (informativa)</CardTitle>
       </CardHeader>
       <CardContent>
-        <form action={formAction} className="flex flex-col gap-4">
+        <form action={formAction} onChange={markDirty} className="flex flex-col gap-4">
           <input type="hidden" name="assetId" value={asset.id} />
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -225,6 +229,7 @@ export function FinancialInfoForm({ asset }: { asset: AssetDetail }) {
 
 export function ContractualInfoForm({ asset }: { asset: AssetDetail }) {
   const [state, formAction, pending] = useActionState(updateContractualAction, editInitialState);
+  const markDirty = useSectionDirtyTracking("contractual", state.success);
 
   return (
     <Card>
@@ -232,7 +237,7 @@ export function ContractualInfoForm({ asset }: { asset: AssetDetail }) {
         <CardTitle className="text-sm">Garantía y soporte</CardTitle>
       </CardHeader>
       <CardContent>
-        <form action={formAction} className="flex flex-col gap-4">
+        <form action={formAction} onChange={markDirty} className="flex flex-col gap-4">
           <input type="hidden" name="assetId" value={asset.id} />
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -259,6 +264,67 @@ export function ContractualInfoForm({ asset }: { asset: AssetDetail }) {
                 name="supportProvider"
                 maxLength={200}
                 defaultValue={asset.supportProvider ?? ""}
+              />
+            </Field>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <Field label="Aseguradora" htmlFor="insuranceProvider" optional>
+              <Input
+                id="insuranceProvider"
+                name="insuranceProvider"
+                maxLength={200}
+                defaultValue={asset.insuranceProvider ?? ""}
+              />
+            </Field>
+            <Field label="Número de póliza" htmlFor="insurancePolicyNumber" optional>
+              <Input
+                id="insurancePolicyNumber"
+                name="insurancePolicyNumber"
+                maxLength={100}
+                defaultValue={asset.insurancePolicyNumber ?? ""}
+              />
+            </Field>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <Field label="Vigencia del seguro" htmlFor="insuranceExpiryDate" optional>
+              <Input
+                id="insuranceExpiryDate"
+                name="insuranceExpiryDate"
+                type="date"
+                defaultValue={asset.insuranceExpiryDate ?? ""}
+              />
+            </Field>
+          </div>
+
+          <SaveBar error={state.error} success={state.success} pending={pending} />
+        </form>
+      </CardContent>
+    </Card>
+  );
+}
+
+export function MaintenanceScheduleForm({ asset }: { asset: AssetDetail }) {
+  const [state, formAction, pending] = useActionState(updateMaintenanceScheduleAction, editInitialState);
+  const markDirty = useSectionDirtyTracking("maintenance", state.success);
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-sm">Mantenimiento</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <form action={formAction} onChange={markDirty} className="flex flex-col gap-4">
+          <input type="hidden" name="assetId" value={asset.id} />
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <Field label="Próximo mantenimiento programado" htmlFor="nextMaintenanceDueDate" optional>
+              <Input
+                id="nextMaintenanceDueDate"
+                name="nextMaintenanceDueDate"
+                type="date"
+                defaultValue={asset.nextMaintenanceDueDate ?? ""}
               />
             </Field>
           </div>

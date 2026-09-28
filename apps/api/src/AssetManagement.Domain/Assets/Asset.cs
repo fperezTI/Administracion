@@ -44,6 +44,12 @@ public sealed class Asset : AuditableAggregateRoot<Guid>
     public string? SupportContract { get; private set; }
     public string? SupportProvider { get; private set; }
 
+    public string? InsuranceProvider { get; private set; }
+    public string? InsurancePolicyNumber { get; private set; }
+    public DateOnly? InsuranceExpiryDate { get; private set; }
+
+    public DateOnly? NextMaintenanceDueDate { get; private set; }
+
     public AssetTag? Tag { get; private set; }
 
     public IReadOnlyCollection<AssetCustomFieldValue> CustomFieldValues => _customFieldValues.AsReadOnly();
@@ -137,6 +143,27 @@ public sealed class Asset : AuditableAggregateRoot<Guid>
         WarrantyEndDate = warrantyEndDate;
         SupportContract = supportContract?.Trim();
         SupportProvider = supportProvider?.Trim();
+        RecordUpdate(nowUtc, updatedByUserId);
+    }
+
+    /// <summary>Identifying/contractual insurance fields only (provider, policy number, expiry) — no
+    /// insured value or replacement cost, which are valuation/accounting concerns out of scope for V1
+    /// (docs/roadmap.md, "sin depreciación/contabilidad").</summary>
+    public void UpdateInsuranceInfo(
+        string? insuranceProvider, string? insurancePolicyNumber, DateOnly? insuranceExpiryDate,
+        DateTimeOffset nowUtc, Guid? updatedByUserId)
+    {
+        InsuranceProvider = insuranceProvider?.Trim();
+        InsurancePolicyNumber = insurancePolicyNumber?.Trim();
+        InsuranceExpiryDate = insuranceExpiryDate;
+        RecordUpdate(nowUtc, updatedByUserId);
+    }
+
+    /// <summary>A quick-glance scheduling field, separate from the actual MaintenanceOrder history (F6) —
+    /// lets list/detail views surface "próximo mantenimiento" without joining that module.</summary>
+    public void SetNextMaintenanceDueDate(DateOnly? nextMaintenanceDueDate, DateTimeOffset nowUtc, Guid? updatedByUserId)
+    {
+        NextMaintenanceDueDate = nextMaintenanceDueDate;
         RecordUpdate(nowUtc, updatedByUserId);
     }
 

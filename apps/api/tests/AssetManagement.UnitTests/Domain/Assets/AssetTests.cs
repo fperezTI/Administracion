@@ -188,4 +188,50 @@ public class AssetTests
 
         asset.AccessoryOfAssetId.Should().BeNull();
     }
+
+    [Fact]
+    public void UpdateInsuranceInfo_sets_the_identifying_and_expiry_fields()
+    {
+        var asset = CreateAsset();
+        var expiryDate = new DateOnly(2027, 6, 1);
+
+        asset.UpdateInsuranceInfo("Aseguradora GNP", "POL-12345", expiryDate, Now, null);
+
+        asset.InsuranceProvider.Should().Be("Aseguradora GNP");
+        asset.InsurancePolicyNumber.Should().Be("POL-12345");
+        asset.InsuranceExpiryDate.Should().Be(expiryDate);
+    }
+
+    [Fact]
+    public void UpdateInsuranceInfo_trims_text_fields()
+    {
+        var asset = CreateAsset();
+
+        asset.UpdateInsuranceInfo("  Aseguradora GNP  ", "  POL-12345  ", null, Now, null);
+
+        asset.InsuranceProvider.Should().Be("Aseguradora GNP");
+        asset.InsurancePolicyNumber.Should().Be("POL-12345");
+    }
+
+    [Fact]
+    public void SetNextMaintenanceDueDate_updates_the_field()
+    {
+        var asset = CreateAsset();
+        var dueDate = new DateOnly(2026, 12, 1);
+
+        asset.SetNextMaintenanceDueDate(dueDate, Now, null);
+
+        asset.NextMaintenanceDueDate.Should().Be(dueDate);
+    }
+
+    [Fact]
+    public void SetNextMaintenanceDueDate_can_clear_the_field()
+    {
+        var asset = CreateAsset();
+        asset.SetNextMaintenanceDueDate(new DateOnly(2026, 12, 1), Now, null);
+
+        asset.SetNextMaintenanceDueDate(null, Now, null);
+
+        asset.NextMaintenanceDueDate.Should().BeNull();
+    }
 }

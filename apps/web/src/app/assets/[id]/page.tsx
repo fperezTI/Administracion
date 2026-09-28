@@ -222,6 +222,8 @@ export default async function AssetDetailPage({ params }: { params: Promise<{ id
           <CardTitle className="text-sm">General</CardTitle>
         </CardHeader>
         <CardContent className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2 text-sm">
+          <Field label="Marca" value={asset.brand} />
+          <Field label="Modelo" value={asset.model} />
           <Field label="Folio patrimonial" value={asset.patrimonialFolio} />
           <Field label="Número de serie" value={asset.serialNumber} />
           <Field label="Condición física" value={PHYSICAL_CONDITION_LABELS[asset.physicalCondition]} />
@@ -287,37 +289,53 @@ export default async function AssetDetailPage({ params }: { params: Promise<{ id
         </Card>
       )}
 
-      {(asset.acquisitionDate || asset.acquisitionCost || asset.supplier || asset.invoice || asset.purchaseOrder) && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-sm">Información financiera (informativa)</CardTitle>
-          </CardHeader>
-          <CardContent className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2 text-sm">
-            <Field label="Fecha de adquisición" value={asset.acquisitionDate} />
-            <Field
-              label="Costo"
-              value={asset.acquisitionCost != null ? `${asset.acquisitionCost} ${asset.currency ?? ""}` : null}
-            />
-            <Field label="Proveedor" value={asset.supplier} />
-            <Field label="Factura" value={asset.invoice} />
-            <Field label="Orden de compra" value={asset.purchaseOrder} />
-          </CardContent>
-        </Card>
-      )}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-sm">Información financiera (informativa)</CardTitle>
+        </CardHeader>
+        <CardContent className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2 text-sm">
+          <Field label="Fecha de adquisición" value={asset.acquisitionDate} />
+          <Field
+            label="Costo"
+            value={asset.acquisitionCost != null ? `${asset.acquisitionCost} ${asset.currency ?? ""}` : null}
+          />
+          <Field label="Proveedor" value={asset.supplier} />
+          <Field label="Factura" value={asset.invoice} />
+          <Field label="Orden de compra" value={asset.purchaseOrder} />
+        </CardContent>
+      </Card>
 
-      {(asset.warrantyStartDate || asset.warrantyEndDate || asset.supportContract || asset.supportProvider) && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-sm">Garantía y soporte</CardTitle>
-          </CardHeader>
-          <CardContent className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2 text-sm">
-            <Field label="Inicio de garantía" value={asset.warrantyStartDate} />
-            <Field label="Fin de garantía" value={asset.warrantyEndDate} />
-            <Field label="Contrato de soporte" value={asset.supportContract} />
-            <Field label="Proveedor de soporte" value={asset.supportProvider} />
-          </CardContent>
-        </Card>
-      )}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-sm">Garantía y soporte</CardTitle>
+        </CardHeader>
+        <CardContent className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2 text-sm">
+          <Field label="Inicio de garantía" value={asset.warrantyStartDate} />
+          <Field label="Fin de garantía" value={asset.warrantyEndDate} />
+          <Field label="Contrato de soporte" value={asset.supportContract} />
+          <Field label="Proveedor de soporte" value={asset.supportProvider} />
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-sm">Seguro</CardTitle>
+        </CardHeader>
+        <CardContent className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2 text-sm">
+          <Field label="Aseguradora" value={asset.insuranceProvider} />
+          <Field label="Número de póliza" value={asset.insurancePolicyNumber} />
+          <Field label="Vigencia" value={asset.insuranceExpiryDate} />
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-sm">Mantenimiento</CardTitle>
+        </CardHeader>
+        <CardContent className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2 text-sm">
+          <Field label="Próximo mantenimiento programado" value={asset.nextMaintenanceDueDate} />
+        </CardContent>
+      </Card>
 
       {asset.customFieldValues.length > 0 && (
         <Card>

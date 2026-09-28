@@ -80,7 +80,18 @@ public sealed class AssetsController(ISender mediator) : ControllerBase
         Guid assetId, UpdateAssetContractualInfoRequest request, CancellationToken cancellationToken)
     {
         var command = new UpdateAssetContractualInfoCommand(
-            assetId, request.WarrantyStartDate, request.WarrantyEndDate, request.SupportContract, request.SupportProvider);
+            assetId, request.WarrantyStartDate, request.WarrantyEndDate, request.SupportContract, request.SupportProvider,
+            request.InsuranceProvider, request.InsurancePolicyNumber, request.InsuranceExpiryDate);
+        await mediator.Send(command, cancellationToken);
+        return NoContent();
+    }
+
+    [HttpPut("{assetId:guid}/maintenance-schedule")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    public async Task<IActionResult> UpdateMaintenanceSchedule(
+        Guid assetId, UpdateAssetMaintenanceScheduleRequest request, CancellationToken cancellationToken)
+    {
+        var command = new UpdateAssetMaintenanceScheduleCommand(assetId, request.NextMaintenanceDueDate);
         await mediator.Send(command, cancellationToken);
         return NoContent();
     }
@@ -172,4 +183,12 @@ public sealed record UpdateAssetFinancialInfoRequest(
     string? PurchaseOrder);
 
 public sealed record UpdateAssetContractualInfoRequest(
-    DateOnly? WarrantyStartDate, DateOnly? WarrantyEndDate, string? SupportContract, string? SupportProvider);
+    DateOnly? WarrantyStartDate,
+    DateOnly? WarrantyEndDate,
+    string? SupportContract,
+    string? SupportProvider,
+    string? InsuranceProvider,
+    string? InsurancePolicyNumber,
+    DateOnly? InsuranceExpiryDate);
+
+public sealed record UpdateAssetMaintenanceScheduleRequest(DateOnly? NextMaintenanceDueDate);

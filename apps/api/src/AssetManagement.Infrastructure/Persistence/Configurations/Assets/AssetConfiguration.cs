@@ -32,6 +32,9 @@ public sealed class AssetConfiguration : IEntityTypeConfiguration<Asset>
         builder.Property(a => a.SupportContract).HasMaxLength(100);
         builder.Property(a => a.SupportProvider).HasMaxLength(200);
 
+        builder.Property(a => a.InsuranceProvider).HasMaxLength(200);
+        builder.Property(a => a.InsurancePolicyNumber).HasMaxLength(100);
+
         builder.Property(a => a.CreatedAtUtc).IsRequired();
 
         // Optimistic concurrency (pedido §11 "versión de concurrencia") — an EF-only concern, not

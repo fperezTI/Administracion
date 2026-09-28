@@ -7,6 +7,7 @@ import {
   updateAssetContractualInfo,
   updateAssetFinancialInfo,
   updateAssetGeneralInfo,
+  updateAssetMaintenanceSchedule,
   type PhysicalCondition,
 } from "@/lib/api";
 
@@ -98,7 +99,30 @@ export async function updateContractualAction(
       warrantyEndDate: emptyToNull(formData.get("warrantyEndDate")),
       supportContract: emptyToNull(formData.get("supportContract")),
       supportProvider: emptyToNull(formData.get("supportProvider")),
+      insuranceProvider: emptyToNull(formData.get("insuranceProvider")),
+      insurancePolicyNumber: emptyToNull(formData.get("insurancePolicyNumber")),
+      insuranceExpiryDate: emptyToNull(formData.get("insuranceExpiryDate")),
     });
+  } catch (error) {
+    if (error instanceof ApiError) {
+      return { error: error.detail ?? "No fue posible guardar los cambios.", success: false };
+    }
+    throw error;
+  }
+
+  revalidatePath(`/assets/${assetId}`);
+  return { error: null, success: true };
+}
+
+export async function updateMaintenanceScheduleAction(
+  _prevState: EditActionState,
+  formData: FormData,
+): Promise<EditActionState> {
+  const accessToken = await requireAccessToken();
+  const assetId = String(formData.get("assetId") ?? "");
+
+  try {
+    await updateAssetMaintenanceSchedule(accessToken, assetId, emptyToNull(formData.get("nextMaintenanceDueDate")));
   } catch (error) {
     if (error instanceof ApiError) {
       return { error: error.detail ?? "No fue posible guardar los cambios.", success: false };

@@ -13,7 +13,10 @@ public sealed record UpdateAssetContractualInfoCommand(
     DateOnly? WarrantyStartDate,
     DateOnly? WarrantyEndDate,
     string? SupportContract,
-    string? SupportProvider)
+    string? SupportProvider,
+    string? InsuranceProvider,
+    string? InsurancePolicyNumber,
+    DateOnly? InsuranceExpiryDate)
     : IRequest, IRequiresPermission
 {
     public string PermissionCode => PermissionCatalog.Assets.Update;
@@ -25,6 +28,8 @@ public sealed class UpdateAssetContractualInfoCommandValidator : AbstractValidat
     {
         RuleFor(x => x.SupportContract).MaximumLength(100);
         RuleFor(x => x.SupportProvider).MaximumLength(200);
+        RuleFor(x => x.InsuranceProvider).MaximumLength(200);
+        RuleFor(x => x.InsurancePolicyNumber).MaximumLength(100);
         RuleFor(x => x)
             .Must(x => x.WarrantyStartDate is null || x.WarrantyEndDate is null || x.WarrantyStartDate <= x.WarrantyEndDate)
             .WithMessage("La fecha de inicio de garantía debe ser anterior o igual a la fecha de fin.");
@@ -42,6 +47,9 @@ public sealed class UpdateAssetContractualInfoCommandHandler(
 
         asset.UpdateContractualInfo(
             request.WarrantyStartDate, request.WarrantyEndDate, request.SupportContract, request.SupportProvider,
+            clock.UtcNow, currentUser.UserId);
+        asset.UpdateInsuranceInfo(
+            request.InsuranceProvider, request.InsurancePolicyNumber, request.InsuranceExpiryDate,
             clock.UtcNow, currentUser.UserId);
 
         await db.SaveChangesAsync(cancellationToken);

@@ -137,6 +137,10 @@ export type AssetDetail = {
   warrantyEndDate: string | null;
   supportContract: string | null;
   supportProvider: string | null;
+  insuranceProvider: string | null;
+  insurancePolicyNumber: string | null;
+  insuranceExpiryDate: string | null;
+  nextMaintenanceDueDate: string | null;
   tag: AssetTagInfo | null;
   customFieldValues: AssetCustomFieldValueInfo[];
   accessoryOfAssetId: string | null;
@@ -398,6 +402,9 @@ export type UpdateAssetContractualInfoInput = {
   warrantyEndDate: string | null;
   supportContract: string | null;
   supportProvider: string | null;
+  insuranceProvider: string | null;
+  insurancePolicyNumber: string | null;
+  insuranceExpiryDate: string | null;
 };
 
 export function updateAssetContractualInfo(
@@ -408,6 +415,17 @@ export function updateAssetContractualInfo(
   return apiFetch(accessToken, `/api/v1/assets/${assetId}/contractual`, {
     method: "PUT",
     body: JSON.stringify(input),
+  });
+}
+
+export function updateAssetMaintenanceSchedule(
+  accessToken: string,
+  assetId: string,
+  nextMaintenanceDueDate: string | null,
+): Promise<void> {
+  return apiFetch(accessToken, `/api/v1/assets/${assetId}/maintenance-schedule`, {
+    method: "PUT",
+    body: JSON.stringify({ nextMaintenanceDueDate }),
   });
 }
 
@@ -827,26 +845,47 @@ export type RelocateAssetResult = { movementId: string; movementFolio: string };
 
 export type AssignmentSortField = "assignedAtUtc" | "assetFolio" | "assignedToDisplayName" | "status";
 
-export function getAssignments(
-  accessToken: string,
-  params: {
-    companyId: string;
-    pageNumber?: number;
-    pageSize?: number;
-    status?: AssignmentStatus;
-    assetId?: string;
-    sortBy?: AssignmentSortField;
-    sortDescending?: boolean;
-  },
-): Promise<PagedResult<AssignmentSummary>> {
+export type AssignmentFilterParams = {
+  companyId: string;
+  pageNumber?: number;
+  pageSize?: number;
+  status?: AssignmentStatus;
+  assetId?: string;
+  assignedToSearch?: string;
+  search?: string;
+  assignedFrom?: string;
+  assignedTo?: string;
+  orgUnitId?: string;
+  sortBy?: AssignmentSortField;
+  sortDescending?: boolean;
+};
+
+function assignmentFilterQuery(params: AssignmentFilterParams): URLSearchParams {
   const query = new URLSearchParams({ companyId: params.companyId });
   if (params.pageNumber) query.set("pageNumber", String(params.pageNumber));
   if (params.pageSize) query.set("pageSize", String(params.pageSize));
   if (params.status) query.set("status", params.status);
   if (params.assetId) query.set("assetId", params.assetId);
+  if (params.assignedToSearch) query.set("assignedToSearch", params.assignedToSearch);
+  if (params.search) query.set("search", params.search);
+  if (params.assignedFrom) query.set("assignedFrom", params.assignedFrom);
+  if (params.assignedTo) query.set("assignedTo", params.assignedTo);
+  if (params.orgUnitId) query.set("orgUnitId", params.orgUnitId);
   if (params.sortBy) query.set("sortBy", params.sortBy);
   if (params.sortDescending) query.set("sortDescending", "true");
-  return apiFetch<PagedResult<AssignmentSummary>>(accessToken, `/api/v1/assignments?${query.toString()}`);
+  return query;
+}
+
+export function getAssignments(accessToken: string, params: AssignmentFilterParams): Promise<PagedResult<AssignmentSummary>> {
+  return apiFetch<PagedResult<AssignmentSummary>>(accessToken, `/api/v1/assignments?${assignmentFilterQuery(params).toString()}`);
+}
+
+export function getAssignmentsExportUrl(
+  params: Omit<AssignmentFilterParams, "pageNumber" | "pageSize" | "sortBy" | "sortDescending"> & { format: ExportFileFormat },
+): string {
+  const query = assignmentFilterQuery(params);
+  query.set("format", params.format);
+  return `/api/exports/assignments?${query.toString()}`;
 }
 
 export function getMyAssignments(accessToken: string): Promise<MyAssignmentSummary[]> {

@@ -22,12 +22,19 @@ public sealed class AssignmentsController(ISender mediator) : ControllerBase
         [FromQuery] int pageSize = 50,
         [FromQuery] AssignmentStatus? status = null,
         [FromQuery] Guid? assetId = null,
+        [FromQuery] string? assignedToSearch = null,
+        [FromQuery] string? search = null,
+        [FromQuery] DateOnly? assignedFrom = null,
+        [FromQuery] DateOnly? assignedTo = null,
+        [FromQuery] Guid? orgUnitId = null,
         [FromQuery] string? sortBy = null,
         [FromQuery] bool sortDescending = false,
         CancellationToken cancellationToken = default)
     {
         var result = await mediator.Send(
-            new GetAssignmentsQuery(companyId, pageNumber, pageSize, status, assetId, sortBy, sortDescending),
+            new GetAssignmentsQuery(
+                companyId, pageNumber, pageSize, status, assetId, assignedToSearch, search, assignedFrom, assignedTo,
+                orgUnitId, sortBy, sortDescending),
             cancellationToken);
         return Ok(result);
     }

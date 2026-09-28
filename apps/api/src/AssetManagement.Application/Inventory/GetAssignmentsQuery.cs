@@ -14,6 +14,13 @@ public sealed record GetAssignmentsQuery(
     int PageSize = 50,
     AssignmentStatus? Status = null,
     Guid? AssetId = null,
+    /// <summary>Coincide contra el nombre de la persona asignada (contains, sin distinguir mayúsculas).</summary>
+    string? AssignedToSearch = null,
+    /// <summary>Coincide contra folio/marca/modelo del activo asignado (mismo criterio que ExportAssetsQuery).</summary>
+    string? Search = null,
+    DateOnly? AssignedFrom = null,
+    DateOnly? AssignedTo = null,
+    Guid? OrgUnitId = null,
     /// <summary>assignedAtUtc descendente (default) | assetFolio | assignedToDisplayName | status</summary>
     string? SortBy = null,
     bool SortDescending = false)
@@ -56,11 +63,40 @@ public sealed class GetAssignmentsQueryHandler(IApplicationDbContext db, ICurren
             query = query.Where(a => a.AssetId == assetId);
         }
 
+        if (request.AssignedFrom is { } assignedFrom)
+        {
+            var fromUtc = assignedFrom.ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc);
+            query = query.Where(a => a.AssignedAtUtc >= fromUtc);
+        }
+
+        if (request.AssignedTo is { } assignedTo)
+        {
+            var toUtc = assignedTo.ToDateTime(TimeOnly.MaxValue, DateTimeKind.Utc);
+            query = query.Where(a => a.AssignedAtUtc <= toUtc);
+        }
+
+        if (request.OrgUnitId is { } orgUnitId)
+        {
+            query = query.Where(a => a.OrgUnitId == orgUnitId);
+        }
+
         var joined =
             from a in query
             join asset in db.Assets.AsNoTracking() on a.AssetId equals asset.Id
             join user in db.Users.AsNoTracking() on a.AssignedToUserId equals user.Id
-            select new { Assignment = a, AssetFolio = asset.InternalFolio, AssignedToName = user.DisplayName };
+            select new { Assignment = a, AssetFolio = asset.InternalFolio, AssetBrand = asset.Brand, AssetModel = asset.Model, AssignedToName = user.DisplayName };
+
+        if (!string.IsNullOrWhiteSpace(request.AssignedToSearch))
+        {
+            var term = request.AssignedToSearch.Trim();
+            joined = joined.Where(x => x.AssignedToName.Contains(term));
+        }
+
+        if (!string.IsNullOrWhiteSpace(request.Search))
+        {
+            var term = request.Search.Trim();
+            joined = joined.Where(x => x.AssetFolio.Contains(term) || x.AssetBrand.Contains(term) || x.AssetModel.Contains(term));
+        }
 
         var descending = request.SortDescending;
         var ordered = request.SortBy switch
