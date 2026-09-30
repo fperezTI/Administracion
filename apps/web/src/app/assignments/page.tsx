@@ -84,7 +84,7 @@ export default async function AssignmentsPage({ searchParams }: { searchParams: 
           defaultOrgUnitId={params.orgUnitId ?? ""}
         />
 
-        <Table>
+        <Table containerClassName="max-h-[calc(100vh-23rem)] overflow-y-auto">
           <TableHeader>
             <TableRow>
               {[

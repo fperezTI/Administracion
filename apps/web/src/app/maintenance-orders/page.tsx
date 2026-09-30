@@ -50,7 +50,7 @@ export default async function MaintenanceOrdersPage({ searchParams }: { searchPa
 
     content = (
       <>
-        <Table>
+        <Table containerClassName="max-h-[calc(100vh-19rem)] overflow-y-auto">
           <TableHeader>
             <TableRow>
               {[

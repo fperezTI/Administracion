@@ -45,7 +45,7 @@ export default async function AuditPage({ searchParams }: { searchParams: Promis
 
     content = (
       <>
-        <Table>
+        <Table containerClassName="max-h-[calc(100vh-19.5rem)] overflow-y-auto">
           <TableHeader>
             <TableRow>
               {[

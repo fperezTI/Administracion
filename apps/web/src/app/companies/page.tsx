@@ -27,7 +27,7 @@ export default async function CompaniesPage({ searchParams }: { searchParams: Pr
     const totalPages = Math.max(1, Math.ceil(companies.totalCount / PAGE_SIZE));
     content = (
       <>
-        <Table>
+        <Table containerClassName="max-h-[calc(100vh-19rem)] overflow-y-auto">
           <TableHeader>
             <TableRow>
               {[

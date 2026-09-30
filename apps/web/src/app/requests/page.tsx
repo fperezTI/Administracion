@@ -46,7 +46,7 @@ export default async function InternalRequestsPage({ searchParams }: { searchPar
 
     content = (
       <>
-        <Table>
+        <Table containerClassName="max-h-[calc(100vh-19rem)] overflow-y-auto">
           <TableHeader>
             <TableRow>
               {[

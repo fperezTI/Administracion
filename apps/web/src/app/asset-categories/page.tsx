@@ -31,7 +31,7 @@ export default async function AssetCategoriesPage({ searchParams }: { searchPara
     const totalPages = Math.max(1, Math.ceil(categories.totalCount / PAGE_SIZE));
     content = (
       <>
-        <Table>
+        <Table containerClassName="max-h-[calc(100vh-19rem)] overflow-y-auto">
           <TableHeader>
             <TableRow>
               {[

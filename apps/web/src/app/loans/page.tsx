@@ -38,7 +38,7 @@ export default async function LoansPage({ searchParams }: { searchParams: Promis
 
     content = (
       <>
-        <Table>
+        <Table containerClassName="max-h-[calc(100vh-19rem)] overflow-y-auto">
           <TableHeader>
             <TableRow>
               {[

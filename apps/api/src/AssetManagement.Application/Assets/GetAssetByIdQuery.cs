@@ -31,6 +31,7 @@ public sealed record AssetDetail(
     AssetStatus Status,
     PhysicalCondition PhysicalCondition,
     Guid? CurrentOrgUnitId,
+    string? CurrentOrgUnitName,
     DateOnly? AcquisitionDate,
     decimal? AcquisitionCost,
     string? Currency,
@@ -78,10 +79,14 @@ public sealed class GetAssetByIdQueryHandler(IApplicationDbContext db) : IReques
             .Select(a => new AssetAccessorySummary(a.Id, a.InternalFolio, a.Brand, a.Model, a.Status))
             .ToListAsync(cancellationToken);
 
+        string? orgUnitName = asset.CurrentOrgUnitId is { } orgUnitId
+            ? await db.OrgUnits.AsNoTracking().Where(o => o.Id == orgUnitId).Select(o => o.Name).FirstOrDefaultAsync(cancellationToken)
+            : null;
+
         return new AssetDetail(
             asset.Id, asset.CompanyId, asset.AssetCategoryId, asset.InternalFolio, asset.PatrimonialFolio,
             asset.Brand, asset.Model, asset.SerialNumber, asset.Description, asset.Status, asset.PhysicalCondition,
-            asset.CurrentOrgUnitId, asset.AcquisitionDate, asset.AcquisitionCost, asset.Currency, asset.Supplier,
+            asset.CurrentOrgUnitId, orgUnitName, asset.AcquisitionDate, asset.AcquisitionCost, asset.Currency, asset.Supplier,
             asset.Invoice, asset.PurchaseOrder, asset.WarrantyStartDate, asset.WarrantyEndDate, asset.SupportContract,
             asset.SupportProvider, asset.InsuranceProvider, asset.InsurancePolicyNumber, asset.InsuranceExpiryDate,
             asset.NextMaintenanceDueDate,

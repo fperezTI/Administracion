@@ -33,7 +33,8 @@ public sealed record AssetSummary(
     string? SerialNumber,
     AssetStatus Status,
     PhysicalCondition PhysicalCondition,
-    Guid? AccessoryOfAssetId);
+    Guid? AccessoryOfAssetId,
+    string? OrgUnitName);
 
 public sealed class GetAssetsQueryHandler(IApplicationDbContext db, ICurrentCompanyContext currentCompany)
     : IRequestHandler<GetAssetsQuery, PagedResult<AssetSummary>>
@@ -70,7 +71,9 @@ public sealed class GetAssetsQueryHandler(IApplicationDbContext db, ICurrentComp
         var joined =
             from a in query
             join c in db.AssetCategories.AsNoTracking() on a.AssetCategoryId equals c.Id
-            select new { Asset = a, CategoryName = c.Name };
+            join orgUnit in db.OrgUnits.AsNoTracking() on a.CurrentOrgUnitId equals (Guid?)orgUnit.Id into orgUnits
+            from orgUnit in orgUnits.DefaultIfEmpty()
+            select new { Asset = a, CategoryName = c.Name, OrgUnitName = orgUnit != null ? orgUnit.Name : null };
 
         // Description/SerialNumber son nullable: sin el OrderBy(...== null) inicial, SQL Server pone los
         // NULL primero en ASC — así quedan siempre al final, sin importar la dirección.
@@ -103,7 +106,7 @@ public sealed class GetAssetsQueryHandler(IApplicationDbContext db, ICurrentComp
         var projected = ordered.Select(x => new AssetSummary(
             x.Asset.Id, x.Asset.InternalFolio, x.Asset.Description, x.Asset.AssetCategoryId, x.Asset.Brand,
             x.Asset.Model, x.Asset.SerialNumber, x.Asset.Status, x.Asset.PhysicalCondition,
-            x.Asset.AccessoryOfAssetId));
+            x.Asset.AccessoryOfAssetId, x.OrgUnitName));
 
         return PagedResult<AssetSummary>.CreateAsync(projected, request.PageNumber, request.PageSize, cancellationToken);
     }

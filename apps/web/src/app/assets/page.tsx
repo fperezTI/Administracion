@@ -15,7 +15,7 @@ import { CompanySwitcher } from "@/components/company-switcher";
 import { EmptyCompanyState } from "@/components/empty-company-state";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Table, TableBody, TableCell, TableHeader, TableRow } from "@/components/ui/table";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ASSET_STATUS_LABELS, PHYSICAL_CONDITION_LABELS, assetStatusBadgeVariant } from "@/lib/asset-labels";
 import { AssetFilterForm } from "./asset-filter-form";
 import { TablePagination, type SearchParams } from "@/components/layout/table-pagination";
@@ -69,7 +69,7 @@ export default async function AssetsPage({ searchParams }: { searchParams: Promi
           defaultSearch={params.search ?? ""}
         />
 
-          <Table>
+          <Table containerClassName="max-h-[calc(100vh-23rem)] overflow-y-auto">
             <TableHeader>
               <TableRow>
                 {[
@@ -79,7 +79,6 @@ export default async function AssetsPage({ searchParams }: { searchParams: Promi
                   { key: "brand", label: "Marca / Modelo", className: undefined },
                   { key: "serialNumber", label: "Serie", className: "hidden sm:table-cell" },
                   { key: "physicalCondition", label: "Condición", className: "hidden sm:table-cell" },
-                  { key: "status", label: "Estado", className: undefined },
                 ].map((column) => (
                   <SortableTableHead
                     key={column.key}
@@ -95,12 +94,24 @@ export default async function AssetsPage({ searchParams }: { searchParams: Promi
                     {column.label}
                   </SortableTableHead>
                 ))}
+                <TableHead className="hidden sm:table-cell">Ubicación</TableHead>
+                <SortableTableHead
+                  basePath="/assets"
+                  params={params}
+                  companyId={companyId}
+                  sortKey="status"
+                  defaultSortKey={DEFAULT_SORT}
+                  currentSortBy={params.sortBy}
+                  currentSortDescending={sortDescending}
+                >
+                  Estado
+                </SortableTableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {assetsResult.items.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={7} className="text-muted-foreground py-8 text-center">
+                  <TableCell colSpan={8} className="text-muted-foreground py-8 text-center">
                     No se encontraron activos con estos filtros.
                   </TableCell>
                 </TableRow>
@@ -119,6 +130,7 @@ export default async function AssetsPage({ searchParams }: { searchParams: Promi
                     </TableCell>
                     <TableCell className="hidden sm:table-cell">{asset.serialNumber ?? "—"}</TableCell>
                     <TableCell className="hidden sm:table-cell">{PHYSICAL_CONDITION_LABELS[asset.physicalCondition]}</TableCell>
+                    <TableCell className="hidden sm:table-cell">{asset.orgUnitName ?? "—"}</TableCell>
                     <TableCell>
                       <Badge variant={assetStatusBadgeVariant(asset.status)}>{ASSET_STATUS_LABELS[asset.status]}</Badge>
                     </TableCell>
@@ -156,7 +168,7 @@ export default async function AssetsPage({ searchParams }: { searchParams: Promi
         subtitle="Inventario de activos de TI por empresa."
         activeCompany={<CompanySwitcher companies={me.companies} currentCompanyId={companyId} />}
       />
-    <div className="mx-auto max-w-6xl px-8 pb-8">
+    <div className="mx-auto max-w-[100rem] px-8 pb-8">
       <div className="mb-4 flex items-center justify-end gap-3">
         <Button
           variant="outline"

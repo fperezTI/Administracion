@@ -25,7 +25,7 @@ export default async function RolesPage({ searchParams }: { searchParams: Promis
     const totalPages = Math.max(1, Math.ceil(roles.totalCount / PAGE_SIZE));
     content = (
       <>
-        <Table>
+        <Table containerClassName="max-h-[calc(100vh-19rem)] overflow-y-auto">
           <TableHeader>
             <TableRow>
               {[

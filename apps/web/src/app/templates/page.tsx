@@ -26,7 +26,7 @@ export default async function TemplatesPage({ searchParams }: { searchParams: Pr
 
     content = (
       <>
-        <Table>
+        <Table containerClassName="max-h-[calc(100vh-19rem)] overflow-y-auto">
           <TableHeader>
             <TableRow>
               {[

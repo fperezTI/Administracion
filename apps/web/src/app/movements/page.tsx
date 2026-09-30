@@ -48,7 +48,7 @@ export default async function MovementsPage({ searchParams }: { searchParams: Pr
 
     content = (
       <>
-          <Table>
+          <Table containerClassName="max-h-[calc(100vh-19.5rem)] overflow-y-auto">
             <TableHeader>
               <TableRow>
                 {[

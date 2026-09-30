@@ -40,7 +40,7 @@ export default async function WarrantiesPage({ searchParams }: { searchParams: P
 
     content = (
       <>
-        <Table>
+        <Table containerClassName="max-h-[calc(100vh-19rem)] overflow-y-auto">
           <TableHeader>
             <TableRow>
               {[

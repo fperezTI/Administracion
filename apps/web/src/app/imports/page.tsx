@@ -48,7 +48,7 @@ export default async function ImportBatchesPage({ searchParams }: { searchParams
 
     content = (
       <>
-        <Table>
+        <Table containerClassName="max-h-[calc(100vh-19rem)] overflow-y-auto">
           <TableHeader>
             <TableRow>
               {[

@@ -93,6 +93,7 @@ export type AssetSummary = {
   status: AssetStatus;
   physicalCondition: PhysicalCondition;
   accessoryOfAssetId: string | null;
+  orgUnitName: string | null;
 };
 
 export type AssetTagInfo = {
@@ -127,6 +128,7 @@ export type AssetDetail = {
   status: AssetStatus;
   physicalCondition: PhysicalCondition;
   currentOrgUnitId: string | null;
+  currentOrgUnitName: string | null;
   acquisitionDate: string | null;
   acquisitionCost: number | null;
   currency: string | null;

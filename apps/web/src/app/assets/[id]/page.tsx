@@ -227,6 +227,7 @@ export default async function AssetDetailPage({ params }: { params: Promise<{ id
           <Field label="Folio patrimonial" value={asset.patrimonialFolio} />
           <Field label="Número de serie" value={asset.serialNumber} />
           <Field label="Condición física" value={PHYSICAL_CONDITION_LABELS[asset.physicalCondition]} />
+          <Field label="Ubicación" value={asset.currentOrgUnitName} />
           <Field label="Descripción" value={asset.description} />
         </CardContent>
       </Card>
